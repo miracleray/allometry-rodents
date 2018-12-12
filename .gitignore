@@ -1,0 +1,12 @@
+## Compiled ignore
+*.pdf
+*.html
+*.eps
+*.png
+
+## R ignore
+*.Rhistory
+*.Rda
+*.rda
+*.RData
+*.Rapp.history
