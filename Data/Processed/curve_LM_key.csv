@@ -1,0 +1,29 @@
+Order,Curve,Before,After
+1,SUR2 parietal interpar suture,par interpar occip,C int parietal & interparietal
+2,SUR2 interpar occipital suture,par interpar occip,C int interparietal & occipital
+3,SUR2 frontal parietal suture,front squa pariet,C int frontal & parietal
+4,SUR V edge foramen magnum,CV most pt for mag,lat occ cond&f mag
+5,SUR rim of premaxilla supraorbital,P most pt supraorbital,A most pt infraorb
+6,SUR rim of maxilla supraorbit,P most pt supraorbital,AL pt zygo arch
+7,SUR pterygoid,P pt tooth row,P pt pterygoid
+8,SUR pos zygo cxn,A int zygo&squa,int squa&parietal
+9,SUR periotic cap,lat occ cond&f mag,int pariet&occip
+10,SUR parietal squamosal suture,int pariet&occip,front squa pariet
+11,SUR P outline aud bulla,lingual tip of bulla,D ext aud meatus
+12,SUR P most edge maxilla,LM P pt of A maxilla,A pt tooth row
+13,SUR nasal premaxilla suture,C int nasal & frontal,AL premax&nas
+14,SUR lingual tooth row,P pt tooth row,A pt tooth row
+15,SUR lateral boundary,front squa pariet,A int zygo&squa
+16,SUR lat edge frontal,front squa pariet,C int nasal & frontal
+17,SUR L most edge maxilla,P pt of A maxilla,AL pt zygo arch
+18,SUR edge rostrum,A most pt infraorb,A int zygo&squa
+19,SUR D edge foramen magnum,lat occ cond&f mag L,CD pt foramen magnum
+20,SUR C parietal,C int frontal & parietal,C int parietal & interparietal
+21,SUR C occipital,CD pt foramen magnum,C int interparietal & occipital
+22,SUR C nasal,C int nasal & frontal,A most pt nasal
+23,SUR C line hard palate,CP pt btwn palatine foramen,C & P most pt palantine
+24,SUR C interparietal,C int parietal & interparietal,C int interparietal & occipital
+25,SUR C frontal,C int frontal & parietal,C int nasal & frontal
+26,SUR C basisphenoid suture,C int basioccip,CV most pt for mag
+27,SUR A outline aud bulla,P pt pterygoid,AV pt ext aud meat
+28,SUR A edge maxilla,AL pt zygo arch,A int zygo&squa

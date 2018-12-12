@@ -1,0 +1,107 @@
+---
+title: "App01-compare-sliding-methods"
+author: "Ariel Marcy"
+date: "10/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
+```
+
+# Appendix 1: Checking methodology of sliding in Viewbox and _geomorph_
+While landmarking, all points were slid in Viewbox according to our template and their proprietary software. Next, we slid the landmarks again using _geomorph_'s functions (script 02). 
+
+Here we check whether sliding twice impacted the landmark variation patterns by looking at the variation on a dataset that was not slid in _geomorph_ - i.e. all points were treated as fixed landmarks. 
+
+### Load packages and functions
+```{r message = FALSE}
+# Load libraries (and install if necessary) for landvR package
+if(!require(devtools)) install.packages("devtools")
+if(!require(dispRity)) install.packages("dispRity")
+if(!require(landvR)) install_github("TGuillerme/landvR")
+
+library(stringr)
+library(data.table)
+library(geomorph)
+source("../Functions/utilities.R")  # custom functions
+load(file = "../Data/Processed/01-data-for-appendix.rda")  # pre-gpagen() shape data from script 01, to be re-slid in this script
+load(file = "../Data/Processed/02-data-for-analyses.rda")  # main data set
+```
+
+## Run GPA treating all points as fixed landmarks
+Here, we conserve the ratios set up in Viewbox. 
+```{r}
+sm.Y.unslid <- gpagen(S, Proj = TRUE, ProcD = TRUE)
+```
+
+## Run bilateral symmetry on unslid dataset
+```{r}
+sm.land.pairs <- FindPairs(sm.pt.names)
+sm.biY.unslid <- bilat.symmetry(sm.Y.unslid$coords, ind = sm.sp.info$All, object.sym = T, replicate = NULL, side = NULL, land.pairs = sm.land.pairs)
+sm.bY.unslid.ss <- sm.biY.unslid$symm.shape
+cols2 <- c("Genus", "Species", "CatNum", "Rep")
+sm.bY.unslid.info <- WriteMetadata(sm.bY.unslid.ss, cols2)
+```
+
+### Remove specimens added for user error measurement
+First, remove the replicates from the main shape data for both small and large patch protocols. Create corresponding metadata tables. These data will be used for the majority of remaining analyses.
+```{r}
+main <- which(sm.bY.unslid.info$Rep == "non")
+unslid.shape <- sm.bY.unslid.ss[, , main]
+unslid.info <- sm.bY.unslid.info[main, ]
+```
+
+## Landmark variation heatmaps
+We can use the `procrustes.var.plot()` function by Dr Thomas Guillerme to see how landmarks vary in the unslid dataset compared to the slid.
+```{r}
+# Find mean configuration
+unslid.consensus <- (select.procrustes(unslid.shape, selector = mean))[[1]]
+
+# Measure spherical coordinates differences from the mean
+diff.from.mean <- coordinates.difference(coordinates = unslid.shape, reference = unslid.consensus, type = "spherical")
+```
+
+To test the hypothesis that each landmark's variation from the mean configuration is above expected, we can use the PC axes from a PCA.
+```{r}
+# Ordinate the data
+unslid.twoD.shape <- two.d.array(unslid.shape)
+unslid.ordination <- stats::prcomp(unslid.twoD.shape)
+
+# Force the symmetric component of shape into class "gpagen" (required for variation.range)
+unslid.gpagen.shape <- list()
+unslid.gpagen.shape$coords <- unslid.shape
+unslid.gpagen.shape$consensus <- unslid.consensus
+class(unslid.gpagen.shape) <- "gpagen"
+
+# Measure extremes of variation from mean on PC1
+unslid.PC1.var <- variation.range(unslid.gpagen.shape, return.ID = FALSE, axis = 1, ordination = unslid.ordination, type = "spherical")
+```
+
+The next step is to make a heatmap showing the size of variation and direction of movement for each landmark in the dataset, comparing between the min and max specimens along PC1.
+```{r}
+# Wrap specimens on the tangent space
+unslid.wrap.PCA <- plotTangentSpace(unslid.shape, verbose = FALSE)
+
+# Select extreme specimens (the ones that make the warp-meshes)
+un.hypothetical.1 <- unslid.wrap.PCA$pc.shapes[[1]]
+un.hypothetical.2 <- unslid.wrap.PCA$pc.shapes[[2]]
+
+# Plot the range of variation along PC1 using a heat color scheme
+PC1.var.plot <- procrustes.var.plot(un.hypothetical.1, un.hypothetical.2, col = heat.colors, col.val = unslid.PC1.var[, "radius"], labels = F)
+```
+
+### Histogram of radius variation for unslid dataset
+```{r}
+# Plot the histogram of variation in landmarks for this protocol
+var.range.unslid <- variation.range(unslid.gpagen.shape)
+hist(var.range.unslid[, 1])
+```
+
+### Compare to slid 
+```{r}
+# Plot the histogram of variation in landmarks for this protocol
+var.range <- variation.range(gpagen.shape)
+hist(var.range[, 1])
+```
