@@ -12,7 +12,7 @@ knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
 # Calculate user error
 Geometric morphometric studies usually require a lot of user-generated data and it's important to assess how much user error is created during the landmarking process. 
 
-First, we visualize whether any outliers can be explained by mistakes in landmark placement (e.g. a point "falling through" the nasal to land on the inner basicranium).
+First, we visualize whether any outliers can be explained by mistakes in landmark placement (e.g. a landmark "falling through" the nasal to land on the inner basicranium).
 
 Second, we compare the shape variation between 20 individuals, from a variety of different species, landmarked twice to calculate the intra-observer (i.e. digitizer) error.
 
@@ -23,14 +23,15 @@ library(stringi)
 library(data.table)
 library(geomorph)
 source("../Functions/utilities.R")  # custom functions defined in utilities.R
-load(file = "../Data/Processed/01-bilat-data-w-ERR.rda")
+load(file = "../Data/Processed/01-bilat-big-data-w-ERR.rda")
+load(file = "../Data/Processed/01-bilat-sm-data-w-ERR.rda")
 ```
 
 ## 1) Check for outliers and fix landmarking errors
-_geomorph_ comes with a handy function to check for outliers. Since our sample has a wide range of species, we decided to include the groups factor. This means the plotOutliers returns likely outliers for each genus instead of the group as a whole. When groups were not defined, only large species were returned as "outliers". 
+_geomorph_ comes with a handy function to check for outliers. Since our sample has a wide range of species, we decided to include the groups factor. This means `plotOutliers()` returns likely outliers for each genus instead of the group as a whole. When groups were not defined, only large species were returned as "outliers". 
 ```{r}
 # Plot outliers by genus for big patch dataset
-outliers <- plotOutliers(big.bY.shape, groups = big.sp.info$Genus, inspect.outliers = T)
+outliers <- plotOutliers(big.bY.shape, groups = big.sp.info$Genus, inspect.outliers = T)  # try changing to Taxa??
 ```
 
 Run again for the small patch protocol dataset:
@@ -57,7 +58,7 @@ med.shape <- MatchSpecShape(med.spec, sm.sp.info, sm.bY.shape)
 plotRefToTarget(med.shape, out.1, method = "vector", label = FALSE)
 plotRefToTarget(med.shape, out.2, method = "vector", label = FALSE)
 ```
-**Repeat the above for each genus/patch protocol as needed. When landmarking errors are found, fix in Viewbox, export new coordinates, and begin again from script 01.** 
+**Repeat the above for each genus/patch protocol as needed. As landmarking errors are found, fix in Viewbox, export new coordinates, and begin again from script 01.** 
 
 ## 2) Calculate intra-observer error
 Now that the shape data have been processed via GPA + bilateral symmetry and corrected for obvious landmarking errors, we can separate the data intended to measure user error from the main data for the remaining analyses. 
@@ -121,5 +122,6 @@ Small Patch: 93.0% with patches, 91.5% without patches (124 points removed)
 ### Save intermediate data 
 These are the main datasets for both protocols without replicates
 ```{r}
-save(big.shape, big.info, sm.shape, sm.info, file = "../Data/Processed/02-main-data-both-protocols.rda")
+save(big.shape, big.info, file = "../Data/Processed/02-main-data-big-protocol.rda")
+save(sm.shape, sm.info, file = "../Data/Processed/02-main-data-sm-protocol.rda")
 ```

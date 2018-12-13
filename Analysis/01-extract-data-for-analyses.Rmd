@@ -193,6 +193,6 @@ Now that we have extracted the 2 patch protocol datasets and the specimen metada
 
 Here we save the R objects we will need for later steps so this script does not have to be run again.
 ```{r}
-save(big.bY.shape, big.sp.info, sm.bY.shape, sm.sp.info, rep.spec, big.pt.names, sm.pt.names, file = "../Data/Processed/01-bilat-data-w-ERR.rda")
-save(B, S, big.pt.names, sm.pt.names, big.sp.info, sm.sp.info, rep.spec, file = "../Data/Processed/01-data-for-appendix.rda")
+save(big.bY.shape, big.sp.info, rep.spec, big.pt.names, big.sp.info, file = "../Data/Processed/01-bilat-big-data-w-ERR.rda")
+save(sm.bY.shape, sm.sp.info, rep.spec, sm.pt.names, sm.sp.info, file = "../Data/Processed/01-bilat-sm-data-w-ERR.rda")
 ```
