@@ -1,5 +1,5 @@
 ---
-title: "05-detect-allometry-and-morph-disparity"
+title: "15-detect-allometry-and-morph-disparity"
 author: "Ariel Marcy"
 date: "10/17/2018"
 output: html_document
@@ -303,3 +303,29 @@ plot(x = log(Allo.clade$size),
      ylab = "RegScore")
 legend(5.85, 0.06, legend = clade.names, col = col.clade.legend, pch = 16, cex = 0.78)
 ```
+
+
+## Static allometry
+```{r}
+# Re-order species to be in closely related groups
+info.traits2 <- info.traits[order(info.traits$Clade, info.traits$Genus, info.traits$Species, info.traits$CatNum), ]
+
+# Run pair-wise slope test
+spp.gdf <- geomorph.data.frame(shape = shape, spp = info.traits$Taxa, size = info$Csize)
+spp.results <- procD.allometry(shape ~ size, f2= ~spp, data = spp.gdf)
+
+
+size <- info$Csize
+spp <- info$Taxa
+pairwiseHOS.spp <- advanced.procD.lm(f1 = shape ~ log(size) + spp, 
+                                     f2 = ~ log(size) * spp, 
+                                     groups = ~ spp,  
+                                     slope = ~ log(size), 
+                                     angle.type = "deg")
+
+# Export P values
+pw.pvalues <- pairwiseHOS.spp$P.slopes.dist
+pw.pvalues[lower.tri(pw.pvalues)] <- NA
+write.csv(na.omit(pw.pvalues), "../Data/Results/static_allometry_pairwise_comp.csv")  # save in Results folder
+```
+
