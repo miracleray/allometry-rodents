@@ -1,5 +1,5 @@
 ---
-title: "04-plot-exploratory-PCAs"
+title: "14-plot-exploratory-PCAs"
 author: "Ariel Marcy"
 date: "10/17/2018"
 output: html_document

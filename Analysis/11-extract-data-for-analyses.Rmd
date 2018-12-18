@@ -1,5 +1,5 @@
 ---
-title: "01-extract-data-for-analyses"
+title: "11-extract-data-for-analyses"
 author: "Ariel Marcy"
 date: "9/17/2018"
 output: html_document
@@ -17,18 +17,15 @@ We found in Marcy et al. 2018, that using bilateral shape data improved the reli
 
 Almost all upcoming analyses are done in the geometric morphometric R package, _geomorph_(Adams 2016; Adams & Otarola-Castillo 2013).
 
-### Load packages
+### Load packages & custom functions
+The custom functions written for these analysese are defined in the utilities.R file for conciseness.
 ```{r message = FALSE}
 library(dplyr)
 library(stringr)
 library(stringi)
 library(data.table)
 library(geomorph)
-```
-
-### Load custom functions written for these analyses
-```{r}
-source("../Functions/utilities.R")  # defined in utilities.R for conciseness.
+source("../Functions/utilities.R")
 ```
 
 ## Prepare shape data for analyses in _geomorph_

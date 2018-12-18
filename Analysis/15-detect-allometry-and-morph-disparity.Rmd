@@ -323,9 +323,12 @@ pairwiseHOS.spp <- advanced.procD.lm(f1 = shape ~ log(size) + spp,
                                      slope = ~ log(size), 
                                      angle.type = "deg")
 
-# Export P values
+# Correct for multiple tests
 pw.pvalues <- pairwiseHOS.spp$P.slopes.dist
 pw.pvalues[lower.tri(pw.pvalues)] <- NA
-write.csv(na.omit(pw.pvalues), "../Data/Results/static_allometry_pairwise_comp.csv")  # save in Results folder
+pw.adj <- p.adjust(pw.pvalues, method = "BY")
+
+# Export P values
+write.csv(pw.adj, "../Data/Results/static_allometry_pairwise_comp.csv")  # save in Results folder
 ```
 
