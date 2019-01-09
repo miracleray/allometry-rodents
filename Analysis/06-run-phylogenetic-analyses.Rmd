@@ -1,7 +1,7 @@
 ---
-title: "16-run-phylogenetic-analyses"
+title: "06-run-phylogenetic-analyses"
 author: "Ariel Marcy"
-date: "11/19/2018"
+date: "2018-11-19"
 output: html_document
 ---
 
@@ -82,8 +82,8 @@ pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
 
 # Plot PCA of mean shapes
 pca.means <- plotTangentSpace(mean.shapes)
-PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
-legend(0.142, 0.047, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.305)
+PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE, flip.axis2 = T)
+legend(0.142, 0.085, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.305)
 ```
 
 ### Correlation of PC1 and PC2 wtih Centroid size
@@ -91,7 +91,7 @@ Here we find Pearson's r for correlation with PC1 and PC2.
 ```{r}
 cor.1 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 1], method = "pearson")  # remember to flip axis
 cor.1  # PC1
-cor.2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")  
+cor.2 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 2], method = "pearson")  
 cor.2  # PC2
 ```
 
@@ -176,23 +176,30 @@ First, test for phylogenetic signal in the shape data.
 physignal(mean.shapes.tree, aus.tree)
 ```
 
-### Evolutionary allometry:
+### Evolutionary Allometry
 ```{r}
 # Centroid size only
 evo.allo.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize)
 evo.allo <- procD.pgls(shape ~CS, aus.tree, data = evo.allo.gdf)
 evo.allo
 
+# R squared for evolutionary allometry without genus interaction
+evo.allo$R2
+```
+
+### Evolutionary Allometry by Genus
+```{r}
 # Interaction with genus
 evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$EGenus)
 evo.allo.gen <- procD.pgls(shape ~CS * genus, aus.tree, data = evo.allo.gen.gdf)
 evo.allo.gen
 
-# Example of a test of homogeneity of slopes, plus pairwise slopes comparisons
+# R squared for evolutionary allometry with genus
+evo.allo.gen$R2
+
+# Test of homogeneity of slopes, plus pairwise slopes comparisons
 HOS <- procD.pgls(f1 = shape ~ log(CS) * genus, aus.tree, data = evo.allo.gen.gdf)
-summary(HOS, formula = FALSE) # formulas too long to print
-
-
+summary(HOS, formula = FALSE)  # formulas too long to print
 ```
 
 **Historical Inference: Evolutionary transitions in size and shape**

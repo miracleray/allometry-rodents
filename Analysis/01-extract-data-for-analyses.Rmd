@@ -1,7 +1,7 @@
 ---
-title: "11-extract-data-for-analyses"
+title: "01-extract-data-for-analyses"
 author: "Ariel Marcy"
-date: "9/17/2018"
+date: "2018-09-17"
 output: html_document
 ---
 
@@ -17,15 +17,18 @@ We found in Marcy et al. 2018, that using bilateral shape data improved the reli
 
 Almost all upcoming analyses are done in the geometric morphometric R package, _geomorph_(Adams 2016; Adams & Otarola-Castillo 2013).
 
-### Load packages & custom functions
-The custom functions written for these analysese are defined in the utilities.R file for conciseness.
+### Load packages
 ```{r message = FALSE}
 library(dplyr)
 library(stringr)
 library(stringi)
 library(data.table)
 library(geomorph)
-source("../Functions/utilities.R")
+```
+
+### Load custom functions written for these analyses
+```{r}
+source("../Functions/utilities.R")  # defined in utilities.R for conciseness.
 ```
 
 ## Prepare shape data for analyses in _geomorph_
@@ -38,8 +41,8 @@ First, to reduce user error, AEM landmarked 20 specimens to familiarize herself 
 
 Viewbox puts the most recent specimen in the first row of the output .csv file, which is why we take the 20 initial specimens from the last rows of the coordinate dataset. 
 ```{r}
-coords.3D <- read.csv("../Data/Raw/3D_coords.csv", header = T)
-coords.3D <- coords.3D[1:(length(coords.3D) - 40)]  # removes 1st 20 specimens landmarked, with 2 protocols per specimen = 40
+coords.3D <- read.csv("../Data/Raw/19_01_09_RawData.csv", header = T)
+coords.3D <- coords.3D[1:(length(coords.3D) - 40)]  # removes first 20 specimens landmarked, with 2 protocols per specimen = 40
 ```
 _Note that the data is loaded in using a relative directory - not a `setwd()` command. This allows others who have cloned this repo of data and code to still use the code out of the box._
 
@@ -93,6 +96,25 @@ sp.info <- WriteMetadata(A, cols)
 # Add special columns (requires 'Genus' 'Species' 'CatNum' & 'Rep')
 sp.info$Taxa <- paste(str_sub(sp.info$Genus, 1, 1), str_sub(sp.info$Species, 1, 3), sep = "_")  # turns Mus musculus into M_mus
 sp.info$All <- with(sp.info, interaction(Genus, Species, CatNum, Rep, sep = "_"))  # required to run geomorph's bilat.symmetry()
+```
+
+## Remove species with too few specimens
+Some species were landmarked before sufficient sampling effort could be certain. These species need to be removed.
+```{r}
+# ID specimens with just 1 unique crania
+spec.counts <- as.data.frame(table(sp.info$Taxa))
+to.remove <- spec.counts[which(spec.counts$Freq <= 2), ]  # 1 individual
+species.rm <- as.vector(to.remove$Var1)
+
+# For loop to take out these specimens
+dataset.rm <- NULL  # initiate blank data frame
+for(n in 1:dim(to.remove)[1]) {
+        dataset.rm <- c(dataset.rm, which(sp.info$Taxa == species.rm[n]))
+}
+
+# Remove species from:
+sp.info <- sp.info[c(-dataset.rm), ]  # Metadata
+A <- A[, , c(-dataset.rm)]  # Shape dataset
 ```
 
 ## Create shape matrices for each patch protocol
@@ -190,6 +212,6 @@ Now that we have extracted the 2 patch protocol datasets and the specimen metada
 
 Here we save the R objects we will need for later steps so this script does not have to be run again.
 ```{r}
-save(big.bY.shape, big.sp.info, rep.spec, big.pt.names, big.sp.info, file = "../Data/Processed/01-bilat-big-data-w-ERR.rda")
-save(sm.bY.shape, sm.sp.info, rep.spec, sm.pt.names, sm.sp.info, file = "../Data/Processed/01-bilat-sm-data-w-ERR.rda")
+save(big.bY.shape, big.sp.info, sm.bY.shape, sm.sp.info, rep.spec, big.pt.names, sm.pt.names, file = "../Data/Processed/01-bilat-data-w-ERR.rda")
+save(B, S, big.pt.names, sm.pt.names, big.sp.info, sm.sp.info, rep.spec, file = "../Data/Processed/01-data-for-appendix.rda")
 ```

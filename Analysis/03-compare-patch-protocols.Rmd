@@ -1,188 +1,14 @@
 ---
-title: "13-extract-data-for-analyses"
+title: "03-compare-patch-protocols"
 author: "Ariel Marcy"
-date: "12/20/2018"
+date: "2018-10-15"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../allometry-rodents')
+knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
 ```
-
-### Load packages, functions, and data
-```{r message = FALSE}
-library(stringr)
-library(data.table)
-library(geomorph)
-library(ape)  # needed to work with phylogenies from here on
-library(geiger)
-library(nlme)
-library(caper)
-library(car)
-source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/02-main-data-big-protocol.rda")
-load(file = "../Data/Processed/02-main-data-sm-protocol.rda")
-```
-
-## Set which patch protocol to use as your starting shape and metadata:
-```{r}
-shape <- sm.shape  # use big.shape to start with the big patch data
-info <- sm.info  # use big.info to start with the big patch data
-```
-
-# Begin preparing metadata
-Handle genus Mastacomys falling within genus Pseudomys in recent phylogenetic analyses
-```{r}
-# Make an "Effective Genus" column since Mastacomys falls within the genus Pseudomys
-info$EGenus <- info$Genus
-info$EGenus[which(info$Genus == "Mas")] <- "Pse"
-
-# Do the same for an Effective Taxa column
-info$ETaxa <- info$Taxa
-info$ETaxa[which(info$Taxa == "M_fus")] <- "P_fus"
-```
-
-Combine metadata with additional trait information gathered from the book, Native Mice and Rats by Dr.s Bill Breed and Fred Ford (2007). 
-```{r}
-info <- info[, c(-5, -7)]  # removes now-unnecessary columns
-
-# Add trait data to the metadata table, info and preserve specimen order
-traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
-traits$Taxa <- paste(str_sub(traits$Genus, 1, 1), str_sub(traits$Species, 1, 3), sep = "_")  # make matching Taxa column
-info.traits <- merge(info, traits, by = "Taxa", sort = F)
-info.traits <- info.traits[order(info.traits$Order), ]  # restore order
-
-# Rename Genus & Species columns so short names have their old col names
-names(info.traits)[names(info.traits) == 'Genus.x'] <- 'Genus'
-names(info.traits)[names(info.traits) == 'Species.x'] <- 'Species'
-```
-
-# Prepare shape and evolutionary tree for evolutionary analyses
-Many of these steps are based on Dr Meriam Zelditch et al.'s A Practical Companion (2012). 
-> Zelditch ML Swiderski D Sheets HD. 2012. A practical companion to geometric morphometrics for biologists: running analyses in freely-available software. Available at: http://booksite.elsevier.com/9780123869036.
-
-### Rename shape array to match phylogeny
-First, we'll rename the dimnames for the shape dataset so that it's only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
-```{r}
-shape.phylo <- shape  # initiate shape ready for mean shape
-dimnames(shape.phylo)[[3]] <- as.list(paste(info.traits$Genus.y, info.traits$Species.y, sep = "_"))
-```
-
-## Calculate mean shape and centroid size for each species
-This step has to be done before working with the tree. To calculate the mean shape for each species, we'll use a function from `geomorph` called `m.shape()`. 
-
-To get the means, we'll subset for each unique species. The mean shape function, `mshape()` gives a 2D array as an output. Therefore, the `for` loop below stores mean shapes in a 2D array format recognized by `geomorph`: (n x [p x k]), where n is number of specimens, p is number of landmark points, and k is number of dimensions. Then we convert to a 3D array with format (p x k x n) since a 3D array is required by most `geomorph` functions. 
-```{r}
-info.traits$FullName <- paste(info.traits$Genus.y, info.traits$Species.y, sep = "_")  # give names to metadata in the same format as the tree "Genus_species"
-full.names <- unique(info.traits$FullName)
-
-# For loop to subset shape data by species and calculate mean shape
-mean.shapes.2D <- NULL  # initiate blank data frame
-for (i in 1:length(full.names)) {  
-        is.taxa <- which(info.traits$FullName == full.names[i])
-        shape.for.mean.2D <- shape.phylo[, , is.taxa]
-        mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # mshape() finds mean specimen; rbind() is critical, output cols must = 3 for 3D
-}
-mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array
-
-# Make names match the tree, make metadata match mean shape data (alphabetical)
-dimnames(mean.shapes)[[3]] <- full.names  # shape names match tree names
-info.means <- info.traits[!duplicated(info.traits$Taxa), -c(4, 5)]  # make metadata; remove columns that don't make sense: CatNum and Order
-info.means <- info.means[order(info.means$FullName), ]  # order same as shape's
-```
-
-### Calculate mean centroid size
-We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size is stored in the info.traits metadata table.
-```{r}
-# Calculate mean centroid size and store in info.means
-cs.means <- aggregate(info.traits[, 6], list(Taxa = info.traits$FullName), mean)
-info.means$Csize <- cs.means[, 2]  # store in vector; aggregate alphabetized it
-names(info.means)[names(info.means) == 'Csize'] <- 'MeanCsize'  # rename column
-
-# Sort shape by alphabetical order, too
-mean.shapes <- mean.shapes[ , , sort(dimnames(mean.shapes)[[3]])]
-```
-
-## Prepare the tree data for phylogenetic analyses
-The commands in `geomorph` require the tree and datasets to have exactly the same set of species.
-
-### Load in phylogenetic tree
-The most recent tree for Australian rodents is from Smissen & Rowe 2018, Figure 2. The tree is a fossil calibrated ultrametric tree from BEAST2 for Hydromini, which includes all the Australo-Papuan old endemics in Murinae.
-```{r}
-Rowe.tree <- "../Data/Processed/Smissen-Rowe-2018-concat.tre"  # 
-raw.tree <- read.tree(Rowe.tree)
-```
-
-### Extract only Genus and Species names from the tree
-The tree file has uneven amounts of information for each entry, some entries have catalog numbers and others do not. Therefore we needed a `for` loop to grab the first two elements from a list, which always corresponded to Genus and Species.
-
-We reassign only Genus and Species names (in form "Genus_species") to the tree so that going forward it is easier to compare to the shape data. 
-```{r}
-no.cat.tree <- raw.tree  # initiate new, modified tree with no CatNums
-label.list <- strsplit(raw.tree$tip.label, "_")  # separate info into list
-
-# For loop finds Genus & Species and reassigns tip name as "Genus_species"
-for (i in 1:length(label.list)) {
-        label <- unlist(label.list[i])
-        no.cat.tree$tip.label[i] <- paste(label[1], label[2], sep = "_")
-}
-```
-
-### Rename nodes
-Since the 2018 Smissen & Rowe tree focused primarily on New Guinae species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to rename some of the nodes with Australian species. 
-
-**Renamed nodes:**
-_Pogonomys macruourus_ (NG) to _Pogonomys mollipilosus_ (Aus)
-_Melomys bannisteri_ (NG) to _Melomys burtoni_ (Aus)
-
-```{r}
-renamed.tree <- no.cat.tree
-P.mac <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_macrourus"))
-renamed.tree$tip.label[P.mac] <- paste("Pogonomys_mollipilosis")
-
-M.ban <- which(str_detect(no.cat.tree$tip.label, "Melomys_bannisteri"))
-renamed.tree$tip.label[M.ban] <- paste("Melomys_burtoni")
-```
-
-### Prune the tree and shape datasets to match each other
-Now that the names in the Smissen & Rowe tree can be compared to our info.traits metadata, we can shape dataset to have all the same species.
-
-First, prune the tree of species not in the shape data
-```{r}
-concord <- name.check(renamed.tree, renamed.tree$tip.label, dimnames(mean.shapes)[[3]])  # check concordance
-aus.tree <- drop.tip(renamed.tree, concord$tree_not_data)  # prune tree to Aus
-```
-
-Second, remove duplicates of species in the tree
-```{r}
-dupes <- which(duplicated(aus.tree$tip.label))
-aus.tree <- drop.tip(aus.tree, dupes)
-```
-
-Third, subset and re-order the metadata and shape datasets to match the order of species found in the tree. 
-```{r}
-# Subset by...
-to.remove <- name.check(aus.tree, aus.tree$tip.label, dimnames(mean.shapes)[[3]])
-info.means.tree <- info.means[!is.element(info.means$FullName, to.remove$data_not_tree), ]  # ...metadata
-mean.shapes.tree <- mean.shapes[, , !is.element(info.means$FullName, to.remove$data_not_tree)]  # ...shape data
-
-# Re-order to match tree tip order
-tree.order <- match(aus.tree$tip.label, info.means.tree$FullName)
-info.means.tree <- info.means.tree[tree.order, ]  # metadata
-mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
-```
-
-
-## Include phylogenetic data in metadata
- 
-
-
-
-## Color schemes for PCA
-Color genus
-
-
 
 # Compare big and small patch protocols
 Our study asked a methodological question: does it make a difference if we use big areas of patch semi-landmarks versus breaking it up with curve semi-landmarks? Or in other words, will a big patch of landmarks pick up different biological patterns than an area broken up by curve landmarks defined along sutures?
@@ -198,6 +24,7 @@ if(!require(devtools)) install.packages("devtools")
 if(!require(dispRity)) install.packages("dispRity")
 if(!require(landvR)) install_github("TGuillerme/landvR")
 library(data.table)
+library(vegan)
 library(geomorph)
 source("../Functions/utilities.R")  # custom functions
 load(file = "../Data/Processed/02-main-data-both-protocols.rda")
@@ -329,15 +156,15 @@ big.info$EGenus[which(big.info$Genus == "Mas")] <- "Pse"  # Mas is effectively P
 sm.info$EGenus <- sm.info$Genus
 sm.info$EGenus[which(sm.info$Genus == "Mas")] <- "Pse"  # Mas is effectively Pse
 
-# Colors by EGenus: Hyd Leg Lep Mel Mes Mus Not Pog Pse(+Mas) Rat Uro Xer Zyz
-col.gen <- c("red", "cornflowerblue", "light green", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
+# Colors by EGenus: Con Hyd Leg Lep Mel Mes Mus Not Pog Pse(+Mas) Rat Uro Xer Zyz
+col.gen <- c("light green", "red", "cornflowerblue", "dark green", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
 
 # Colors by specimen, ordered in same way as metadata
 sp.col.gen <- PlotByGroup(big.info, "EGenus", col.gen)  # is the same for big and small protocols, tested with all.equal()
 
 # Set color scheme for plot legends, taxa listed in order presented in phylogeny
-col.phylo <- c("yellow", "darkgoldenrod4", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")  # same as col.gen but in a different order
-gen.name.phylo <- c("Mel", "Uro", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")  # order of genera in phylogeny
+col.phylo <- c("yellow", "darkgoldenrod4", "dark green", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")  # same as col.gen but in a different order
+gen.name.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")  # order of genera in phylogeny
 ```
 
 ### PCA plot of big patch protocol
@@ -346,8 +173,8 @@ PCAs are very human-friendly way of visualizing shape variation in 2 dimensions.
 big.pca <- plotTangentSpace(big.shape, groups = sp.col.gen, axis1 = 1, axis2 = 2, verbose = T)
 
 # Flip PC1 and PC2 to show positive shape allometry (larger spp, larger values)
-big.pca$pc.scores[, "PC1"] <- -(big.pca$pc.scores[, "PC1"])
-big.pca$pc.scores[, "PC2"] <- -(big.pca$pc.scores[, "PC2"])
+#big.pca$pc.scores[, "PC1"] <- -(big.pca$pc.scores[, "PC1"])
+#big.pca$pc.scores[, "PC2"] <- -(big.pca$pc.scores[, "PC2"])
 
 # Get proportion of variance for PC1 and PC2 in format for plots
 big.PCs <- big.pca$pc.summary$importance
@@ -367,17 +194,17 @@ plot(x = big.pca$pc.scores[, 1],
      cex = 1.5, 
      cex.axis = 1.3, 
      cex.lab = 1.3)
-legend(0.15, 0.055, legend = gen.name.phylo, col = col.phylo, pch = 16, cex = 0.78)
+legend(0.16, 0.055, legend = gen.name.phylo, col = col.phylo, pch = 16, cex = 0.63)
 ```
 
 ### PCA plot of small patch protocol
 ```{r}
 # Plot PCAs
-sm.pca <- plotTangentSpace(sm.shape, groups = sp.col.gen, axis1 = 2, axis2 = 1, verbose = T)
+sm.pca <- plotTangentSpace(sm.shape, groups = sp.col.gen, axis1 = 1, axis2 = 2, verbose = T, label = sm.info$CatNum)
 
 # Flip PC1 and PC2 to show positive shape allometry (larger spp, larger values)
-sm.pca$pc.scores[, "PC1"] <- -(sm.pca$pc.scores[, "PC1"])
-sm.pca$pc.scores[, "PC2"] <- -(sm.pca$pc.scores[, "PC2"])
+#sm.pca$pc.scores[, "PC1"] <- -(sm.pca$pc.scores[, "PC1"])
+#sm.pca$pc.scores[, "PC2"] <- -(sm.pca$pc.scores[, "PC2"])
 
 # Get proportion of variance for PC1 and PC2 in format for plots
 sm.PCs <- sm.pca$pc.summary$importance
@@ -397,8 +224,15 @@ plot(x = sm.pca$pc.scores[, 1],
      cex = 1.5, 
      cex.axis = 1.3, 
      cex.lab = 1.3)
-legend(0.15, 0.055, legend = gen.name.phylo, col = col.phylo, pch = 16, cex = 0.78)
+legend(0.16, 0.055, legend = gen.name.phylo, col = col.phylo, pch = 16, cex = 0.63)
 ```
+
+## Mantel test
+A way to test if the two protocols provide a statistically significant different presentations of specimens.
+```{r}
+mantel(dist(sm.pca$pc.scores), dist(big.pca$pc.scores))
+```
+The Mantel test finds a highly significant (p < 0.001) relationship between the two PC score distance matrices, with statistic = 0.9989. Meaning they are very similar distance matrices, as expected. 
 
 ## Compare performance of patch protocols in ANOVA by genus and centroid size
 The patch protocols look very similar on the PCAs, which suggests that they do not capture shape variation differently from one another. To test this, we performed a Procrustes ANOVA on shape ~ centroid size * genus.
