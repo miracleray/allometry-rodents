@@ -3,6 +3,7 @@
 *.html
 *.eps
 *.png
+*.xlsx
 
 ## R ignore
 *.Rhistory
