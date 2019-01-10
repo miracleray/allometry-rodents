@@ -74,7 +74,7 @@ plot(x = info$Csize,
      xlab = "Centroid size", 
      ylab = "PC1 score", 
      main = "PC1 vs Centroid Size")
-legend(413, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.78)
+legend(415, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.66)
 text(300, 0, paste("r =", cor.assoc), col = "dark grey")
 ```
 
@@ -89,7 +89,7 @@ paste("Correlation is", cor.assoc.PC2, "with p =", cor.pval.PC2)
 Correlation of PC2 with size is statistically indistinguishable from 0.
 
 
-## 2) Static Allometry: Homogeneity of Slopes Test by species
+## 2) Measure static Allometry: Homogeneity of Slopes Test by species
 Isolate only those species with at least 8 specimens.
 ```{r}
 spec.counts <- as.data.frame(table(info$Taxa))
@@ -110,16 +110,17 @@ shape.HOS <- shape[, , c(-dataset.rm)]  # Shape dataset
 Code written with Dr Emma Sheratt to export the p-values of slope differences among all species present in the study.
 ```{r}
 # Run static allometry test
-spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
+spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
 spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, data = spp.gdf)
 
 # Examine results
 spp.results$aov.table
 spp.results$HOS.test
+summary(spp.results)
 
 # Find pair-wise p-values for slopes for each taxa
-size <- info.HOS$Csize
-spp <- info.HOS$Taxa
+size <- info$Csize
+spp <- info$Taxa
 pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
                                      f2 = ~log(size) * spp, 
                                      groups = ~spp,  
@@ -131,30 +132,25 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
 write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/19_01_11_static_pwHOS.csv")  # save in Results folder
 ```
 
-## 3) Static Allometry: Common Allometric Component & Residuals
-In _geomorph_, the function `procD.allometry()` does a Procrustes ANOVA with permutation to find patterns of shape covariation with centroid size.
+## 3) Visualize static Allometry: Common Allometric Component & Residuals
+In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted crania shape (estimated with the common allometric component or CAC).
 ```{r}
-# Run Procrustes ANOVA on shape and size with genus as the grouping variable
-gdf <- geomorph.data.frame(coords = shape, csize = info$Csize, genus = info$EGenus)
-Allo <- procD.allometry(coords ~ csize, ~ genus, logsz = TRUE, iter = 999, RRPP = TRUE, print.progress = TRUE, data = gdf)
-summary(Allo)
-
-# Plot results
-plot(x = log(Allo$size),
-     y = Allo$CAC, 
-     xlim = c(4.72, 6.17), 
+# Plot static allometry
+plot(x = spp.results$size,
+     y = spp.results$CAC,
+     xlim = c(110, 435),
      col = sp.col.gen, 
      pch = 16, 
      main = "Predicted Allometric Shape by Genus",
      xlab = "Log centroid size", 
-     ylab = "Predicted shape")
-legend(6.05, 0.115, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
+     ylab = "Predicted shape (CAC)")
+legend(410, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.65)
 ```
 
-## Visualize the residual component of shape (size-less shape) as a PCA
+### Visualize the residual component of shape (size-less shape) as a PCA
 ```{r}
-plot(x = Allo$RSC[, 1],
-     y = Allo$RSC[, 2], 
+plot(x = spp.results$RSC[, 1],
+     y = spp.results$RSC[, 2], 
      xlim = c(-0.10, 0.095), # parameters used for PCAs in previous script
      ylim = c(-0.04, 0.07), 
      col = sp.col.gen, 
@@ -162,20 +158,24 @@ plot(x = Allo$RSC[, 1],
      main = "Residual shape component (size-less shape)",
      xlab = "RSC PC1", 
      ylab = "RSC PC2")
-legend(0.078, 0.077, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
+legend(0.08, 0.077, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.65)
 ```
-Size-less shape seems to have few patterns but it's interesting that genus _Rattus_ appears to have greater variation than any other genus. 
 
-## Visualize the residual component of shape as a PCA by immigration wave
+### Test witih dispRity package
+Test with `dispRity` package if Rattus has greater diparity in the size-less morphospace given by the residual component of shape. Unlike the PCA above, the multivariate test below can consider all PC axes simulatenously. 
 ```{r}
-plot(x = Allo$RSC[, 1],
-     y = Allo$RSC[, 2], 
-     xlim = c(-0.10, 0.095),
-     ylim = c(-0.04, 0.07), 
-     col = sp.col.wave, 
-     pch = 16, 
-     main = "Residual shape component (size-less shape)",
-     xlab = "RSC PC1", 
-     ylab = "RSC PC2")
-legend(-0.11, -0.01, legend = c("AOEs", "Native Rattus", "Invasives"), col = c("blue", "black", "grey"), pch = 16, cex = 0.78)
+# Make lists to define old versus new endemics
+new.endemics <- which(str_detect(info$Genus, "Rat") == TRUE)
+all.specimens <- c(1:dim(info)[1])  # dummy list, length = max specimens
+old.endemics <- all.specimens[-new.endemics]  # process of elimination
+
+# Run dispRity test on median and centroid metrics (default)
+size.less.dispRity <- dispRity.per.group(spp.results$RSC, list(Old = old.endemics, New = new.endemics))
+summary(size.less.dispRity)
+plot(size.less.dispRity)
 ```
+
+Looks like there could be a statistically significant difference, let's test:
+```{r}
+# Test is from adonis function from vegan package which expects a distance matrix with method = Euclidean 
+test.dispRity(size.less.dispRity, test = t.test) 
