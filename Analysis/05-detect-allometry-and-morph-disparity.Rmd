@@ -1,13 +1,13 @@
 ---
-title: "05-detect-allometry-and-morph-disparity"
+title: "03-measure-allometry"
 author: "Ariel Marcy"
-date: "2018-10-17"
+date: "2019-01-11"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Allometry and Morphological Disparity
@@ -24,24 +24,47 @@ library(stringr)
 library(data.table)
 library(geomorph)
 source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/03-sm-PCA-with-color.rda")
-load(file = "../Data/Processed/04-sm-data-with-traits.rda")
+load(file = "../Data/Processed/02-main-data.rda")
 ```
 
-## Correlation of allometry to PC1
+### Set up for analyses
+Since Mastacomys is technically within the genus Pseudomys (Smissen & Rowe 2018), we'll make an "Effective Genus" column where this genus is classified under Pseudomys.
+```{r}
+# Make an Effective Genus column to better categorize Mas phylogenetically
+info$EGenus <- info$Genus
+info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas is effectively Pse
+```
+
+Colors for subsequent figures are set up according to column "EGenus":
+```{r}
+# Colors by EGenus: Con Hyd Leg Lep Mel Mes Mus Not Pog Pse(+Mas) Rat Uro Xer Zyz
+col.gen <- c("light green", "red", "cornflowerblue", "dark green", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
+
+# Colors by specimen, ordered in same way as metadata
+sp.col.gen <- PlotByGroup(info, "EGenus", col.gen)  # is the same for big and small protocols, tested with all.equal()
+
+# Scheme for legend: taxa listed in order presented in phylogeny
+col.phylo <- c("yellow", "darkgoldenrod4", "dark green", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")
+names.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
+```
+
+## 1) Correlation of allometry to PC1 & PC2
 Centroid size is a proxy for body size. Usually in GMM studies, the centroid size is highly correlated with PC1, meaning that size increase is likely responsible for shape changes along this axis.
 
-Here we test for a significant correlation using Pearson's R and plot centroid size versus PC1.
+### Test for correlation in PC1
+We test for a significant correlation using Pearson's R and plot centroid size versus PC1.
 ```{r}
+# Run PCA
+PCA <- plotTangentSpace(shape, groups = sp.col.gen, axis1 = 1, axis2 = 2, verbose = T)
+
 # Find Pearson's r for correlation with PC1
 cor <- cor.test(info$Csize, PCA$pc.scores[, 1], method = "pearson")
 cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
+cor.assoc
+```
 
-# Set color scheme for legend, taxa listed in order presented in phylogeny
-gen.color <- c("yellow", "darkgoldenrod4", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")  # same as col.gen but in a different order
-genus.name <- c("Mel", "Uro", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
-
-# Plot centroid size versus PC1 to see correlation
+### Plot centroid size versus PC1 to see correlation
+```{r}
 plot(x = info$Csize, 
      y = PCA$pc.scores[, 1], 
      xlim = c(110, 440), 
@@ -51,7 +74,7 @@ plot(x = info$Csize,
      xlab = "Centroid size", 
      ylab = "PC1 score", 
      main = "PC1 vs Centroid Size")
-legend(413, 0.16, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
+legend(413, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.78)
 text(300, 0, paste("r =", cor.assoc), col = "dark grey")
 ```
 
@@ -65,8 +88,51 @@ paste("Correlation is", cor.assoc.PC2, "with p =", cor.pval.PC2)
 ```
 Correlation of PC2 with size is statistically indistinguishable from 0.
 
-## Find predicted allometric shape by genus
-In _geomorph_, the function `procD.allometry()` does a Procrustes ANOVA with permutation to find patterns of shape covariation with centroid size. 
+
+## 2) Static Allometry: Homogeneity of Slopes Test by species
+Isolate only those species with at least 8 specimens.
+```{r}
+spec.counts <- as.data.frame(table(info$Taxa))
+to.remove <- spec.counts[which(spec.counts$Freq <= 7), ]
+species.rm <- as.vector(to.remove$Var1)
+
+# For loop to take out these specimens
+dataset.rm <- NULL  # initiate blank data frame
+for(n in 1:dim(to.remove)[1]) {
+        dataset.rm <- c(dataset.rm, which(info$Taxa == species.rm[n]))
+}
+
+# Remove species from:
+info.HOS <- info[c(-dataset.rm), ]  # Metadata
+shape.HOS <- shape[, , c(-dataset.rm)]  # Shape dataset
+```
+
+Code written with Dr Emma Sheratt to export the p-values of slope differences among all species present in the study.
+```{r}
+# Run static allometry test
+spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, data = spp.gdf)
+
+# Examine results
+spp.results$aov.table
+spp.results$HOS.test
+
+# Find pair-wise p-values for slopes for each taxa
+size <- info.HOS$Csize
+spp <- info.HOS$Taxa
+pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
+                                     f2 = ~log(size) * spp, 
+                                     groups = ~spp,  
+                                     slope = ~log(size), 
+                                     angle.type = "deg",
+                                     data = spp.gdf)
+
+# Export p-values
+write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/19_01_11_static_pwHOS.csv")  # save in Results folder
+```
+
+## 3) Static Allometry: Common Allometric Component & Residuals
+In _geomorph_, the function `procD.allometry()` does a Procrustes ANOVA with permutation to find patterns of shape covariation with centroid size.
 ```{r}
 # Run Procrustes ANOVA on shape and size with genus as the grouping variable
 gdf <- geomorph.data.frame(coords = shape, csize = info$Csize, genus = info$EGenus)
@@ -83,34 +149,6 @@ plot(x = log(Allo$size),
      xlab = "Log centroid size", 
      ylab = "Predicted shape")
 legend(6.05, 0.115, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
-```
-
-### Visualize allometry using the Common Allometric Component (CAC) of shape
-This plot gives an esitmate of the average allometric trend within genera. 
-```{r}
-plot(x = log(Allo$size),
-     y = Allo$CAC, 
-     xlim = c(4.72, 6.17), 
-     col = sp.col.gen, 
-     pch = 16, 
-     main = "Common Allometric Component of Shape by Genus",
-     xlab = "Log centroid size", 
-     ylab = "CAC")
-legend(6.05, 0.115, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
-```
-
-### Visualize allometry using the regression of shape on size (RegScore)
-This method calculates shape scores from the regression of shape on size, and plots these versus size. Different than CAC when multiple groups are considered.
-```{r}
-plot(x = log(Allo$size),
-     y = Allo$Reg.proj, 
-     xlim = c(4.72, 6.17), 
-     col = sp.col.gen, 
-     pch = 16, 
-     main = "Regression of shape on size by Genus",
-     xlab = "Log centroid size", 
-     ylab = "RegScore")
-legend(6.05, 0.137, legend = genus.name, col = col.phylo, pch = 16, cex = 0.78)
 ```
 
 ## Visualize the residual component of shape (size-less shape) as a PCA
@@ -140,184 +178,4 @@ plot(x = Allo$RSC[, 1],
      xlab = "RSC PC1", 
      ylab = "RSC PC2")
 legend(-0.11, -0.01, legend = c("AOEs", "Native Rattus", "Invasives"), col = c("blue", "black", "grey"), pch = 16, cex = 0.78)
-```
-
-### Test for greater standard deviation along PC1 and PC2 in native Rattus
-```{r}
-res.shape <- Allo$RSC[, 1:2]  # residual shape component PC1 & 2 scores
-res.sd <- aggregate(res.shape, list(Taxa = info.traits$Wave), sd)
-res.sd
-```
-
-## Test for morphological disparity among species
-Here we test for morphological disparity among all 35 different species.
-```{r}
-rodent.spp.gdf <- geomorph.data.frame(coords = shape, spp = info.traits$ETaxa)
-spp.disparity <- morphol.disparity(coords ~ spp, groups = ~ spp, iter = 1000, seed = 42, data = rodent.spp.gdf, print.progress = FALSE)
-
-# Morphological disparity results
-results.morph <- spp.disparity$Procrustes.var  # observed Procrustes variances
-results.spp <- p.adjust(spp.disparity$PV.dist.Pval, method = "holm")  # p value results corrected for multiple comparisons
-```
-
-### Make a readable table
-There are 1125 cells in the p value results table. The ReadableTable() function provides an easier way to read them. 
-```{r}
-results.spp.en <- ReadableTable(results.spp, results.morph)
-```
-
-## Test for morphological disparity among genera
-Here we test for morphological disparity among the different genera.
-```{r}
-rodent.gen.gdf <- geomorph.data.frame(coords = shape, gen = info.traits$EGenus)
-gen.disparity <- morphol.disparity(coords ~ gen, groups = ~ gen, iter = 1000, seed = 42, data = rodent.gen.gdf, print.progress = FALSE)
-
-# Morphological disparity results
-results.gen <- gen.disparity$Procrustes.var  # observed Procrustes variances
-results.p <- p.adjust(gen.disparity$PV.dist.Pval, method = "holm")  # p value results
-
-results.gen.en <- ReadableTable(results.p, results.gen)
-```
-
-### Test for greater morphological disparity among waves
-Australian rodents arrived in three waves: 
-1) old endemics (6-5mya), 
-2) native _Rattus_ (2-1mya), and 
-3) invasives (~300 years ago; paraphyletic) 
-
-Here we test for disparity between these three groups:
-```{r}
-aus.rodent.gdf <- geomorph.data.frame(coords = shape, wave = info.traits$Wave)
-wave.disparity <- morphol.disparity(coords ~ wave, groups = ~wave, iter = 1000, seed = 42, data = aus.rodent.gdf, print.progress = FALSE)
-
-# Morphological disparity (observed Procrustes variances)
-results.morph <- wave.disparity$Procrustes.var
-
-# P value results
-results <- p.adjust(wave.disparity$PV.dist.Pval, method = "holm")
-results.en <- ReadableTable(results, results.morph)
-colnames(results) <- c("Old Endemics", "Native Rattus", "Inv Rattus")
-rownames(results.en) <- c("Old Endemics", "Native Rattus", "Inv Rattus", "Inv Mus")
-results.en
-```
-
-### Test witih dispRity package
-Test with `dispRity` package if Rattus has greater diparity in the size-less morphospace given by the residual component of shape. Unlike the PCA above, the multivariate test below can consider all PC axes simulatenously. 
-```{r}
-# Make lists to define old versus new endemics
-new.endemics <- which(str_detect(info.traits$Genus, "Rat") == TRUE)
-all.specimens <- c(1:dim(info.traits)[1])  # dummy list, length = max specimens
-old.endemics <- all.specimens[-new.endemics]  # process of elimination
-
-# Run dispRity test on median and centroid metrics (default)
-size.less.dispRity <- dispRity.per.group(Allo$RSC, list(Old = old.endemics, New = new.endemics))
-summary(size.less.dispRity)
-plot(size.less.dispRity)
-```
-
-Looks like there could be a statistically significant difference, let's test:
-```{r}
-# Test is from adonis function from vegan package which expects a distance matrix with method = Euclidean 
-test.dispRity(size.less.dispRity, test = t.test)  
-```
-
-```{r}
-# Run by wave
-first.wave <- which(info.traits$Wave == 1)
-sec.wave <- which(info.traits$Wave == 2)
-third.wave <- which(info.traits$Wave > 2)
-
-# Run dispRity test on median and centroid metrics (default)
-size.less.dispRity <- dispRity.per.group(Allo$RSC, list(First = first.wave, Second = sec.wave, Third = third.wave))
-summary(size.less.dispRity)
-plot(size.less.dispRity)
-```
-
-
-
-To address questions of evolution in Australia, we'll subset the data by natives.
-```{r}
-is.native <- FindNatives(info.traits, "Taxa", c("M_mus", "R_nor", "R_rat"))
-native.shape <- shape[, , is.native]
-native.info <- info.traits[is.native, ]
-```
-
-## Find predicted allometric shape by clade 
-The Procrustes ANOVA found no significant differences between slopes of different genera. Here we test if this pattern holds for larger clades of Australian rodents. 
-
-We begin subsetting the dataset by only native species using the `FindNatives()` function. 
-```{r}
-# Remove invasives from the dataset
-is.native <- FindNatives(info.traits, column = "Clade", invasives = c("invRattus", "Mus"))
-native.shape <- shape[, , is.native]
-native.info <- info.traits[is.native, ]
-
-# Set up colors in order of clades as they fall on evolutionary tree
-clade.names <- c("Uromyini", "Conilurini", "Pseudomini", "Hydromini", "Pogonomini", "Rattus") 
-col.clade.legend <- c("yellow", "green", "dark blue", "red", "magenta", "black")  # similar to col.gen
-col.clade.key <- c("green", "red", "magenta", "dark blue", "black", "yellow")
-
-col.clade <- PlotByGroup(native.info, "Clade", col.clade.key)
-
-# Run Procrustes ANOVA on shape and size with clade as the grouping variable
-gdf <- geomorph.data.frame(coords = native.shape, csize = native.info$Csize, clade = native.info$Clade)
-Allo.clade <- procD.allometry(coords ~ csize, ~ clade, logsz = TRUE, iter = 999, RRPP = TRUE, print.progress = FALSE, data = gdf)
-summary(Allo)
-
-# Plot results
-plot(x = log(Allo.clade$size),
-     y = Allo.clade$pred.val, 
-     xlim = c(4.72, 6.17), 
-     col = col.clade, 
-     pch = 16, 
-     main = "Predicted Allometric Shape by Clade",
-     xlab = "Log centroid size", 
-     ylab = "Predicted shape")
-legend(5.85, 0.05, legend = clade.names, col = col.clade.legend, pch = 16, cex = 0.78)
-```
-
-### Visualize allometry using the Common Allometric Component (CAC) of shape
-This plot gives an estimate of the average allometric trend within clades. 
-```{r}
-plot(x = log(Allo.clade$size),
-     y = Allo.clade$CAC, 
-     xlim = c(4.72, 6.17), 
-     col = col.clade, 
-     pch = 16, 
-     main = "Common Allometric Component of Shape by Clade",
-     xlab = "Log centroid size", 
-     ylab = "CAC")
-legend(5.85, 0.023, legend = clade.names, col = col.clade.legend, pch = 16, cex = 0.78)
-```
-
-### Visualize allometry using the regression of shape on size (RegScore)
-This method calculates shape scores from the regression of shape on size, and plots these versus size. Different than CAC when multiple groups are considered.
-```{r}
-plot(x = log(Allo.clade$size),
-     y = Allo.clade$Reg.proj, 
-     xlim = c(4.72, 6.17), 
-     col = col.clade,
-     pch = 16, 
-     main = "Regression of shape on size by Clade",
-     xlab = "Log centroid size", 
-     ylab = "RegScore")
-legend(5.85, 0.06, legend = clade.names, col = col.clade.legend, pch = 16, cex = 0.78)
-```
-
-### Static Allometry by species
-Code written with Dr Emma Sheratt to export the p-values of slope differences among all species present in the study.
-```{r}
-spp.gdf <- geomorph.data.frame(shape = shape, spp = info.traits$Taxa, size = info$Csize)
-spp.results <- procD.allometry(shape ~ size, f2= ~spp, data = spp.gdf)
-
-size <- info$Csize
-spp <- info$Taxa
-pairwiseHOS.spp <- advanced.procD.lm(f1 = shape ~ log(size) + spp, 
-                                     f2 = ~ log(size) * spp, 
-                                     groups = ~ spp,  
-                                     slope = ~ log(size), 
-                                     angle.type = "deg")
-
-# Export P value upper triangle
-write.csv(pw.pvalues, "../Data/Results/static_allometry_pair_comp.csv")  # save in Results folder
 ```

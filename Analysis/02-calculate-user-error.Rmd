@@ -17,6 +17,8 @@ First, we visualize whether any outliers can be explained by mistakes in landmar
 
 Second, we compare the shape variation between 20 individuals, from a variety of different species, landmarked twice to calculate the intra-observer (i.e. digitizer) error.
 
+Third, we'll finalize the specimens to be included in future analyses. 
+
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
 library(stringr)
@@ -102,7 +104,7 @@ RepAbility(patchless.shape, err.info$CatNum, n.Rep = 2)
 ```
 Taking out patch points decreases the repeatability by less than 2%.
 
-## Make main dataset
+## 3) Make main dataset
 Make the datasets without replicates to be used for the rest of the analyses.
 ```{r}
 main <- which(sp.info$Rep == "non")
@@ -118,11 +120,11 @@ rat.out <- which(sp.info$CatNum == "C11381")  # Rattus norvegicus
 uro.out <- which(sp.info$CatNum == "J17610")  # Uromys caudimaculatus
 
 # Remove from both datasets
-sp.info <- sp.info[-c(rat.out, uro.out), ]  # metadata
+info <- sp.info[-c(rat.out, uro.out), ]  # metadata
 shape <- shape[, , -c(rat.out, uro.out)]  # shape data
 ```
 
 ### Save intermediate data
 ```{r}
-save(shape, sp.info, file = "../Data/Processed/02-main-data.rda")
+save(shape, info, file = "../Data/Processed/02-main-data.rda")
 ```
