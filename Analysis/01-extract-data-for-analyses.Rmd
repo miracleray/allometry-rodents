@@ -1,13 +1,13 @@
 ---
 title: "01-extract-data-for-analyses"
 author: "Ariel Marcy"
-date: "2018-09-17"
+date: "2019-01-10"
 output: html_document
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Converting information from Viewbox into shape and metadata
@@ -18,21 +18,18 @@ We found in Marcy et al. 2018, that using bilateral shape data improved the reli
 Almost all upcoming analyses are done in the geometric morphometric R package, _geomorph_(Adams 2016; Adams & Otarola-Castillo 2013).
 
 ### Load packages
+Custom functions are defined in utilities.R for conciseness.
 ```{r message = FALSE}
 library(dplyr)
 library(stringr)
 library(stringi)
 library(data.table)
 library(geomorph)
-```
-
-### Load custom functions written for these analyses
-```{r}
-source("../Functions/utilities.R")  # defined in utilities.R for conciseness.
+source("../Functions/utilities.R")  # custom functions
 ```
 
 ## Prepare shape data for analyses in _geomorph_
-Viewbox exports the data as a 2D array with specimens as columns and X, Y, and Z coordinates as rows for landmark. For _geomorph_, we need to convert this into a 3D array where each specimen has its own 2D array of 3 columns for XYZ coordinates and a row for each landmark. In other words, a 3D array has dimensions (p x k x n), where p is the number of landmarks, k is the dimension (2 or 3), and n is the number of specimens.
+Viewbox exports the data as a 2D array with specimens as columns and X, Y, and Z coordinates as rows for each landmark. For _geomorph_, we need to convert this into a 3D array where each specimen has its own 2D array of 3 columns for XYZ coordinates and a row for each landmark. In other words, a 3D array has dimensions (p x k x n), where p is the number of landmarks, k is the dimension (2 or 3), and n is the number of specimens.
 
 We also need to extract the metadata contained in the specimen filenames (exported as column names) and preserve their order so that the metadata matches the order of specimens in the shape data.
 
@@ -60,7 +57,7 @@ The coordinate data is just shape data unless we can extract any information the
 ### Fix naming of replicate filenames (included to measure user error)
 Interspersed throughout the data collection process, AEM landmarked 20 specimens twice. Their specimen names included "_ERR", however, not always in the same place in the filename. 
 
-We correct the naming scheme to be machine-readable and in the process create a list of specimen names which were landmarked twice. In script 02-calculate-user-error.Rmd, we use this list to analyze user error relative to (biological) variation in our sample.
+We correct the naming scheme to be machine-readable and in the process create a list of specimen names which were landmarked twice. In script 02-calculate-user-error.Rmd, we use this list to analyze user error.
 ```{r}
 # Detect replicates
 names <- dimnames(A)[[3]]
@@ -126,37 +123,28 @@ no.XYZ <- str_sub(pt.names, 3, -1)  # removes XYZ appended by Viewbox
 u.pt.names<- unique(no.XYZ)  # returns unique point and curve names
 ```
 
-### Split shape dataset into separate big and small patch datasets
+### Isolate the small patch dataset
+The dataset contains two different shape datasets from two different landmarking protocols. This study, however, uses just one protocol, the small patch dataset as shown in the supplementary material of the paper. 
 ```{r}
-# Create data for big patch protocol
-big.data <- sp.info$Patch == "big"
-big.pts <- which(!str_detect(u.pt.names, "PAT2") & !str_detect(u.pt.names, "SUR2"))  # gets rid of columns left empty for small patch coordinates
-B <- A[big.pts, , big.data]
-big.sp.info <- sp.info[big.data, ]
-big.sp.info$Order <- c(1:nrow(big.sp.info))  # completes big patch dataset
-big.pt.names <- u.pt.names[big.pts]  # creates table of unique point names
-
-# Create data for small patch protocol
+# Create data from small patch protocol
 sm.data <- sp.info$Patch == "small"
 sm.pts <- which(!str_detect(u.pt.names, "PAT D"))  # gets rid of columns meant for big patch dataset
 S <- A[sm.pts, , sm.data]
-sm.sp.info <- sp.info[sm.data, ]
-sm.sp.info$Order <- c(1:nrow(sm.sp.info))  # completes small patch dataset
-sm.pt.names <- u.pt.names[sm.pts]  # creates table of unique point names
+sp.info <- sp.info[sm.data, ]
+sp.info$Order <- c(1:nrow(sp.info))  # completes small patch dataset
+pt.names <- u.pt.names[sm.pts]  # creates table of unique point names
 ```
 
 ## Run GPA and bilateral symmetry
 Because we already slid our curve semi-landmarks and patch semi-landmarks in Viewbox, we pass their coordinates to _geomorph_ as if they are fixed landmarks. This avoids "over-sliding" the shape data. 
 ```{r}
-big.Y <- gpagen(B, Proj = TRUE, ProcD = TRUE)
-sm.Y <- gpagen(S, Proj = TRUE, ProcD = TRUE)
+Y <- gpagen(S, Proj = TRUE, ProcD = TRUE)
 ```
 
 ### Add centroid size from gpagen() to metadata
 Simply join the centroid size given by `gpagen()` to the metadata table for each dataset. These data will be used later to quantify allometry.
 ```{r}
-big.sp.info$Csize <- unname(big.Y$Csize)
-sm.sp.info$Csize <- unname(sm.Y$Csize)
+sp.info$Csize <- unname(Y$Csize)
 ```
 
 ### Prepare data for running `bilat.symmetry()`
@@ -173,45 +161,25 @@ _For example, "SUR occipital suture R 2" is anterior to "SUR occipital suture R 
 _For example, "PAT auditory bulla R 3" and "PAT auditory bulla L 3" are in mirror image locations on their respective patches_
 ```{r}
 # Make landmark pair tables for each protocol
-big.land.pairs <- FindPairs(big.pt.names)
-sm.land.pairs <- FindPairs(sm.pt.names)
+land.pairs <- FindPairs(pt.names)
 ```
 
 ### Run bilateral GPA
 Now we are ready to re-run the generalized Procrustes alignment using bilateral landmark designations and extract the symmetric component of shape.
 
-The two bilateral GPAs can take some time (~10min total to run).
+The two bilateral GPAs can take some time (~5min total to run).
 
 WARNING: the `bilat.symmetry()` function will change the order of specimens in the shape file IF you have any non-unique names in the vector given to argument `ind =` of `bilat.symmetry()`. For example, if we had used `$CatNum`, then we would have 2 of the same CatNums for specimens with replicates. To avoid this, have a column for Replicate Status ("Rep" in this script), merge this with the CatNum column and any other columns of interest, and use this `$All` column for the `ind =` argument of `bilat.symmetry()`.
 ```{r}
-# Perform bilateral procrustes alignment on each patch protocol
-big.biY <- bilat.symmetry(big.Y$coords, ind = big.sp.info$All, object.sym = T, replicate = NULL, side = NULL, land.pairs = big.land.pairs)
-
-# Extract symmetric component of shape data
-big.bY.shape <- big.biY$symm.shape  # analogous to Y$coords, where Y is the output of gpagen()
-
-# Repeat 2 steps above for small patch protocol
-sm.biY <- bilat.symmetry(sm.Y$coords, ind = sm.sp.info$All, object.sym = T, replicate = NULL, side = NULL, land.pairs = sm.land.pairs)
-sm.bY.shape <- sm.biY$symm.shape
+# Perform bilateral procrustes alignment
+biY <- bilat.symmetry(Y$coords, ind = sp.info$All, object.sym = T, replicate = NULL, side = NULL, land.pairs = land.pairs)
+shape <- biY$symm.shape
 ```
-
-## Summarize results from bilateral symmetry analyses
-The bilateral results may be relevant for researchers interested in how much variation can be explained by symmetric variation among specimens, asymmetric variation among specimens, and fluctating asymmetry within specimens. 
-```{r}
-# Big patch protocol
-summary(big.biY)
-# Small patch protocol
-summary(sm.biY)
-```
-Interestingly, we observe that the big patch protocol has elevated asymmetry relative to the small patch protocol (side Rsq = .11 vs .04, respectively). We suspect this is because it was impossible to get a perfectly mirror-image-matched large patch on the dorsal surface of the skull in Viewbox. Perhaps this asymmetry, hard-coded into the patch protocol, contributed to an increase in asymmetry measured compared to the small patch protocol. The small patch protocol had fewer patch points and it was easier to make mirror-image small patches.
-
-### TODO: test asymmetry without patches
 
 ### Save intermediate data
 Now that we have extracted the 2 patch protocol datasets and the specimen metadata, we are ready for the next analysis step: 02-calculate-user-error.Rmd.
 
 Here we save the R objects we will need for later steps so this script does not have to be run again.
 ```{r}
-save(big.bY.shape, big.sp.info, sm.bY.shape, sm.sp.info, rep.spec, big.pt.names, sm.pt.names, file = "../Data/Processed/01-bilat-data-w-ERR.rda")
-save(B, S, big.pt.names, sm.pt.names, big.sp.info, sm.sp.info, rep.spec, file = "../Data/Processed/01-data-for-appendix.rda")
+save(shape, sp.info, rep.spec, pt.names, file = "../Data/Processed/01-bilat-data-w-ERR.rda")
 ```
