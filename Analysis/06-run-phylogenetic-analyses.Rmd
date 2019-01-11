@@ -1,7 +1,7 @@
 ---
-title: "06-run-phylogenetic-analyses"
+title: "04-measure-evolutionary-allometry"
 author: "Ariel Marcy"
-date: "2018-11-19"
+date: "2019-01-11"
 output: html_document
 ---
 
@@ -27,15 +27,30 @@ library(nlme)
 library(caper)
 library(car)
 source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/03-sm-PCA-with-color.rda")
-load(file = "../Data/Processed/04-sm-data-with-traits.rda")
+load(file = "../Data/Processed/02-main-data.rda")
 ```
 
-### Rename shape array to match phylogeny
-First, we'll rename the dimnames for the shape dataset so that it's only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
+### Set up shape array for phylogentic analyses
+First, attach long form names for genus and species to the metadata.
+```{r}
+# Get names from trait information gathered from the book, Native Mice and Rats by Dr.s Bill Breed and Fred Ford (2007). 
+traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
+traits$Taxa <- paste(str_sub(traits$Genus, 1, 1), str_sub(traits$Species, 1, 3), sep = "_")  # make matching Taxa column
+info.traits <- merge(info, traits, by = "Taxa", sort = F)
+info.traits <- info.traits[order(info.traits$Order), ]  # preserve shape specimen order
+
+# Rename Genus & Species columns they have their old, short column name, long form Genus and Species columns will keep Genus.y and Species.y
+names(info.traits)[names(info.traits) == 'Genus.x'] <- 'Genus'
+names(info.traits)[names(info.traits) == 'Species.x'] <- 'Species'
+
+# Remove unnecessary columns
+info.phylo <- info.traits[, c(1:4, 8, 9, 11, 12)]
+```
+
+Second, rename dimnames for the shape dataset so that it's only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
 ```{r}
 shape.phylo <- shape  # initiate shape optimized for phylogenetics
-dimnames(shape.phylo)[[3]] <- as.list(paste(info.traits$Genus.y, info.traits$Species.y, sep = "_"))
+dimnames(shape.phylo)[[3]] <- as.list(paste(info.phylo$Genus.y, info.phylo$Species.y, sep = "_"))
 ```
 
 ## Calculate mean shape and centroid size for each species
@@ -43,13 +58,13 @@ This step has to be done before working with the tree. To calculate the mean sha
 
 To get the means, we'll subset for each unique species. The mean shape function, `mshape()` gives a 2D array as an output. Therefore, the `for` loop below stores mean shapes in a 2D array format recognized by `geomorph`: (n x [p x k]), where n is number of specimens, p is number of landmark points, and k is number of dimensions. Then we convert to a 3D array with format (p x k x n) since a 3D array is required by most `geomorph` functions. 
 ```{r}
-info.traits$FullName <- paste(info.traits$Genus.y, info.traits$Species.y, sep = "_")  # give names to metadata in the same format as the tree "Genus_species"
-full.names <- unique(info.traits$FullName)
+info.phylo$FullName <- paste(info.phylo$Genus.y, info.phylo$Species.y, sep = "_")  # give names to metadata in the same format as the tree "Genus_species"
+full.names <- unique(info.phylo$FullName)
 
 # For loop to subset shape data by species and calculate mean shape
 mean.shapes.2D <- NULL  # initiate blank data frame
 for (i in 1:length(full.names)) {  
-        is.taxa <- which(info.traits$FullName == full.names[i])
+        is.taxa <- which(info.phylo$FullName == full.names[i])
         shape.for.mean.2D <- shape.phylo[, , is.taxa]
         mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # mshape() finds mean specimen; rbind() is critical, output cols must = 3 for 3D
 }
@@ -57,33 +72,20 @@ mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array
 
 # Make names match the tree, make metadata match mean shape data (alphabetical)
 dimnames(mean.shapes)[[3]] <- full.names  # shape names match tree names
-info.means <- info.traits[!duplicated(info.traits$Taxa), -c(4, 5)]  # make metadata; remove columns that don't make sense: CatNum and Order
+info.means <- info.phylo[!duplicated(info.phylo$Taxa), -c(4, 5)]  # make metadata; remove columns that don't make sense: CatNum and Order
 info.means <- info.means[order(info.means$FullName), ]  # order same as shape's
 ```
 
 ### Calculate mean centroid size
-We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size is stored in the info.traits metadata table.
+We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size is stored in the info.phylo metadata table.
 ```{r}
 # Calculate mean centroid size and store in info.means
-cs.means <- aggregate(info.traits[, 6], list(Taxa = info.traits$FullName), mean)
+cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)
 info.means$Csize <- cs.means[, 2]  # store in vector; aggregate alphabetized it
 names(info.means)[names(info.means) == 'Csize'] <- 'MeanCsize'  # rename column
 
 # Sort shape by alphabetical order, too
 mean.shapes <- mean.shapes[ , , sort(dimnames(mean.shapes)[[3]])]
-```
-
-### Plot PCA of skull shape means by species
-Before adding the tree, we can plot the PCA of mean shapes, which will contain more species than the set subsetted by species found in the tree.
-```{r}
-# Set colors for genera and different points for species within each genus
-col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors
-pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
-
-# Plot PCA of mean shapes
-pca.means <- plotTangentSpace(mean.shapes)
-PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE, flip.axis2 = T)
-legend(0.142, 0.085, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.305)
 ```
 
 ### Correlation of PC1 and PC2 wtih Centroid size
@@ -143,7 +145,7 @@ axisPhylo()
 ```
 
 ### Prune the tree and shape datasets to match each other
-Now that the names in the Smissen & Rowe tree can be compared to our info.traits metadata, we can shape dataset to have all the same species.
+Now that the names in the Smissen & Rowe tree can be compared to our info.phylo metadata, we can shape dataset to have all the same species.
 
 First, prune the tree of species not in the shape data
 ```{r}
@@ -178,45 +180,17 @@ physignal(mean.shapes.tree, aus.tree)
 
 ### Evolutionary Allometry
 ```{r}
-# Centroid size only
-evo.allo.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize)
-evo.allo <- procD.pgls(shape ~CS, aus.tree, data = evo.allo.gdf)
-evo.allo
-
-# R squared for evolutionary allometry without genus interaction
-evo.allo$R2
-```
-
-### Evolutionary Allometry by Genus
-```{r}
 # Interaction with genus
-evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$EGenus)
-evo.allo.gen <- procD.pgls(shape ~CS * genus, aus.tree, data = evo.allo.gen.gdf)
+evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$Genus)
+evo.allo.gen <- procD.pgls(shape ~log(CS) * genus, aus.tree, data = evo.allo.gen.gdf)
 evo.allo.gen
 
 # R squared for evolutionary allometry with genus
 evo.allo.gen$R2
-
-# Test of homogeneity of slopes, plus pairwise slopes comparisons
-HOS <- procD.pgls(f1 = shape ~ log(CS) * genus, aus.tree, data = evo.allo.gen.gdf)
-summary(HOS, formula = FALSE)  # formulas too long to print
 ```
 
-**Historical Inference: Evolutionary transitions in size and shape**
-First try with mean shapes:
-```{r}
-ancestral.shapes <- plotGMPhyloMorphoSpace(aus.tree,
-mean.shapes.tree, tip.labels = T, node.labels = F)
-```
-
-Next, try with "size-less" residuals of mean shape:
-```{r}
-ancestral.res <- plotGMPhyloMorphoSpace(aus.tree,
-evo.allo$pgls.residuals, tip.labels = T, node.labels = F)
-```
-
-### Compare evolutionary rates
-Given the new world monkey papers (Chervaud & Marriog 2005, 2009?), we would expect the carnivores to have the slowest rates of evolution and rodents, which evolve along the allometric line to have the greatest rates of evolution. 
+## Compare evolutionary rates
+Given the new world monkey papers (Chervaud & Marriog 2005, 2009), we would expect the carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
 
 First, we need to make sure the data meets the brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
@@ -260,14 +234,3 @@ gp.cvh[which(info.means.tree$Taxa == "P_ora")] <- 2
 names(gp.cvh) <- info.means.tree$FullName
 compare.evol.rates(mean.shapes.tree, aus.tree, gp.cvh)
 ```
-
-### Compare evolutionary rates of centroid size by wave
-```{r}
-Csize <- matrix(info.means.tree$MeanCsize, dimnames = list(info.means.tree$FullName))  # make matrix Csize with names
-gp.wave <- info.means.tree$Wave
-gp.wave[length(gp.wave)] <- 3  # group Mus with invasive Rattus
-names(gp.wave) <- info.means.tree$FullName
-compare.evol.rates(Csize, aus.tree, gp = gp.wave, iter = 49)
-
-```
-AOEs have the highest rate of centroid size evolution, especially compared to _Rattus_. 

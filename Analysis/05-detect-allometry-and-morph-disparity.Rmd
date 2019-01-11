@@ -1,5 +1,5 @@
 ---
-title: "03-measure-allometry"
+title: "03-measure-static-allometry"
 author: "Ariel Marcy"
 date: "2019-01-11"
 output: html_document
@@ -89,7 +89,7 @@ paste("Correlation is", cor.assoc.PC2, "with p =", cor.pval.PC2)
 Correlation of PC2 with size is statistically indistinguishable from 0.
 
 
-## 2) Measure static Allometry: Homogeneity of Slopes Test by species
+## 2) Measure static allometry: Homogeneity of Slopes Test by species
 Isolate only those species with at least 8 specimens.
 ```{r}
 spec.counts <- as.data.frame(table(info$Taxa))
@@ -107,7 +107,7 @@ info.HOS <- info[c(-dataset.rm), ]  # Metadata
 shape.HOS <- shape[, , c(-dataset.rm)]  # Shape dataset
 ```
 
-Code written with Dr Emma Sheratt to export the p-values of slope differences among all species present in the study.
+Run allometry tests as well as a homogeneity of slopes test
 ```{r}
 # Run static allometry test
 spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
@@ -118,15 +118,14 @@ spp.results$aov.table
 spp.results$HOS.test
 summary(spp.results)
 
-# Find pair-wise p-values for slopes for each taxa
+# Find pair-wise p-values for slopes for each taxa, code written with Dr Emma Sheratt
 size <- info$Csize
 spp <- info$Taxa
 pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
                                      f2 = ~log(size) * spp, 
                                      groups = ~spp,  
                                      slope = ~log(size), 
-                                     angle.type = "deg",
-                                     data = spp.gdf)
+                                     angle.type = "deg")
 
 # Export p-values
 write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/19_01_11_static_pwHOS.csv")  # save in Results folder
