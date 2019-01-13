@@ -127,8 +127,11 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
                                      slope = ~log(size), 
                                      angle.type = "deg")
 
+# Correct for multiple comparisons
+pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
+
 # Export p-values
-write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/19_01_11_static_pwHOS.csv")  # save in Results folder
+write.csv(pwHOS.pvals, "../Data/Results/19_01_12_static_pwHOS.csv")  # save in Results folder
 ```
 
 ## 3) Visualize static Allometry: Common Allometric Component & Residuals
@@ -177,4 +180,4 @@ plot(size.less.dispRity)
 Looks like there could be a statistically significant difference, let's test:
 ```{r}
 # Test is from adonis function from vegan package which expects a distance matrix with method = Euclidean 
-test.dispRity(size.less.dispRity, test = t.test) 
+test.dispRity(size.less.dispRity, test = t.test)
