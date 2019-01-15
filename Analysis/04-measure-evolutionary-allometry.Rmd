@@ -207,7 +207,7 @@ evo.allo.gen$R2
 ```
 
 ## Compare evolutionary rates
-Given the new world monkey papers (Chervaud & Marriog 2005, 2009), we would expect the carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
+Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expect the carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
 
 First, we need to make sure the data meets the brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
@@ -215,6 +215,32 @@ First, we need to make sure the data meets the brownian motion assumption requir
 mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
 aus.dtt <- dtt(mean.shapes.tree.2D, aus.tree, plot = TRUE)
 ```
+
+**Carnivores vs non-carnivores**
+```{r}
+is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
+names(is.carnivore) <- info.means.tree$FullName
+compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore)
+```
+This test showed no significant difference in evolutionary rates.
+
+**Herbivores vs non-carnivores**
+```{r}
+is.herbivore <- as.numeric(info.means.tree$Feeding == "Herbivorous")
+names(is.herbivore) <- info.means.tree$FullName
+compare.evol.rates(mean.shapes.tree, aus.tree, is.herbivore)
+
+# Only specialized herbivores P. oralis and M. fuscus
+P.ora <- which(info.means.tree$Taxa == "P_ora")
+M.fus <- which(info.means.tree$Taxa == "M_fus")
+is.sp.herb <- c(P.ora, M.fus)
+herb.grps <- rep(1, dim(info.means.tree)[1])
+herb.grps[is.sp.herb] <- 2
+
+names(herb.grps) <- info.means.tree$FullName
+compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps)
+```
+Intriguingly, the specialized herbivores evolved more quickly than the rest of the group!
 
 **_Notomys_ vs Pseudomys vs AOEs vs Other**
 ```{r}
@@ -227,27 +253,4 @@ names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
 
 # Run analysis
 compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
-names(is.carnivore) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore)
-
-# Carnivores vs waves
-carn.vs.waves <- info.means.tree$Wave - is.carnivore  # makes carnivores = 0
-names(carn.vs.waves) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, carn.vs.waves)
-```
-Neither test showed a significant difference in evolutionary rates. 
-
-**Carnivores vs herbivores**
-Mastacomys fuscus and Pseudomys oralis are the most specialized herbivores.
-```{r}
-gp.cvh <- as.numeric(info.means.tree$Feeding == "Carnivorous")
-gp.cvh[which(info.means.tree$Taxa == "M_fus")] <- 2
-gp.cvh[which(info.means.tree$Taxa == "P_ora")] <- 2
-names(gp.cvh) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, gp.cvh)
 ```
