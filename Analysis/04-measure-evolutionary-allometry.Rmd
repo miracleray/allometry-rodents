@@ -44,7 +44,7 @@ names(info.traits)[names(info.traits) == 'Genus.x'] <- 'Genus'
 names(info.traits)[names(info.traits) == 'Species.x'] <- 'Species'
 
 # Remove unnecessary columns
-info.phylo <- info.traits[, c(1:4, 8, 9, 11, 12)]
+info.phylo <- info.traits[, -c(5:7)]
 ```
 
 Second, rename dimnames for the shape dataset so that it's only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
@@ -72,8 +72,12 @@ mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array
 
 # Make names match the tree, make metadata match mean shape data (alphabetical)
 dimnames(mean.shapes)[[3]] <- full.names  # shape names match tree names
-info.means <- info.phylo[!duplicated(info.phylo$Taxa), -c(4, 5)]  # make metadata; remove columns that don't make sense: CatNum and Order
+info.means <- info.phylo[!duplicated(info.phylo$Taxa), ]  # make metadata; remove columns that don't make sense: CatNum and Order
 info.means <- info.means[order(info.means$FullName), ]  # order same as shape's
+
+# Make an Effective Genus column to better categorize Mas phylogenetically
+info.means$EGenus <- info.means$Genus
+info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
 ```
 
 ### Calculate mean centroid size
@@ -85,15 +89,28 @@ info.means$Csize <- cs.means[, 2]  # store in vector; aggregate alphabetized it
 names(info.means)[names(info.means) == 'Csize'] <- 'MeanCsize'  # rename column
 
 # Sort shape by alphabetical order, too
-mean.shapes <- mean.shapes[ , , sort(dimnames(mean.shapes)[[3]])]
+mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]
+```
+
+### Plot PCA of skull shape means by species
+Before adding the tree, we can plot the PCA of mean shapes, which will contain more species than the set subsetted by species found in the tree.
+```{r}
+# Set colors for genera and different points for species within each genus
+col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors
+pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
+
+# Plot PCA of mean shapes
+pca.means <- plotTangentSpace(mean.shapes)
+PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
+legend(0.142, 0.085, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.305)
 ```
 
 ### Correlation of PC1 and PC2 wtih Centroid size
 Here we find Pearson's r for correlation with PC1 and PC2.
 ```{r}
-cor.1 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 1], method = "pearson")  # remember to flip axis
+cor.1 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 1], method = "pearson")  # flipped axis to match graph above
 cor.1  # PC1
-cor.2 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 2], method = "pearson")  
+cor.2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")  
 cor.2  # PC2
 ```
 
