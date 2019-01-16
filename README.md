@@ -39,6 +39,6 @@ The analysis workflow is broken down into smaller scripts explained below. Each 
 * **03-measure-static-allometry.Rmd** Tests correlation of PC1 and PC2 with centroid size. Uses `geomorph`'s `procD.allometry()` and `advanced.procD.lm()` to test for significant differences in allometric slopes and intercepts by genus and by clade. Plots allometric relationships using the Common Allometric Component. Plots "size-less" residuals of static allometry.
 * **04-measure-evolutionary-allometry.Rmd** Organizes the tree, mean shape data, and metadata in preparation for phylogenetic analyses of shape using the 2018 Smissen & Rowe tree. Runs phylogenetic analyses including evolutionary signal, evolutionary rates, and phylogenetically-informed `procD.pgls()` linear model for evolutionary allometry.
 
-**Custom functions in the utility file:** The analyses call custom functions that are defined in the ..Data/Functions/utilities.R file.
-
 * **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the 4 museums' original metadata.  
+
+**Custom functions in the utility file:** The analyses call custom functions that are defined in the ..Data/Functions/utilities.R file.
