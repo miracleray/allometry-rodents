@@ -1,0 +1,65 @@
+---
+title: "Sup01-combine-metadata-sex-info"
+author: "Ariel Marcy"
+date: "1/16/2019"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
+
+# Load packages
+library(dplyr)
+library(stringr)
+library(stringi)
+source("../Functions/utilities.R")  # custom functions
+load(file = "../Data/Processed/02-main-data.rda")
+```
+
+## Prepare metadata for comparison with analyses metadata
+First, load in the museum metadata
+```{r}
+AM_rats <- read.csv("../Data/Raw/AM_muridae_skulls.csv", header = TRUE)
+MV_rats <- read.csv("../Data/Raw/MV_muridae_skulls.csv", header = TRUE)
+QM_rats <- read.csv("../Data/Raw/QM_muridae_skulls.csv", header = TRUE)
+SAM_rats <- read.csv("../Data/Raw/SAM_muridae_skulls.csv", header = TRUE)
+```
+
+Next, format the "CatNum" columns & isolate it with the Sex column
+```{r}
+# Australian Museum
+AM_rats$CatNum <- str_replace(AM_rats$RegNum, "M.", "M")  # "CatNum" column
+AM_rats$CatNum <- str_remove(AM_rats$CatNum, "[.]([0-9]{3})")  # removes .00X on ends
+AMrats <- AM_rats[, c("CatNum", "Sex")]
+AMrats$Museum <- "AM"
+
+# Museum Victoria
+MV_rats$CatNum <- paste(MV_rats$Reg, MV_rats$RegNum, sep = "")
+MVrats <- MV_rats[, c("CatNum", "Sex")]
+MVrats$Museum <- "MV"
+
+# Queensland Museum
+QMrats <- QM_rats[, c("CatNum", "Sex")]
+QMrats$Museum <- "QM"
+
+# South Australian Museum
+SAM_rats$CatNum <- paste(SAM_rats$Prefix, SAM_rats$Reg.Number, sep = "")
+SAMrats <- SAM_rats[, c("CatNum", "Sex")]
+SAMrats$Museum <- "SAM"
+```
+
+## Combine museum metadata with analysis metadata
+This will allow us to create the supplementary datafile for the paper.
+```{r}
+# Make master museum metadata file
+museMD <- rbind(AMrats, MVrats, QMrats, SAMrats)
+
+# Merge
+info.sex <- merge(info, museMD, by = "CatNum", all.x = TRUE, sort = FALSE)
+
+# Export
+info.sex <- info.sex[, -c(4, 5, 7)] # Remove unneded columns
+write.csv(info.sex, "../Data/Results/ListOfSpecimensWithSex.csv")
+```
+
