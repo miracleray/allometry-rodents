@@ -57,10 +57,14 @@ We test for a significant correlation using Pearson's R and plot centroid size v
 # Run PCA
 PCA <- plotTangentSpace(shape, groups = sp.col.gen, axis1 = 1, axis2 = 2, verbose = T)
 
+PlotPCA(PCA, 1, 2, sp.col.gen)
+
 # Find Pearson's r for correlation with PC1
 cor <- cor.test(info$Csize, PCA$pc.scores[, 1], method = "pearson")
 cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
 cor.assoc
+cor$p.value
+
 ```
 
 ### Plot centroid size versus PC1 to see correlation

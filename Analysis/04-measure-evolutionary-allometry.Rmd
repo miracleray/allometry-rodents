@@ -18,6 +18,7 @@ Many of these steps are based on Dr Meriam Zelditch et al.'s A Practical Compani
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
+library(dispRity)
 library(stringr)
 library(data.table)
 library(geomorph)
@@ -211,10 +212,11 @@ Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expe
 
 First, we need to make sure the data meets the brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
-### NOT WORKING YET ###
+# Plot disparity through time
 mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
-aus.dtt <- dtt(mean.shapes.tree.2D, aus.tree, plot = TRUE)
+aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
 ```
+Data mostly fits the Brownian Motion model with one possible exception around relative time 0.65.
 
 **Carnivores vs non-carnivores**
 ```{r}
