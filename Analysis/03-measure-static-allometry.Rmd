@@ -112,7 +112,7 @@ Run allometry tests as well as a homogeneity of slopes test
 ```{r}
 # Run static allometry test
 spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, data = spp.gdf)
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
 
 # Examine results
 spp.results$aov.table
@@ -125,7 +125,8 @@ spp <- info$Taxa
 pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
                                      f2 = ~log(size) * spp, 
                                      groups = ~spp,  
-                                     slope = ~log(size), 
+                                     slope = ~log(size),
+                                     iter = 500,
                                      angle.type = "deg")
 
 # Correct for multiple comparisons
