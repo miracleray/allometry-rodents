@@ -263,3 +263,16 @@ herb.grps[is.sp.herb] <- 1
 names(herb.grps) <- info.means.tree$FullName
 compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps)
 ```
+
+**Large frugivores vs others**
+```{r}
+# Only large frugivores U. caudimaculatus and M. gouldii
+U.cau <- which(info.means.tree$Taxa == "U_cau")
+M.gou <- which(info.means.tree$Taxa == "M_gou")
+is.frug <- c(U.cau, M.gou)
+frug.grps <- rep(2, dim(info.means.tree)[1])
+frug.grps[is.frug] <- 1
+
+names(frug.grps) <- info.means.tree$FullName
+compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps)
+```
