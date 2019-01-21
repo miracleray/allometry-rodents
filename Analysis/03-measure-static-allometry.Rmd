@@ -64,22 +64,19 @@ cor <- cor.test(info$Csize, PCA$pc.scores[, 1], method = "pearson")
 cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
 cor.assoc
 cor$p.value
-
 ```
 
 ### Plot centroid size versus PC1 to see correlation
 ```{r}
-plot(x = info$Csize, 
+plot(x = log(info$Csize), 
      y = PCA$pc.scores[, 1], 
-     xlim = c(110, 440), 
-     ylim = c(-0.11, 0.14), 
      col = sp.col.gen, 
      pch = 16, 
-     xlab = "Centroid size", 
+     xlab = "Log Centroid size", 
      ylab = "PC1 score", 
-     main = "PC1 vs Centroid Size")
+     main = "Static Allometry: PC1 vs Log Centroid Size")
 legend(415, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.66)
-text(300, 0, paste("r =", cor.assoc), col = "dark grey")
+text(5.7, 0, paste("r =", cor.assoc), col = "dark grey")
 ```
 
 ### Test for correlation in PC2

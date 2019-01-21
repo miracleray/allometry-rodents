@@ -110,9 +110,19 @@ legend(0.142, 0.085, legend = info.means$Taxa, col = col.means, border = NULL, p
 Here we find Pearson's r for correlation with PC1 and PC2.
 ```{r}
 cor.1 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 1], method = "pearson")  # flipped axis to match graph above
-cor.1  # PC1
+cor.1 <- round(unname(cor.1$estimate), digits = 3)  # PC1
 cor.2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")  
 cor.2  # PC2
+
+# Visualize Log(CS) vs PC1
+plot(x = log(info.means$MeanCsize), 
+     y = -pca.means$pc.scores[, 1], 
+     col = col.means, 
+     pch = 16, 
+     xlab = "Log Centroid size", 
+     ylab = "PC1 score", 
+     main = "Evolutionary Allometry: PC1 vs Log Centroid Size")
+text(5.6, 0, paste("r =", cor.1), col = "dark grey")
 ```
 
 ## Prepare the tree data for phylogenetic analyses
@@ -216,7 +226,18 @@ First, we need to make sure the data meets the brownian motion assumption requir
 mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
 aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
 ```
-Data mostly fits the Brownian Motion model with one possible exception around relative time 0.65.
+Data mostly fits the Brownian Motion model with one possible exception around relative time ~0.65.
+
+**_Notomys_ versus other species**
+```{r}
+# Set up grouping factor
+gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
+gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
+names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
+
+# Run analysis
+compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys)
+```
 
 **Carnivores vs non-carnivores**
 ```{r}
@@ -226,7 +247,7 @@ compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore)
 ```
 This test showed no significant difference in evolutionary rates.
 
-**Herbivores vs non-carnivores**
+**Herbivores vs other species**
 ```{r}
 is.herbivore <- as.numeric(info.means.tree$Feeding == "Herbivorous")
 names(is.herbivore) <- info.means.tree$FullName
@@ -236,23 +257,9 @@ compare.evol.rates(mean.shapes.tree, aus.tree, is.herbivore)
 P.ora <- which(info.means.tree$Taxa == "P_ora")
 M.fus <- which(info.means.tree$Taxa == "M_fus")
 is.sp.herb <- c(P.ora, M.fus)
-herb.grps <- rep(1, dim(info.means.tree)[1])
-herb.grps[is.sp.herb] <- 2
+herb.grps <- rep(2, dim(info.means.tree)[1])
+herb.grps[is.sp.herb] <- 1
 
 names(herb.grps) <- info.means.tree$FullName
 compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps)
-```
-Intriguingly, the specialized herbivores evolved more quickly than the rest of the group!
-
-**_Notomys_ vs Pseudomys vs AOEs vs Other**
-```{r}
-# Set up grouping factor
-gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
-gp.notomys[which(info.means.tree$Wave == 1)] <- 1  # set AOEs to 1
-gp.notomys[which(info.means.tree$Genus == "Not")] <- 2  # set Notomys
-gp.notomys[which(info.means.tree$EGenus == "Pse")] <- 3  # set Pseudomys
-names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
-
-# Run analysis
-compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys)
 ```
