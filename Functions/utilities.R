@@ -275,6 +275,7 @@ PlotPCA <- function(pca, PCx, PCy, col.grp, pch.grp = 16, flip.axis1 = F, flip.a
         
         PCA.plot <- plot(x = pca$pc.scores[, PCx],
                          y = pca$pc.scores[, PCy], 
+                         main = "Principal Component Analysis",
                          xlab = PCx.lab, 
                          ylab = PCy.lab,
                          asp = TRUE,
