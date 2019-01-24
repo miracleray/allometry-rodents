@@ -130,10 +130,10 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
                                      angle.type = "deg")
 
 # Correct for multiple comparisons
-pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
+pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "BH")  # Hommel is a more powerful method for independent hypothesis tests
 
 # Export p-values
-write.csv(pwHOS.pvals, "../Data/Results/19_01_12_static_pwHOS.csv")  # save in Results folder
+write.csv(pwHOS.pvals, "../Data/Results/19_01_24_static_pwHOS.csv")  # save in Results folder
 ```
 
 ## 3) Visualize static Allometry: Common Allometric Component & Residuals

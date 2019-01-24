@@ -276,3 +276,7 @@ frug.grps[is.frug] <- 1
 names(frug.grps) <- info.means.tree$FullName
 compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 500)
 ```
+
+```{r}
+p.adjust(c(0.601, 0.507, 0.014, 0.002), method = "bonferroni")
+```
