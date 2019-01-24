@@ -103,7 +103,7 @@ pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
 # Plot PCA of mean shapes
 pca.means <- plotTangentSpace(mean.shapes)
 PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
-legend(0.142, 0.085, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.305)
+legend(0.125, 0.047, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 2)
 ```
 
 ### Correlation of PC1 and PC2 wtih Centroid size
@@ -159,11 +159,8 @@ _Melomys bannisteri_ (NG) to _Melomys burtoni_ (Aus)
 
 ```{r}
 renamed.tree <- no.cat.tree
-P.mac <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_macrourus"))
+P.mac <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
 renamed.tree$tip.label[P.mac] <- paste("Pogonomys_mollipilosis")
-
-M.ban <- which(str_detect(no.cat.tree$tip.label, "Melomys_bannisteri"))
-renamed.tree$tip.label[M.ban] <- paste("Melomys_burtoni")
 
 # Optional plot
 plot(renamed.tree)
