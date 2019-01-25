@@ -114,15 +114,22 @@ cor.1 <- round(unname(cor.1$estimate), digits = 3)  # PC1
 cor.2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")  
 cor.2  # PC2
 
+# Call out specialized herbivores with squares
+pch.evo.allo <- rep(16, length(col.means))
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 15 
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 15
+
 # Visualize Log(CS) vs PC1
 plot(x = log(info.means$MeanCsize), 
-     y = -pca.means$pc.scores[, 1], 
+     y = -pca.means$pc.scores[, 1],
+     xlim = c(4.7, 6.1),
      col = col.means, 
-     pch = 16, 
+     pch = pch.evo.allo, 
      xlab = "Log Centroid size", 
      ylab = "PC1 score", 
      main = "Evolutionary Allometry: PC1 vs Log Centroid Size")
 text(5.6, 0, paste("r =", cor.1), col = "dark grey")
+legend(6, 0.130, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
 ```
 
 ## Prepare the tree data for phylogenetic analyses
