@@ -140,15 +140,15 @@ write.csv(pwHOS.pvals, "../Data/Results/19_01_24_static_pwHOS.csv")  # save in R
 In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted crania shape (estimated with the common allometric component or CAC).
 ```{r}
 # Plot static allometry
-plot(x = spp.results$size,
+plot(x = log(spp.results$size),
      y = spp.results$CAC,
-     xlim = c(110, 435),
+     xlim = c(4.7, 6.13),
      col = sp.col.gen, 
      pch = 16, 
      main = "Predicted Allometric Shape by Genus",
      xlab = "Log centroid size", 
      ylab = "Predicted shape (CAC)")
-legend(410, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.65)
+legend(6.02, 0.055, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
 ```
 
 ### Create multi-panel figure
