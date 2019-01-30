@@ -119,7 +119,7 @@ spp.results$aov.table
 spp.results$HOS.test
 summary(spp.results)
 
-# Find pair-wise p-values for slopes for each taxa, code written with Dr Emma Sheratt
+# Find pair-wise p-values for slopes for each taxa, code written with Dr Emma Sherratt
 size <- info$Csize
 spp <- info$Taxa
 pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
