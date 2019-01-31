@@ -139,19 +139,46 @@ write.csv(pwHOS.pvals, "../Data/Results/19_01_24_static_pwHOS.csv")  # save in R
 ## 3) Visualize static Allometry: Common Allometric Component & Residuals
 In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted crania shape (estimated with the common allometric component or CAC).
 ```{r}
+# Set colors for genera and different points for species within each genus
+info$EGenus <- info$Genus
+info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
+
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
+pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
+
 # Plot static allometry
 plot(x = log(spp.results$size),
      y = spp.results$CAC,
-     xlim = c(4.7, 6.13),
+     xlim = c(4.7, 6.3),
      col = sp.col.gen, 
-     pch = 16, 
+     pch = pch.spp,
+     bg = sp.col.gen,
+     main = "Predicted Allometric Shape by Species",
+     xlab = "Log centroid size", 
+     ylab = "Predicted shape (CAC)")
+legend(6.03, 0.051, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.42, ncol = 2)
+```
+
+### Create the same figure for genera (supplemental info)
+```{r}
+# Run allometry test on genera
+gen.gdf <- geomorph.data.frame(shape = shape, gen = info$EGenus, size = info$Csize)
+gen.results <- procD.allometry(shape ~ log(size), f2 = ~gen, iter = 500, data = gen.gdf)
+summary(gen.results)
+
+# Plot predicted allometric shape
+plot(x = log(gen.results$size),
+     y = gen.results$CAC,
+     xlim = c(4.7, 6.15),
+     col = sp.col.gen, 
+     pch = 16,
      main = "Predicted Allometric Shape by Genus",
      xlab = "Log centroid size", 
      ylab = "Predicted shape (CAC)")
-legend(6.02, 0.055, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
+legend(6.04, 0.12, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
 ```
 
-### Create multi-panel figure
+## Create multi-panel figure
 CAC plot on top with PCA and PC1 vs CS on the bottom
 ```{r}
 layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
