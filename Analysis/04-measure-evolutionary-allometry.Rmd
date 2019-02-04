@@ -242,66 +242,7 @@ evo.allo.gen
 evo.allo.gen$R2
 ```
 
-## Compare evolutionary rates
-Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expect the carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
-
-First, we need to make sure the data meets the brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
-```{r} 
-# Plot disparity through time
-mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
-aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
-```
-Data mostly fits the Brownian Motion model with one possible exception around relative time ~0.65.
-
-**_Notomys_ versus other species**
+### Save intermediate data
 ```{r}
-# Set up grouping factor
-gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
-gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
-names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
-
-# Run analysis
-compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
-names(is.carnivore) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
-```
-This test showed no significant difference in evolutionary rates.
-
-**Herbivores vs other species**
-```{r}
-is.herbivore <- as.numeric(info.means.tree$Feeding == "Herbivorous")
-names(is.herbivore) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, is.herbivore, iter = 500)
-
-# Only specialized herbivores P. oralis and M. fuscus
-P.ora <- which(info.means.tree$Taxa == "P_ora")
-M.fus <- which(info.means.tree$Taxa == "M_fus")
-is.sp.herb <- c(P.ora, M.fus)
-herb.grps <- rep(2, dim(info.means.tree)[1])
-herb.grps[is.sp.herb] <- 1
-
-names(herb.grps) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
-```
-
-**Large frugivores vs others**
-```{r}
-# Only large frugivores U. caudimaculatus and M. gouldii
-U.cau <- which(info.means.tree$Taxa == "U_cau")
-M.gou <- which(info.means.tree$Taxa == "M_gou")
-is.frug <- c(U.cau, M.gou)
-frug.grps <- rep(2, dim(info.means.tree)[1])
-frug.grps[is.frug] <- 1
-
-names(frug.grps) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 500)
-```
-
-```{r}
-p.adjust(c(0.601, 0.507, 0.014, 0.002), method = "bonferroni")
+save(mean.shapes, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
 ```
