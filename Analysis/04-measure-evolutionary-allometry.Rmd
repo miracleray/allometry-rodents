@@ -244,5 +244,5 @@ evo.allo.gen$R2
 
 ### Save intermediate data
 ```{r}
-save(mean.shapes, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
+save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
 ```

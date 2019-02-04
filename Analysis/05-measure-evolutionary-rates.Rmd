@@ -7,21 +7,17 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Evolutionary rates
 Evolutionary studies must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
-Many of these steps are based on Dr Meriam Zelditch et al.'s A Practical Companion (2012). 
-> Zelditch ML Swiderski D Sheets HD. 2012. A practical companion to geometric morphometrics for biologists: running analyses in freely-available software. Available at: http://booksite.elsevier.com/9780123869036.
-
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(dispRity)
-library(stringr)
-library(data.table)
 library(geomorph)
+library(geiger)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
@@ -46,23 +42,20 @@ gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
 names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
 
 # Run analysis
-compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
+not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
+summary(not.test)
 ```
 
 **Carnivores vs non-carnivores**
 ```{r}
 is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
 names(is.carnivore) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
+carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
 ```
 This test showed no significant difference in evolutionary rates.
 
 **Herbivores vs other species**
 ```{r}
-is.herbivore <- as.numeric(info.means.tree$Feeding == "Herbivorous")
-names(is.herbivore) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, is.herbivore, iter = 500)
-
 # Only specialized herbivores P. oralis and M. fuscus
 P.ora <- which(info.means.tree$Taxa == "P_ora")
 M.fus <- which(info.means.tree$Taxa == "M_fus")
@@ -71,7 +64,7 @@ herb.grps <- rep(2, dim(info.means.tree)[1])
 herb.grps[is.sp.herb] <- 1
 
 names(herb.grps) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
+herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
 ```
 
 **Large frugivores vs others**
@@ -84,9 +77,10 @@ frug.grps <- rep(2, dim(info.means.tree)[1])
 frug.grps[is.frug] <- 1
 
 names(frug.grps) <- info.means.tree$FullName
-compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 500)
+frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 500)
 ```
 
+### Adujust p-values for multiple comparisons
 ```{r}
-p.adjust(c(0.601, 0.507, 0.014, 0.002), method = "bonferroni")
+p.adjust(c(not.test, carn.test$P.value, herb.test$P.value, frug.test$P.value), method = "bonferroni")
 ```
