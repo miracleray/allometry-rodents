@@ -103,7 +103,7 @@ pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
 # Plot PCA of mean shapes
 pca.means <- plotTangentSpace(mean.shapes)
 PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
-legend(0.125, 0.047, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 2)
+legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 3)
 ```
 
 ### Correlation of PC1 and PC2 wtih Centroid size
@@ -130,6 +130,27 @@ plot(x = log(info.means$MeanCsize),
      main = "Evolutionary Allometry: PC1 vs Log Centroid Size")
 text(5.6, 0, paste("r =", cor.1), col = "dark grey")
 legend(6, 0.130, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
+```
+
+### ProcD Allometry visualization
+```{r}
+evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
+mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
+
+cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$CAC, method = "pearson")
+cor.allo.short <- round(cor.allo$estimate, 2)
+
+# Plot predicted allometric shape
+plot(x = log(info.means$MeanCsize),
+     y = mean.allo$CAC,
+     xlim = c(4.7, 6.13),
+     col = col.means, 
+     pch = 16,
+     main = "Predicted Mean Allometric Shape",
+     xlab = "Log centroid size", 
+     ylab = "Common Allometric Component")
+legend(6.02, 0.13, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
+text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ```
 
 ## Prepare the tree data for phylogenetic analyses
