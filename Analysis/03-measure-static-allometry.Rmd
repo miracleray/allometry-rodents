@@ -242,3 +242,9 @@ Looks like there could be a statistically significant difference, let's test:
 ```{r}
 # Test is from adonis function from vegan package which expects a distance matrix with method = Euclidean 
 test.dispRity(size.less.dispRity, test = t.test)
+```
+
+### Save intermediate data
+```{r}
+save(col.gen, sp.col.gen, col.phylo, names.phylo, file = "../Data/Processed/03-color-data.rda")
+```

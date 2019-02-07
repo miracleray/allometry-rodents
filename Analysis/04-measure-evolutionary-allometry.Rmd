@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '../aus-rodent-skulls')
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Phylogenetic analyses
@@ -29,6 +29,7 @@ library(caper)
 library(car)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
+load(file = "../Data/Processed/03-color-data.rda")
 ```
 
 ### Set up shape array for phylogentic analyses
