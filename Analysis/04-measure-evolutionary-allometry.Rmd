@@ -107,32 +107,6 @@ PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
 legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 3)
 ```
 
-### Correlation of PC1 and PC2 wtih Centroid size
-Here we find Pearson's r for correlation with PC1 and PC2.
-```{r}
-cor.1 <- cor.test(info.means$MeanCsize, -pca.means$pc.scores[, 1], method = "pearson")  # flipped axis to match graph above
-cor.1 <- round(unname(cor.1$estimate), digits = 3)  # PC1
-cor.2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")  
-cor.2  # PC2
-
-# Call out specialized herbivores with squares
-pch.evo.allo <- rep(16, length(col.means))
-pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 15 
-pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 15
-
-# Visualize Log(CS) vs PC1
-plot(x = log(info.means$MeanCsize), 
-     y = -pca.means$pc.scores[, 1],
-     xlim = c(4.7, 6.1),
-     col = col.means, 
-     pch = pch.evo.allo, 
-     xlab = "Log Centroid size", 
-     ylab = "PC1 score", 
-     main = "Evolutionary Allometry: PC1 vs Log Centroid Size")
-text(5.6, 0, paste("r =", cor.1), col = "dark grey")
-legend(6, 0.130, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
-```
-
 ### ProcD Allometry visualization
 ```{r}
 evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
@@ -141,16 +115,51 @@ mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$CAC, method = "pearson")
 cor.allo.short <- round(cor.allo$estimate, 2)
 
+# Call out specialized herbivores with squares
+pch.evo.allo <- rep(16, length(col.means))
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 15 
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 15
+
 # Plot predicted allometric shape
 plot(x = log(info.means$MeanCsize),
      y = mean.allo$CAC,
      xlim = c(4.7, 6.13),
      col = col.means, 
-     pch = 16,
+     pch = pch.evo.allo,
      main = "Predicted Mean Allometric Shape",
      xlab = "Log centroid size", 
      ylab = "Common Allometric Component")
 legend(6.02, 0.13, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
+text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
+```
+
+## Create multi-panel figure
+CAC plot on top with PCA and PC1 vs CS on the bottom
+```{r}
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
+
+# PCA plot
+plot(x = -pca.means$pc.scores[, 1],
+     y = pca.means$pc.scores[, 2],
+     xlim = c(-0.07, 0.2),
+     col = col.means,
+     pch = pch.means,
+     bg = col.means,
+     main = "Principal Component Analysis",
+     xlab = "PC1", 
+     ylab = "PC2")
+legend(0.13, 0.055, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, pt.cex = 1.2, ncol = 4)
+
+# CAC plot
+plot(x = log(info.means$MeanCsize),
+     y = mean.allo$CAC,
+     xlim = c(4.75, 6.13),
+     col = col.means, 
+     pch = pch.evo.allo,
+     main = "Predicted Mean Allometric Shape",
+     xlab = "Log centroid size", 
+     ylab = "CAC")
+legend(6.02, 0.13, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.4, pt.cex = 1, ncol = 2)
 text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ```
 
@@ -159,9 +168,10 @@ The commands in `geomorph` require the tree and datasets to have exactly the sam
 
 ### Load in phylogenetic tree
 The most recent tree for Australian rodents is from Smissen & Rowe 2018, Figure 2. The tree is a fossil calibrated ultrametric tree from BEAST2 for Hydromini, which includes all the Australo-Papuan old endemics in Murinae.
+
+This tree adds more species from Australia to the Smissen & Rowe phylogeny. 
 ```{r}
-Rowe.tree <- "../Data/Processed/Smissen-Rowe-2018-concat.tre"  # 
-raw.tree <- read.tree(Rowe.tree)
+raw.tree <- read.nexus("../Data/Processed/Marcy-BEAST01.con.tre")
 ```
 
 ### Extract only Genus and Species names from the tree
@@ -179,23 +189,16 @@ for (i in 1:length(label.list)) {
 }
 ```
 
-### Rename nodes
-Since the 2018 Smissen & Rowe tree focused primarily on New Guinae species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to rename some of the nodes with Australian species. 
+### Rename node
+Since the 2018 Smissen & Rowe tree focused primarily on New Guinae species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to rename one of the nodes with the Australian species. 
 
-**Renamed nodes:**
-_Pogonomys macruourus_ (NG) to _Pogonomys mollipilosus_ (Aus)
-_Melomys bannisteri_ (NG) to _Melomys burtoni_ (Aus)
+**Renamed node:**
+_Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
 
 ```{r}
 renamed.tree <- no.cat.tree
-P.mac <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
-renamed.tree$tip.label[P.mac] <- paste("Pogonomys_mollipilosis")
-
-# Optional plot
-plot(renamed.tree)
-tiplabels(cex = 0.1)
-nodelabels(cex = 0.1)
-axisPhylo()
+P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
+renamed.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
 ```
 
 ### Prune the tree and shape datasets to match each other
