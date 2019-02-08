@@ -4,7 +4,7 @@ Code author: Ariel E. Marcy
 To cite the paper and/or code:
 > Coming soonish
 
-As of January 2018, this is still a work in progress.
+As of February 2018, this is still a work in progress.
 
 *All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
 
@@ -26,9 +26,9 @@ If you use these data, please cite the original authors:
 > Breed B & Ford F. 2007. Native Mice and Rats. Australian Natural History Series, CSIRO Publishing: Colling-wood, Victoria, Australia, 185 pp. ISBN 978-0-6430-9166-5.
 
 **Phylogenetic data:**
-* [Fossil calibrated ultrametric tree from Smissen & Rowe 2018](/Data/Processed/Smissen-Rowe-2018-concat.tre)
+* [Fossil calibrated ultrametric tree modified from Smissen & Rowe 2018](/Data/Processed/Marcy-BEAST01.con.tre)
 
-If you use these data, please cite the original authors:
+If you use these data, please cite this paper and the original authors:
 > Smissen PJ & Rowe KC. 2018. Repeated biome transitions in the evolution of Australian Rodents. Molecular Phylogenetics and Evolution. 128:182–191. doi: 10.1016/j.ympev.2018.07.015.
     
 ## Analyses
