@@ -52,7 +52,6 @@ names(is.carnivore) <- info.means.tree$FullName
 carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
 summary(carn.test)
 ```
-This test showed no significant difference in evolutionary rates.
 
 **Herbivores vs other species**
 ```{r}

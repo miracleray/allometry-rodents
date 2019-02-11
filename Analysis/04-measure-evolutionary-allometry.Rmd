@@ -136,6 +136,14 @@ text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ## Create multi-panel figure
 CAC plot on top with PCA and PC1 vs CS on the bottom
 ```{r}
+# Write x and y labels with proportion of variance for PCx and PCy
+PCs <- pca.means$pc.summary$importance
+PCx.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
+PCx.lab <- paste("PC", 1, " (", PCx.per, "%)", sep = "")
+PCy.per <- round(PCs[2, 2] * 100, digits = 1)
+PCy.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
+
+
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
 
 # PCA plot
@@ -146,8 +154,8 @@ plot(x = -pca.means$pc.scores[, 1],
      pch = pch.means,
      bg = col.means,
      main = "Principal Component Analysis",
-     xlab = "PC1", 
-     ylab = "PC2")
+     xlab = PCx.lab, 
+     ylab = PCy.lab)
 legend(0.13, 0.055, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, pt.cex = 1.2, ncol = 4)
 
 # CAC plot
