@@ -252,6 +252,11 @@ evo.allo.gen
 
 # R squared for evolutionary allometry with genus
 evo.allo.gen$R2
+
+# Without interaction term
+evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$Genus)
+evo.allo.gen.2 <- procD.pgls(shape ~log(CS) + genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
+evo.allo.gen.2
 ```
 
 ### Save intermediate data
