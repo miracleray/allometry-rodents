@@ -31,7 +31,7 @@ load(file = "../Data/Processed/02-main-data.rda")
 ### Plot PC1 Min/Max
 ```{r}
 # Find mean configuration - i.e. mean shape in dataset
-consensus <- (select.procrustes(shape, selector = mean))[[1]]
+consensus <- (select.procrustes(shape, selector = mean))[[1?]]
 
 # Measure spherical coordinates differences from the mean for each specimen for each landmark
 diff.from.mean <- coordinates.difference(coordinates = shape, reference = consensus, type = "spherical")
@@ -60,13 +60,13 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
 ```
 
-### Plot PC2 Min/Max
+### Plot PC2 Min/Max (not working for this version of landvR)
 ```{r}
 # Measure extremes of variation from mean on PC2
 PC2.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 2, ordination = ordination, type = "spherical")
 
 # Wrap specimens on the tangent space; flip axes to get correct warp grids
-wrap.PCA.2 <- plotTangentSpace(shape, verbose = FALSE, axis1 = 2, axis2 = 1)
+wrap.PCA.2 <- plotTangentSpace(shape, verbose = FALSE, axis1 = 1, axis2 = 2)
 
 # Select extreme specimens (the ones that make the warp-meshes)
 hypothetical.1.2 <- wrap.PCA.2$pc.shapes[[1]]
