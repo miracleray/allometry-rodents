@@ -30,6 +30,7 @@ Next, format the "CatNum" columns & isolate it with the Sex column
 ```{r}
 # Australian Museum
 AM_rats$CatNum <- str_replace(AM_rats$RegNum, "M.", "M")  # "CatNum" column
+#AM_rats$CatNum <- str_replace(AM_rats$RegNum, "S.", "S")  # "CatNum" column
 AM_rats$CatNum <- str_remove(AM_rats$CatNum, "[.]([0-9]{3})")  # removes .00X on ends
 AMrats <- AM_rats[, c("CatNum", "Sex")]
 AMrats$Museum <- "AM"
