@@ -62,4 +62,3 @@ info.sex <- merge(info, museMD, by = "CatNum", all.x = TRUE, sort = FALSE)
 info.sex <- info.sex[, -c(4, 5, 7)] # Remove unneded columns
 write.csv(info.sex, "../Data/Results/ListOfSpecimensWithSex.csv")
 ```
-
