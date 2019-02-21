@@ -52,6 +52,8 @@ med.shape <- MatchSpecShape(med.spec, sp.info, shape)
 
 # Compare landmark locations in outlier specimens to median specimen
 plotRefToTarget(med.shape, out.1, method = "vector", label = FALSE)
+
+outliers
 ```
 **Repeat the above for each genus/patch protocol as needed. When landmarking errors are found, fix in Viewbox, export new coordinates, and begin again from script 01.** 
 

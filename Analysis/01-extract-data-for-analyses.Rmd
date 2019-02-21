@@ -118,8 +118,8 @@ A <- A[, , c(-dataset.rm)]  # Shape dataset
 Our methodology tested whether different patch protocols (big and small) impact later shape analyses. To save time, we digitized the patches at the same time so we have two different patch protocols to extract from the same shape coordinate file. 
 ```{r}
 # Extract landmark point names
-pt.names <-coords.3D[, 1]  # gets 3D point names from Viewbox
-no.XYZ <- str_sub(pt.names, 3, -1)  # removes XYZ appended by Viewbox
+pt.names <- coords.3D[, 1]  # gets 3D point names from Viewbox
+no.XYZ <- str_remove(pt.names, "[XYZ] ") # removes XYZ appended by Viewbox
 u.pt.names<- unique(no.XYZ)  # returns unique point and curve names
 ```
 

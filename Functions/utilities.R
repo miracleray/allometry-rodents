@@ -137,7 +137,7 @@ FindPairs <- function(pt.names){
         # Returns:
         #   2 column data table of paired landmarks ready for geomorph's bilat.symmetry()'s land.pair argument.
         
-        pairs <- data.table("Right" = numeric(), "Left" = numeric())
+        pairs <- NULL
         
         # Removes R and L designations so pairs can be detected
         no.side.names <- gsub(" R", "", pt.names)
@@ -145,12 +145,12 @@ FindPairs <- function(pt.names){
         
         # Checks if point has a pair and if so, their index #s are paired
         for(i in unique(no.side.names)){
-                index <- str_detect(no.side.names, i)
-                if (sum(index) == 2) {
-                        new.pair <- which(index == TRUE)
-                        pairs <- rbind(pairs, as.list(new.pair))
-                } 
+                index <- which(no.side.names == i)
+                if (length(index) == 2) {
+                        pairs <- rbind(pairs, t(index))
+                }
         }
+        colnames(pairs) <- c("Right", "Left")
         return(pairs)
 }
 
