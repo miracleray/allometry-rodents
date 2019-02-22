@@ -105,13 +105,13 @@ for(n in 1:dim(to.remove)[1]) {
 
 # Remove species from:
 info.HOS <- info[c(-dataset.rm), ]  # Metadata
-shape.HOS <- shape[, , c(-dataset.rm)]  # Shape dataset
+shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
 
 Run allometry tests as well as a homogeneity of slopes test
 ```{r}
 # Run static allometry test
-spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
+spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
 spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
 
 # Examine results
@@ -130,10 +130,10 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
                                      angle.type = "deg")
 
 # Correct for multiple comparisons
-pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "BH")  # Hommel is a more powerful method for independent hypothesis tests
+pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
 
 # Export p-values
-write.csv(pwHOS.pvals, "../Data/Results/19_01_24_static_pwHOS.csv")  # save in Results folder
+write.csv(pwHOS.pvals, "../Data/Results/19_02_22_static_pwHOS.csv")  # save in Results folder
 ```
 
 ## 3) Visualize static Allometry: Common Allometric Component & Residuals
