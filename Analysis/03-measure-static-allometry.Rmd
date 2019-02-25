@@ -148,14 +148,14 @@ pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each indiv
 
 # Plot static allometry
 plot(x = log(spp.results$size),
-     y = spp.results$CAC,
+     y = spp.results$Reg.proj,
      xlim = c(4.7, 6.32),
      col = sp.col.gen, 
      pch = pch.spp,
      bg = sp.col.gen,
-     main = "Predicted Allometric Shape by Species",
+     main = "Regression Score",
      xlab = "Log centroid size", 
-     ylab = "Predicted shape (CAC)")
+     ylab = "Regression Score")
 #text(4.75, 0.03, "Mus", col = "grey")
 #text(5.65, 0.042, "Rattus")
 legend(6.03, 0.051, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.51, ncol = 2)

@@ -31,7 +31,7 @@ load(file = "../Data/Processed/02-main-data.rda")
 ### Plot PC1 Min/Max
 ```{r}
 # Find mean configuration - i.e. mean shape in dataset
-consensus <- (select.procrustes(shape, selector = mean))[[1?]]
+consensus <- (select.procrustes(shape, selector = mean))[[1]]
 
 # Measure spherical coordinates differences from the mean for each specimen for each landmark
 diff.from.mean <- coordinates.difference(coordinates = shape, reference = consensus, type = "spherical")

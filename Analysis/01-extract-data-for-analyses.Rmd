@@ -20,6 +20,9 @@ Almost all upcoming analyses are done in the geometric morphometric R package, _
 ### Load packages
 Custom functions are defined in utilities.R for conciseness.
 ```{r message = FALSE}
+library(devtools)
+devtools::install_github("geomorphR/geomorph", ref = "Stable")
+
 library(dplyr)
 library(stringr)
 library(stringi)
