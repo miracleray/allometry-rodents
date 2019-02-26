@@ -23,7 +23,7 @@ library(stringr)
 library(data.table)
 library(geomorph)
 library(ape)  # needed to work with phylogenies from here on
-library(geiger)
+#library(geiger)
 library(nlme)
 library(caper)
 library(car)
@@ -86,8 +86,8 @@ info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
 We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size is stored in the info.phylo metadata table.
 ```{r}
 # Calculate mean centroid size and store in info.means
-cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)
-info.means$Csize <- cs.means[, 2]  # store in vector; aggregate alphabetized it
+cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)  # aggregate also alphabetizes it
+info.means$Csize <- cs.means[, 2]  # store in vector
 names(info.means)[names(info.means) == 'Csize'] <- 'MeanCsize'  # rename column
 
 # Sort shape by alphabetical order, too

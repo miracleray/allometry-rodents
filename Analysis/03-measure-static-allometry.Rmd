@@ -111,7 +111,7 @@ shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 Run allometry tests as well as a homogeneity of slopes test
 ```{r}
 # Run static allometry test
-spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
+spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
 spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
 
 # Examine results
@@ -133,7 +133,7 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
 pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
 
 # Export p-values
-write.csv(pwHOS.pvals, "../Data/Results/19_02_22_static_pwHOS.csv")  # save in Results folder
+write.csv(pwHOS.pvals, "../Data/Results/19_02_25_static_pwHOS.csv")  # save in Results folder
 ```
 
 ## 3) Visualize static Allometry: Common Allometric Component & Residuals
@@ -143,22 +143,23 @@ In _geomorph_, static allometry can be visualized with log(centroid size) plotte
 info$EGenus <- info$Genus
 info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
 
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
 pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
+
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
+col.unique.spp <- PlotByGroup(info, "EGenus", col.gen)
+
 
 # Plot static allometry
 plot(x = log(spp.results$size),
-     y = spp.results$Reg.proj,
-     xlim = c(4.7, 6.32),
+     y = spp.results$pred.val,
+     xlim = c(4.7, 7),
      col = sp.col.gen, 
      pch = pch.spp,
      bg = sp.col.gen,
-     main = "Regression Score",
+     main = "Static allometry",
      xlab = "Log centroid size", 
-     ylab = "Regression Score")
-#text(4.75, 0.03, "Mus", col = "grey")
-#text(5.65, 0.042, "Rattus")
-legend(6.03, 0.051, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.51, ncol = 2)
+     ylab = "Predicted value")
+legend(6.04, 0.15, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.63, ncol = 3)
 ```
 
 ### Create the same figure for genera (supplemental info)
