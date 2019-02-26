@@ -145,9 +145,12 @@ info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
 
 pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
 
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
-col.unique.spp <- PlotByGroup(info, "EGenus", col.gen)
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
 
+# Make color vector for legend
+unique.taxa <- as.data.frame(unique(info[, c(6,10)]))
+unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
+col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 
 # Plot static allometry
 plot(x = log(spp.results$size),
@@ -171,13 +174,13 @@ summary(gen.results)
 
 # Plot predicted allometric shape
 plot(x = log(gen.results$size),
-     y = gen.results$CAC,
+     y = gen.results$pred.val,
      xlim = c(4.7, 6.15),
      col = sp.col.gen, 
      pch = 16,
      main = "Predicted Allometric Shape by Genus",
      xlab = "Log centroid size", 
-     ylab = "Predicted shape (CAC)")
+     ylab = "Predicted value")
 legend(6.04, 0.12, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.7)
 ```
 
