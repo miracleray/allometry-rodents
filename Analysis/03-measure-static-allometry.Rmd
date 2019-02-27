@@ -32,7 +32,7 @@ Since Mastacomys is technically within the genus Pseudomys (Smissen & Rowe 2018)
 ```{r}
 # Make an Effective Genus column to better categorize Mas phylogenetically
 info$EGenus <- info$Genus
-info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas is effectively Pse
+info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas is effectively Pseudomys (Pse)
 ```
 
 Colors for subsequent figures are set up according to column "EGenus":
@@ -111,7 +111,7 @@ shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 Run allometry tests as well as a homogeneity of slopes test
 ```{r}
 # Run static allometry test
-spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
+spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
 spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
 
 # Examine results
@@ -119,7 +119,7 @@ spp.results$aov.table
 spp.results$HOS.test
 summary(spp.results)
 
-# Find pair-wise p-values for slopes for each taxa, code written with Dr Emma Sherratt
+# Find pair-wise p-values for slopes for each taxa
 size <- info$Csize
 spp <- info$Taxa
 pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
@@ -136,33 +136,36 @@ pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is
 write.csv(pwHOS.pvals, "../Data/Results/19_02_25_static_pwHOS.csv")  # save in Results folder
 ```
 
-## 3) Visualize static Allometry: Common Allometric Component & Residuals
-In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted crania shape (estimated with the common allometric component or CAC).
+## 3) Visualize static Allometry: Predicted Value
+In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted value of crania shape.
 ```{r}
+# Run static allometry test with all specimens
+spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
+
 # Set colors for genera and different points for species within each genus
 info$EGenus <- info$Genus
 info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
-
 pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
-
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
 
 # Make color vector for legend
 unique.taxa <- as.data.frame(unique(info[, c(6,10)]))
 unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
 col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
+
 # Plot static allometry
 plot(x = log(spp.results$size),
      y = spp.results$pred.val,
-     xlim = c(4.7, 7),
+     xlim = c(4.7, 6.3),
      col = sp.col.gen, 
      pch = pch.spp,
      bg = sp.col.gen,
      main = "Static allometry",
      xlab = "Log centroid size", 
      ylab = "Predicted value")
-legend(6.04, 0.15, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.63, ncol = 3)
+legend(6.04, 0.15, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.44, pt.cex = 0.7, ncol = 2)
 ```
 
 ### Create the same figure for genera (supplemental info)
@@ -181,73 +184,7 @@ plot(x = log(gen.results$size),
      main = "Predicted Allometric Shape by Genus",
      xlab = "Log centroid size", 
      ylab = "Predicted value")
-legend(6.04, 0.12, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.7)
-```
-
-## Create multi-panel figure
-CAC plot on top with PCA and PC1 vs CS on the bottom
-```{r}
-layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
-
-plot(x = spp.results$size,
-     y = spp.results$CAC,
-     xlim = c(110, 435),
-     col = sp.col.gen, 
-     pch = 16, 
-     main = "Static Allometry: Predicted Allometric Shape by Genus",
-     xlab = "Log centroid size", 
-     ylab = "Predicted shape (CAC)")  # figure on top
-legend(408, 0.055, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, y.intersp = 0.25)
-text(105, 0.04, "A", cex = 1.35)
-
-PlotPCA(PCA, 1, 2, sp.col.gen)  # first figure on bottom
-text(-.10, 0.053, "B", cex = 1.35)
-
-plot(x = log(info$Csize), 
-     y = PCA$pc.scores[, 1], 
-     col = sp.col.gen, 
-     pch = 16, 
-     xlab = "Log Centroid size", 
-     ylab = "PC1 score",
-     main = "PC1 to Size Correlation")  # 2nd fig on bottom
-legend(415, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 1)
-text(5.7, 0, paste("r =", cor.assoc), col = "dark grey")
-text(4.77, 0.12, "C", cex = 1.35)
-```
-
-
-### Visualize the residual component of shape (size-less shape) as a PCA
-```{r}
-plot(x = spp.results$RSC[, 1],
-     y = spp.results$RSC[, 2], 
-     xlim = c(-0.10, 0.095),
-     ylim = c(-0.04, 0.07), 
-     col = sp.col.gen, 
-     pch = 16, 
-     main = "Residual shape component (size-less shape)",
-     xlab = "RSC PC1", 
-     ylab = "RSC PC2")
-legend(0.08, 0.077, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.65)
-```
-
-### Test witih dispRity package
-Test with `dispRity` package if Rattus has greater diparity in the size-less morphospace given by the residual component of shape. Unlike the PCA above, the multivariate test below can consider all PC axes simulatenously. 
-```{r}
-# Make lists to define old versus new endemics
-new.endemics <- which(str_detect(info$Genus, "Rat") == TRUE)
-all.specimens <- c(1:dim(info)[1])  # dummy list, length = max specimens
-old.endemics <- all.specimens[-new.endemics]  # process of elimination
-
-# Run dispRity test on median and centroid metrics (default)
-size.less.dispRity <- dispRity.per.group(spp.results$RSC, list(Old = old.endemics, New = new.endemics))
-summary(size.less.dispRity)
-plot(size.less.dispRity)
-```
-
-Looks like there could be a statistically significant difference, let's test:
-```{r}
-# Test is from adonis function from vegan package which expects a distance matrix with method = Euclidean 
-test.dispRity(size.less.dispRity, test = t.test)
+legend(6.04, 0.145, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
 ```
 
 ### Save intermediate data
