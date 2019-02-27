@@ -23,7 +23,7 @@ library(stringr)
 library(data.table)
 library(geomorph)
 library(ape)  # needed to work with phylogenies from here on
-#library(geiger)
+library(geiger)
 library(nlme)
 library(caper)
 library(car)
@@ -158,16 +158,16 @@ plot(x = -pca.means$pc.scores[, 1],
      ylab = PCy.lab)
 #legend(0.13, 0.055, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, pt.cex = 1.2, ncol = 4)
 
-# CAC plot
+# Projected regression score plot
 plot(x = log(info.means$MeanCsize),
-     y = mean.allo$CAC,
-     xlim = c(4.75, 6.2),
+     y = mean.allo$Reg.proj,
+     xlim = c(4.75, 6.3),
      col = col.means, 
      pch = pch.evo.allo,
-     main = "Predicted Mean Allometric Shape",
+     main = "Mean Allometric Shape",
      xlab = "Log centroid size", 
-     ylab = "CAC")
-legend(6.02, 0.135, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
+     ylab = "Projected regression scores")
+legend(6.02, 0.07, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
 text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ```
 

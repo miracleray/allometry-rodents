@@ -55,8 +55,7 @@ Centroid size is a proxy for body size. Usually in GMM studies, the centroid siz
 We test for a significant correlation using Pearson's R and plot centroid size versus PC1.
 ```{r}
 # Run PCA
-PCA <- plotTangentSpace(shape, groups = sp.col.gen, axis1 = 1, axis2 = 2, verbose = T)
-
+PCA <- plotTangentSpace(shape, groups = sp.col.gen, verbose = T)
 PlotPCA(PCA, 1, 2, sp.col.gen)
 
 # Find Pearson's r for correlation with PC1
