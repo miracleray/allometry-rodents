@@ -101,6 +101,21 @@ pca.means <- plotTangentSpace(mean.shapes)
 PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
 legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 3)
 ```
+### Pearson's correlations
+```{r}
+# Find Pearson's r for correlation with PC1
+cor <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 1], method = "pearson")
+cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
+cor.assoc
+cor$p.value
+
+# Find Pearson's r for correlation with PC2
+cor2 <- cor.test(info.means$MeanCsize, pca.means$pc.scores[, 2], method = "pearson")
+cor.assoc2 <- round(unname(cor2$estimate), digits = 3)  # round to 3 sig figs
+cor.assoc2
+cor2$p.value
+```
+
 
 ### ProcD Allometry visualization
 ```{r}
