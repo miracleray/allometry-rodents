@@ -18,15 +18,10 @@ Many of these steps are based on Dr Meriam Zelditch et al.'s A Practical Compani
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-library(dispRity)
 library(stringr)
-library(data.table)
 library(geomorph)
-library(ape)  # needed to work with phylogenies from here on
-library(geiger)
-library(nlme)
-library(caper)
-library(car)
+library(ape)  # needed to work with phylogenies
+library(geiger)  # needed to work with phylogenies
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
@@ -109,10 +104,11 @@ legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, p
 
 ### ProcD Allometry visualization
 ```{r}
+# Run allometry on all 34 species
 evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 
-cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$CAC, method = "pearson")
+cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pearson")
 cor.allo.short <- round(cor.allo$estimate, 2)
 
 # Call out specialized herbivores with squares
@@ -120,30 +116,17 @@ pch.evo.allo <- rep(16, length(col.means))
 pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 15 
 pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 15
 
-# Plot predicted allometric shape
-plot(x = log(info.means$MeanCsize),
-     y = mean.allo$CAC,
-     xlim = c(4.7, 6.13),
-     col = col.means, 
-     pch = pch.evo.allo,
-     main = "Predicted Mean Allometric Shape",
-     xlab = "Log centroid size", 
-     ylab = "Common Allometric Component")
-legend(6.02, 0.13, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6)
-text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
-```
-
-## Create multi-panel figure
-CAC plot on top with PCA and PC1 vs CS on the bottom
-```{r}
 # Write x and y labels with proportion of variance for PCx and PCy
 PCs <- pca.means$pc.summary$importance
 PCx.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
 PCx.lab <- paste("PC", 1, " (", PCx.per, "%)", sep = "")
 PCy.per <- round(PCs[2, 2] * 100, digits = 1)
 PCy.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
+```
 
-
+## Create multi-panel figure
+PCA on top with Reg.proj plot on the bottom
+```{r}
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
 
 # PCA plot
@@ -156,18 +139,17 @@ plot(x = -pca.means$pc.scores[, 1],
      main = "Principal Component Analysis",
      xlab = PCx.lab, 
      ylab = PCy.lab)
-#legend(0.13, 0.055, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, pt.cex = 1.2, ncol = 4)
 
-# Projected regression score plot
+# Evolutionary Allometry plot
 plot(x = log(info.means$MeanCsize),
      y = mean.allo$Reg.proj,
-     xlim = c(4.75, 6.3),
+     xlim = c(4.75, 6.17),
      col = col.means, 
      pch = pch.evo.allo,
-     main = "Mean Allometric Shape",
+     main = "Evolutionary Allometry",
      xlab = "Log centroid size", 
-     ylab = "Projected regression scores")
-legend(6.02, 0.07, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
+     ylab = "Projected regression score")
+legend(6, 0.135, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
 text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ```
 
