@@ -48,48 +48,7 @@ col.phylo <- c("yellow", "darkgoldenrod4", "dark green", "green", "light green",
 names.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
 ```
 
-## 1) Correlation of allometry to PC1 & PC2
-Centroid size is a proxy for body size. Usually in GMM studies, the centroid size is highly correlated with PC1, meaning that size increase is likely responsible for shape changes along this axis.
-
-### Test for correlation in PC1
-We test for a significant correlation using Pearson's R and plot centroid size versus PC1.
-```{r}
-# Run PCA
-PCA <- plotTangentSpace(shape, groups = sp.col.gen, verbose = T)
-PlotPCA(PCA, 1, 2, sp.col.gen)
-
-# Find Pearson's r for correlation with PC1
-cor <- cor.test(info$Csize, PCA$pc.scores[, 1], method = "pearson")
-cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
-cor.assoc
-cor$p.value
-```
-
-### Plot centroid size versus PC1 to see correlation
-```{r}
-plot(x = log(info$Csize), 
-     y = PCA$pc.scores[, 1], 
-     col = sp.col.gen, 
-     pch = 16, 
-     xlab = "Log Centroid size", 
-     ylab = "PC1 score", 
-     main = "Static Allometry: PC1 vs Log Centroid Size")
-legend(415, 0.16, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.66)
-text(5.7, 0, paste("r =", cor.assoc), col = "dark grey")
-```
-
-### Test for correlation in PC2
-```{r}
-# Find Pearson's r for correlation with PC2
-cor.PC2 <- cor.test(info$Csize, PCA$pc.scores[, 2], method = "pearson")
-cor.assoc.PC2 <- round(unname(cor.PC2$estimate), digits = 3)
-cor.pval.PC2 <- round(unname(cor.PC2$p.value), digits = 3)
-paste("Correlation is", cor.assoc.PC2, "with p =", cor.pval.PC2) 
-```
-Correlation of PC2 with size is statistically indistinguishable from 0.
-
-
-## 2) Measure static allometry: Homogeneity of Slopes Test by species
+## 1) Measure static allometry: Homogeneity of Slopes Test by species
 Isolate only those species with at least 8 specimens.
 ```{r}
 spec.counts <- as.data.frame(table(info$Taxa))
@@ -135,7 +94,7 @@ pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is
 write.csv(pwHOS.pvals, "../Data/Results/19_02_25_static_pwHOS.csv")  # save in Results folder
 ```
 
-## 3) Visualize static Allometry: Predicted Value
+## 2) Visualize static Allometry: Predicted Value
 In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted value of crania shape.
 ```{r}
 # Run static allometry test with all specimens
