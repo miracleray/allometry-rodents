@@ -95,12 +95,14 @@ Before adding the tree, we can plot the PCA of mean shapes, which will contain m
 # Set colors for genera and different points for species within each genus
 col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors
 pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
+pch.means[which(info.means$Taxa == "M_fus")] <- 2
 
 # Plot PCA of mean shapes
 pca.means <- plotTangentSpace(mean.shapes)
 PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
 legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 3)
 ```
+
 ### Pearson's correlations
 ```{r}
 # Find Pearson's r for correlation with PC1
@@ -126,10 +128,10 @@ mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pearson")
 cor.allo.short <- round(cor.allo$estimate, 2)
 
-# Call out specialized herbivores with squares
+# Call out specialized herbivores with special characters
 pch.evo.allo <- rep(16, length(col.means))
-pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 15 
-pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 15
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2
 
 # Write x and y labels with proportion of variance for PCx and PCy
 PCs <- pca.means$pc.summary$importance
