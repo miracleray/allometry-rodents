@@ -104,6 +104,7 @@ spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = 
 # Set colors for genera and different points for species within each genus
 info$EGenus <- info$Genus
 info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
 pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
 
 # Make color vector for legend
@@ -111,19 +112,22 @@ unique.taxa <- as.data.frame(unique(info[, c(6,10)]))
 unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
 col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
+# Find the mean point for each static allometry
+mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
+mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
 
-# Plot static allometry
+# Plot static and evolutionary allometry
 plot(x = log(spp.results$size),
-     y = spp.results$pred.val,
+     y = spp.results$Reg.proj,
      xlim = c(4.7, 6.3),
      col = sp.col.gen, 
      pch = pch.spp,
      bg = sp.col.gen,
-     main = "Static allometry",
+     main = "Static and evolutionary allometry",
      xlab = "Log centroid size", 
-     ylab = "Predicted value")
-legend(6.04, 0.15, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.44, pt.cex = 0.7, ncol = 2)
+     ylab = "Projected Regression Score")
+abline(lm(mean.shape$V1 ~ log(mean.size$x)))  # plots evolutionary allometry
+legend(6.04, 0.06, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.44, pt.cex = 0.7, ncol = 2)
 ```
 
 ### Create the same figure for genera (supplemental info)
