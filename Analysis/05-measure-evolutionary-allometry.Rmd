@@ -1,5 +1,5 @@
 ---
-title: "05-plot-heatmaps"
+title: "05-measure-evolutionary-allometry"
 author: "Ariel Marcy"
 date: "2/14/2019"
 output: html_document
@@ -58,20 +58,4 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 
 # Plot the range of variation along PC1 using a heat color scheme
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
-```
-
-### Plot PC2 Min/Max (not working for this version of landvR)
-```{r}
-# Measure extremes of variation from mean on PC2
-PC2.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 2, ordination = ordination, type = "spherical")
-
-# Wrap specimens on the tangent space; flip axes to get correct warp grids
-wrap.PCA.2 <- plotTangentSpace(shape, verbose = FALSE, axis1 = 1, axis2 = 2)
-
-# Select extreme specimens (the ones that make the warp-meshes)
-hypothetical.1.2 <- wrap.PCA.2$pc.shapes[[1]]
-hypothetical.2.2 <- wrap.PCA.2$pc.shapes[[2]]
-
-# Plot the range of variation along PC2 using a heat color scheme
-PC1.var.plot <- procrustes.var.plot(hypothetical.1.2, hypothetical.2.2, col = heat.colors, col.val = PC2.var[, "radius"], labels = F)
 ```

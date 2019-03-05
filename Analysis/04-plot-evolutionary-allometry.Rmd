@@ -1,5 +1,5 @@
 ---
-title: "04-measure-evolutionary-allometry"
+title: "04-plot-evolutionary-allometry"
 author: "Ariel Marcy"
 date: "2019-01-11"
 output: html_document
