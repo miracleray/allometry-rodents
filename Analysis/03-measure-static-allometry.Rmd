@@ -117,6 +117,12 @@ col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
 mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
 
+# Find the correlation
+cor.static <- cor.test(log(spp.results$size), spp.results$Reg.proj, method = "pearson")
+cor.static.assoc <- round(unname(cor.static$estimate), digits = 3)  # round to 3 sig figs
+cor.static.assoc
+cor.static$p.value
+
 # Plot static and evolutionary allometry
 plot(x = log(spp.results$size),
      y = spp.results$Reg.proj,
