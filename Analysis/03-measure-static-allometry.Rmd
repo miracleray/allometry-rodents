@@ -119,7 +119,7 @@ mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
 
 # Find the correlation
 cor.static <- cor.test(log(spp.results$size), spp.results$Reg.proj, method = "pearson")
-cor.static.assoc <- round(unname(cor.static$estimate), digits = 3)  # round to 3 sig figs
+cor.static.assoc <- round(unname(cor.static$estimate), digits = 2)  # round to 3 sig figs
 cor.static.assoc
 cor.static$p.value
 
@@ -135,6 +135,7 @@ plot(x = log(spp.results$size),
      ylab = "Projected Regression Score")
 abline(lm(mean.shape$V1 ~ log(mean.size$x)))  # plots evolutionary allometry
 legend(6.04, 0.06, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.7, pt.cex = 0.8, ncol = 2, x.intersp = .3, y.intersp = 0.6)
+text(5.7, -0.02, paste("r = ", cor.static.assoc), col = "dark grey")
 ```
 
 ### Create the same figure for genera (supplemental info)
@@ -146,14 +147,14 @@ summary(gen.results)
 
 # Plot predicted allometric shape
 plot(x = log(gen.results$size),
-     y = gen.results$pred.val,
+     y = gen.results$Reg.proj,
      xlim = c(4.7, 6.15),
      col = sp.col.gen, 
      pch = 16,
-     main = "Predicted Allometric Shape by Genus",
+     main = "Allometric Shape by Genus",
      xlab = "Log centroid size", 
-     ylab = "Predicted value")
-legend(6.04, 0.145, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
+     ylab = "Shape (projected regression score)")
+legend(6.04, 0.06, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
 ```
 
 ### Save intermediate data

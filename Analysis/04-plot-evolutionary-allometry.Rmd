@@ -10,101 +10,110 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Phylogenetic analyses
-Evolutionary studies must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
-
-Many of these steps are based on Dr Meriam Zelditch et al.'s A Practical Companion (2012). 
-> Zelditch ML Swiderski D Sheets HD. 2012. A practical companion to geometric morphometrics for biologists: running analyses in freely-available software. Available at: http://booksite.elsevier.com/9780123869036.
+# Plot evolutionary allometry and PC1 heatmap
+Here we plot the PCA and evolutionary allometry plots as well as the PC1 min and max heatmap showing what shape changes occur. PC1 is highly correlated allometric shape. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(stringr)
 library(geomorph)
-library(ape)  # needed to work with phylogenies
-library(geiger)  # needed to work with phylogenies
+# Load libraries (and install if necessary) for landvR package
+if(!require(devtools)) install.packages("devtools")
+if(!require(dispRity)) install.packages("dispRity")
+if(!require(landvR)) install_github("TGuillerme/landvR")
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 ```
 
-### Set up shape array for phylogentic analyses
+## Set up shape array for evolutionary allometric and phylogentic analyses
 First, attach long form names for genus and species to the metadata.
 ```{r}
-# Get names from trait information gathered from the book, Native Mice and Rats by Dr.s Bill Breed and Fred Ford (2007). 
+# Get names from trait information gathered from Native Mice and Rats by Dr.s Bill Breed and Fred Ford (2007). 
 traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
 traits$Taxa <- paste(str_sub(traits$Genus, 1, 1), str_sub(traits$Species, 1, 3), sep = "_")  # make matching Taxa column
 info.traits <- merge(info, traits, by = "Taxa", sort = F)
 info.traits <- info.traits[order(info.traits$Order), ]  # preserve shape specimen order
 
-# Rename Genus & Species columns they have their old, short column name, long form Genus and Species columns will keep Genus.y and Species.y
+# Rename Genus & Species columns so they have their old, short column name, long form Genus and Species columns keep Genus.y and Species.y
 names(info.traits)[names(info.traits) == 'Genus.x'] <- 'Genus'
 names(info.traits)[names(info.traits) == 'Species.x'] <- 'Species'
 
-# Remove unnecessary columns
-info.phylo <- info.traits[, -c(5:7)]
+info.phylo <- info.traits[, -c(5:7)]  # remove unnecessary columns
 ```
 
-Second, rename dimnames for the shape dataset so that it's only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
+Second, rename shape dataset dimnames to only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
 ```{r}
 shape.phylo <- shape  # initiate shape optimized for phylogenetics
 dimnames(shape.phylo)[[3]] <- as.list(paste(info.phylo$Genus.y, info.phylo$Species.y, sep = "_"))
 ```
 
 ## Calculate mean shape and centroid size for each species
-This step has to be done before working with the tree. To calculate the mean shape for each species, we'll use a function from `geomorph` called `m.shape()`. 
+This step has to be done before plotting evolutionary allometry and working with the phylogeny.
 
-To get the means, we'll subset for each unique species. The mean shape function, `mshape()` gives a 2D array as an output. Therefore, the `for` loop below stores mean shapes in a 2D array format recognized by `geomorph`: (n x [p x k]), where n is number of specimens, p is number of landmark points, and k is number of dimensions. Then we convert to a 3D array with format (p x k x n) since a 3D array is required by most `geomorph` functions. 
+The mean shape function, `mshape()` outputs a 2D array. Therefore, the `for` loop below stores mean shapes in a 2D array format recognized by `geomorph`: (n x [p x k]), where n is number of specimens, p is number of landmark points, and k is number of dimensions. Finally, we convert to a 3D array with format (p x k x n) since a 3D array is required by most `geomorph` functions. 
 ```{r}
-info.phylo$FullName <- paste(info.phylo$Genus.y, info.phylo$Species.y, sep = "_")  # give names to metadata in the same format as the tree "Genus_species"
-full.names <- unique(info.phylo$FullName)
+info.phylo$FullName <- paste(info.phylo$Genus.y, info.phylo$Species.y, sep = "_")  # give names to metadata in the same format as the tree, "Genus_species"
+full.names <- unique(info.phylo$FullName)  # list of species
 
 # For loop to subset shape data by species and calculate mean shape
 mean.shapes.2D <- NULL  # initiate blank data frame
 for (i in 1:length(full.names)) {  
         is.taxa <- which(info.phylo$FullName == full.names[i])
         shape.for.mean.2D <- shape.phylo[, , is.taxa]
-        mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # mshape() finds mean specimen; rbind() is critical, output cols must = 3 for 3D
+        mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # output cols must = 3 for 3D
 }
-mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array
+mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array with 325 landmarks and 3 for 3D landmarks in this study
+```
 
-# Make names match the tree, make metadata match mean shape data (alphabetical)
-dimnames(mean.shapes)[[3]] <- full.names  # shape names match tree names
-info.means <- info.phylo[!duplicated(info.phylo$Taxa), ]  # make metadata; remove columns that don't make sense: CatNum and Order
-info.means <- info.means[order(info.means$FullName), ]  # order same as shape's
+Create metadata and put mean shape and metadata in alphabetical order.
+```{r}
+# Alphabetical order for mean shape
+dimnames(mean.shapes)[[3]] <- full.names  # Genus_species format
+mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]  # ABC
 
-# Make an Effective Genus column to better categorize Mas phylogenetically
-info.means$EGenus <- info.means$Genus
-info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
+# Alphabetical order for mean shape metadata
+info.means <- info.phylo[!duplicated(info.phylo$Taxa), -c(4:6)]  # make metadata; remove outdated columns: CatNum, Csize, Order
+info.means <- info.means[order(info.means$FullName), ]  # ABC order
 ```
 
 ### Calculate mean centroid size
-We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size is stored in the info.phylo metadata table.
+We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size for all 317 specimens is stored in the info.phylo metadata table.
 ```{r}
 # Calculate mean centroid size and store in info.means
 cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)  # aggregate also alphabetizes it
-info.means$Csize <- cs.means[, 2]  # store in vector
-names(info.means)[names(info.means) == 'Csize'] <- 'MeanCsize'  # rename column
-
-# Sort shape by alphabetical order, too
-mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]
+info.means$MeanCsize <- cs.means[, 2]  # store in vector
 ```
 
-### Plot PCA of skull shape means by species
-Before adding the tree, we can plot the PCA of mean shapes, which will contain more species than the set subsetted by species found in the tree.
+## Make multipanel figure: mean PCA, evolutionary allometry, and PC1 heatmap
+First, set up colors and points by genera and important taxa
 ```{r}
-# Set colors for genera and different points for species within each genus
+# Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
+info.means$EGenus <- info.means$Genus
+info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
+
+# Colors for genera and different points by species within each genus; used for PCA
 col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors
-pch.means <- PointOutDiffSpp(info.means)  # points by unique species in a genus
-pch.means[which(info.means$Taxa == "M_fus")] <- 2
+pch.means <- PointOutDiffSpp(info.means)  # pts by unique species in a genus
+pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
-# Plot PCA of mean shapes
-pca.means <- plotTangentSpace(mean.shapes)
-PlotPCA(pca.means, 1, 2, col.means, pch.means, flip.axis1 = TRUE)
-legend(0.094, 0.002, legend = info.means$Taxa, col = col.means, border = NULL, pch = pch.means, pt.bg = col.means, cex = 0.4, ncol = 3)
+# Points to call out only specialized herbivores with special characters; used for Evolutionary Allometry plot
+pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11  # star
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 ```
 
-### Pearson's correlations
+### Run PCA and find Pearson's correlations for PC1 and PC2 with size
 ```{r}
+pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
+
+# Write x and y labels with proportion of variance for PC1 and PC2
+PCs <- pca.means$pc.summary$importance
+PC1.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
+PC1.lab <- paste("PC", 1, " (", PCx.per, "%)", sep = "")
+PC2.per <- round(PCs[2, 2] * 100, digits = 1)
+PC2.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
+
 # Find Pearson's r for correlation with PC1
 cor <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 1], method = "pearson")
 cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
@@ -124,26 +133,49 @@ cor2$p.value
 evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 
+# Find correlation of mean shape to log centroid size
 cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pearson")
-cor.allo.short <- round(cor.allo$estimate, 2)
-
-# Call out specialized herbivores with special characters
-pch.evo.allo <- rep(16, length(col.means))
-pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11
-pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2
-
-# Write x and y labels with proportion of variance for PCx and PCy
-PCs <- pca.means$pc.summary$importance
-PCx.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
-PCx.lab <- paste("PC", 1, " (", PCx.per, "%)", sep = "")
-PCy.per <- round(PCs[2, 2] * 100, digits = 1)
-PCy.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
+cor.allo.short <- round(cor.allo$estimate, 2)  # 2 sig figs
 ```
 
-## Create multi-panel figure
-PCA on top with Reg.proj plot on the bottom
+### Plot PC1 Min/Max
+For the heatmap, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along the PC axes. Much of the below was adapted from [this vignette written by Dr Guillerme](https://cdn.rawgit.com/TGuillerme/landvR/8a6a6bd5/inst/vignettes/Landmark_partition_test.html).
 ```{r}
-layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 1 fig on top
+# Find mean configuration - i.e. mean shape in dataset
+consensus <- (select.procrustes(shape, selector = mean))[[1]]
+
+# Measure spherical coordinates differences from the mean for each specimen for each landmark
+diff.from.mean <- coordinates.difference(coordinates = shape, reference = consensus, type = "spherical")
+
+# Ordinate the data
+twoD.shape <- two.d.array(shape)
+ordination <- stats::prcomp(twoD.shape)
+
+# Force the symmetric component of shape into class "gpagen" (required for variation.range)
+gpagen.shape <- list()
+gpagen.shape$coords <- shape
+gpagen.shape$consensus <- consensus
+class(gpagen.shape) <- "gpagen"
+
+# Measure extremes of variation from mean on PC1
+PC1.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 1, ordination = ordination, type = "spherical")
+
+# Wrap specimens on the tangent space
+wrap.PCA <- plotTangentSpace(shape, verbose = FALSE)
+
+# Select extreme specimens (the ones that make the warp-meshes)
+hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
+hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
+
+# Plot the range of variation along PC1 using a heat color scheme
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+
+```
+
+### Plot the multi-panel figure
+PCA on top, evolutionary allometry plot in the middle, PC1 heatplot on the bottom.
+```{r}
+layout(matrix(c(1,1,2,2,3,3), 3, 2, byrow = TRUE))  # 3 rows, 2 columns
 
 # PCA plot
 plot(x = -pca.means$pc.scores[, 1],
@@ -153,8 +185,8 @@ plot(x = -pca.means$pc.scores[, 1],
      pch = pch.means,
      bg = col.means,
      main = "Principal Component Analysis",
-     xlab = PCx.lab, 
-     ylab = PCy.lab)
+     xlab = PC1.lab, 
+     ylab = PC2.lab)
 
 # Evolutionary Allometry plot
 plot(x = log(info.means$MeanCsize),
@@ -164,107 +196,12 @@ plot(x = log(info.means$MeanCsize),
      pch = pch.evo.allo,
      main = "Evolutionary Allometry",
      xlab = "Log centroid size", 
-     ylab = "Projected regression score")
+     ylab = "Shape (projected regression score)")
 legend(6, 0.135, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
 text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
 ```
 
-## Prepare the tree data for phylogenetic analyses
-The commands in `geomorph` require the tree and datasets to have exactly the same set of species.
-
-### Load in phylogenetic tree
-The most recent tree for Australian rodents is from Smissen & Rowe 2018, Figure 2. The tree is a fossil calibrated ultrametric tree from BEAST2 for Hydromini, which includes all the Australo-Papuan old endemics in Murinae.
-
-This tree adds more species from Australia to the Smissen & Rowe phylogeny. 
-```{r}
-raw.tree <- read.nexus("../Data/Processed/Marcy-BEAST01.con.tre")
-```
-
-### Extract only Genus and Species names from the tree
-The tree file has uneven amounts of information for each entry, some entries have catalog numbers and others do not. Therefore we needed a `for` loop to grab the first two elements from a list, which always corresponded to Genus and Species.
-
-We reassign only Genus and Species names (in form "Genus_species") to the tree so that going forward it is easier to compare to the shape data. 
-```{r}
-no.cat.tree <- raw.tree  # initiate new, modified tree with no CatNums
-label.list <- strsplit(raw.tree$tip.label, "_")  # separate info into list
-
-# For loop finds Genus & Species and reassigns tip name as "Genus_species"
-for (i in 1:length(label.list)) {
-        label <- unlist(label.list[i])
-        no.cat.tree$tip.label[i] <- paste(label[1], label[2], sep = "_")
-}
-```
-
-### Rename node
-Since the 2018 Smissen & Rowe tree focused primarily on New Guinae species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to rename one of the nodes with the Australian species. 
-
-**Renamed node:**
-_Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
-
-```{r}
-renamed.tree <- no.cat.tree
-P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
-renamed.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
-```
-
-### Prune the tree and shape datasets to match each other
-Now that the names in the Smissen & Rowe tree can be compared to our info.phylo metadata, we can shape dataset to have all the same species.
-
-First, prune the tree of species not in the shape data
-```{r}
-concord <- name.check(renamed.tree, renamed.tree$tip.label, dimnames(mean.shapes)[[3]])  # check concordance
-aus.tree <- drop.tip(renamed.tree, concord$tree_not_data)  # prune tree to Aus
-```
-
-Second, remove duplicates of species in the tree
-```{r}
-dupes <- which(duplicated(aus.tree$tip.label))
-aus.tree <- drop.tip(aus.tree, dupes)
-```
-
-Third, subset and re-order the metadata and shape datasets to match the order of species found in the tree. 
-```{r}
-# Subset
-to.remove <- name.check(aus.tree, aus.tree$tip.label, dimnames(mean.shapes)[[3]])
-info.means.tree <- info.means[!is.element(info.means$FullName, to.remove$data_not_tree), ]  # metadata
-mean.shapes.tree <- mean.shapes[, , !is.element(info.means$FullName, to.remove$data_not_tree)]  # shape data
-
-# Re-order to match tree tip order
-tree.order <- match(aus.tree$tip.label, info.means.tree$FullName)
-info.means.tree <- info.means.tree[tree.order, ]  # metadata
-mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
-```
-
-## Phylogenetic Analyses
-First, test for phylogenetic signal in the shape data. 
-```{r}
-physignal(mean.shapes.tree, aus.tree, iter = 500)
-```
-
-### Evolutionary Allometry
-```{r}
-# Interaction with genus
-evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$Genus)
-evo.allo.gen <- procD.pgls(shape ~log(CS) * genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
-evo.allo.gen
-
-# R squared for evolutionary allometry with genus
-evo.allo.gen$R2
-
-# Without interaction term
-evo.allo.gen.gdf <- geomorph.data.frame(shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, genus = info.means.tree$Genus)
-evo.allo.gen.2 <- procD.pgls(shape ~log(CS) + genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
-evo.allo.gen.2
-```
-
-### Export tables
-```{r}
-write.table(evo.allo.gen$aov.table, "../Data/Results/PANOVA_interaction.csv", sep = ",")
-
-write.table(evo.allo.gen.2$aov.table, "../Data/Results/PANOVA_no_int.csv", sep = ",")
-```
-
 ### Save intermediate data
 ```{r}
-save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
+save(mean.shapes, info.means, file = "../Data/Processed/04-mean-data.rda")
 ```
