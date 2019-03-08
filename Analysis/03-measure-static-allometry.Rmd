@@ -122,20 +122,60 @@ cor.static <- cor.test(log(spp.results$size), spp.results$Reg.proj, method = "pe
 cor.static.assoc <- round(unname(cor.static$estimate), digits = 2)  # round to 3 sig figs
 cor.static.assoc
 cor.static$p.value
+```
 
-# Plot static and evolutionary allometry
+### Plot static and evolutionary allometry multipanel figure
+```{r}
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+
+# Plot of all data points with evolutionary allometry
+par(mar = c(1, 4, 1.5, 0))
 plot(x = log(spp.results$size),
      y = spp.results$Reg.proj,
-     xlim = c(4.7, 6.4),
+     xlim = c(4.7, 6.3),
      col = sp.col.gen, 
      pch = pch.spp,
      bg = sp.col.gen,
      main = "Static and evolutionary allometry",
+     xlab = NA,
+     ylab = "Shape (Proj. Reg. Score)")
+abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
+
+# Species Legend
+legend(6.01, 0.06, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.75, pt.cex = 0.8, ncol = 2, x.intersp = .3, y.intersp = 0.6)
+
+# Plot of static allometry with evolutionary allometry
+par(mar=c(5, 4, 1.5, 0))
+plot(x = log(spp.results$size),
+     y = spp.results$Reg.proj,
+     xlim = c(4.7, 6.3),
+     col = "white", 
+     pch = pch.spp,
+     bg = "white",
      xlab = "Log centroid size", 
-     ylab = "Projected Regression Score")
-abline(lm(mean.shape$V1 ~ log(mean.size$x)))  # plots evolutionary allometry
-legend(6.04, 0.06, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.7, pt.cex = 0.8, ncol = 2, x.intersp = .3, y.intersp = 0.6)
-text(5.7, -0.02, paste("r = ", cor.static.assoc), col = "dark grey")
+     ylab = "Shape (Proj. Reg. Score)")
+abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
+text(6, -0.02, paste("r = ", cor.static.assoc), cex = 1.3, col = "dark grey")
+
+# Line segments to represent the static allometry for each species
+taxa <- sort(unique(info$Taxa))  # ABC order
+for(i in 1:length(taxa)) {
+        # Isolate size and shape info for each taxon
+        taxon.size <- spp.results$size[which(info$Taxa == taxa[i])]
+        taxon.shape <- spp.results$Reg.proj[which(info$Taxa == taxa[i])]
+        
+        # Find parameters of regression line
+        lm.params <- lm(taxon.shape ~ log(taxon.size))
+        lm.slope <- unname(lm.params$coefficients[2])
+        lm.int <- unname(lm.params$coefficients[1])
+
+        # Draw regression line segment between min and max points 
+        x.0 <- min(log(taxon.size))
+        y.0 <- x.0 * lm.slope + lm.int  # y = mx + b
+        x.1 <- max(log(taxon.size))
+        y.1 <- x.1 * lm.slope + lm.int  # y = mx + b
+        segments(x.0, y.0, x.1, y.1, col = col.unique.spp[i], lwd = 1.5)
+}
 ```
 
 ### Create the same figure for genera (supplemental info)
