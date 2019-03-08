@@ -116,13 +116,13 @@ PC2.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
 
 # Find Pearson's r for correlation with PC1
 cor <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 1], method = "pearson")
-cor.assoc <- round(unname(cor$estimate), digits = 3)  # round to 3 sig figs
+cor.assoc <- round(unname(cor$estimate), digits = 3)  # 3 sig figs
 cor.assoc
 cor$p.value
 
 # Find Pearson's r for correlation with PC2
 cor2 <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 2], method = "pearson")
-cor.assoc2 <- round(unname(cor2$estimate), digits = 3)  # round to 3 sig figs
+cor.assoc2 <- round(unname(cor2$estimate), digits = 3)  # 3 sig figs
 cor.assoc2
 cor2$p.value
 ```
@@ -168,7 +168,10 @@ hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
 hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 
 # Plot the range of variation along PC1 using a heat color scheme
+open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+view3d(phi = 90)  # flip cranium
+rgl.snapshot("PC1heatmap.png")  # save screenshot for multipanel plot
 
 ```
 
