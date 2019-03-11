@@ -17,6 +17,7 @@ Here we plot the PCA and evolutionary allometry plots as well as the PC1 min and
 ```{r message = FALSE}
 library(stringr)
 library(geomorph)
+library(plotrix)
 # Load libraries (and install if necessary) for landvR package
 if(!require(devtools)) install.packages("devtools")
 if(!require(dispRity)) install.packages("dispRity")
@@ -175,10 +176,12 @@ rgl.snapshot("PC1heatmap.png")  # save screenshot for multipanel plot
 
 ```
 
-### Plot the multi-panel figure
-PCA on top, evolutionary allometry plot in the middle, PC1 heatplot on the bottom.
+### Plot and export the multi-panel figure
+PCA on top and evolutionary allometry plot on the bottom
 ```{r}
-layout(matrix(c(1,1,2,2,3,3), 3, 2, byrow = TRUE))  # 3 rows, 2 columns
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure2_PCA_EvoAllo.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
 
 # PCA plot
 plot(x = -pca.means$pc.scores[, 1],
@@ -190,18 +193,37 @@ plot(x = -pca.means$pc.scores[, 1],
      main = "Principal Component Analysis",
      xlab = PC1.lab, 
      ylab = PC2.lab)
+text(.105, -0.003, "Frugivores", col = "darkgoldenrod4")
+draw.ellipse(.116, .015, .006, .012, angle = -12, border = "darkgoldenrod4")
+
+text(.075, 0.041, "Herbivores", col = "dark blue")
+draw.ellipse(.048, .033, .025, .007, angle = -19, border = "dark blue")
+
+text(.045, -0.054, "Carnivores", col = "red")
+draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "red")
+
+text(-.055, 0.035, "Notomys", col = "blue")
+draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("blue", "blue"))  # draws both
 
 # Evolutionary Allometry plot
 plot(x = log(info.means$MeanCsize),
      y = mean.allo$Reg.proj,
-     xlim = c(4.75, 6.17),
+     xlim = c(4.75, 6),
      col = col.means, 
      pch = pch.evo.allo,
      main = "Evolutionary Allometry",
      xlab = "Log centroid size", 
-     ylab = "Shape (projected regression score)")
-legend(6, 0.135, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.6, pt.cex = 1, ncol = 2)
-text(5.7, 0.02, paste("r = ", cor.allo.short), col = "dark grey")
+     ylab = "Shape (proj. reg. score)")
+legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+text(4.81, 0.105, paste("r = ", cor.allo.short), col = "dark grey")
+
+text(5.76, 0.11, "Frugivores", col = "darkgoldenrod4")
+text(5.35, 0.053, "Herbivores", col = "dark blue")
+text(5.81, 0.075, "Carnivore", col = "red")
+text(5.03, 0.02, "Carnivore", col = "orange")
+text(5.3, -0.065, "Hopping Notomys", col = "blue")
+
+dev.off()  # finishes plot export
 ```
 
 ### Save intermediate data
