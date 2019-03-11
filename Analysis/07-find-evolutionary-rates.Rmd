@@ -1,5 +1,5 @@
 ---
-title: "06-measure-evolutionary-rates"
+title: "07-find-evolutionary-rates"
 author: "Ariel Marcy"
 date: "2/4/2019"
 output: html_document
@@ -20,13 +20,13 @@ library(geomorph)
 library(geiger)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
-load(file = "../Data/Processed/04-phylo-data.rda")
+load(file = "../Data/Processed/06-phylo-data.rda")
 ```
 
 ## Compare evolutionary rates
 Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expect specialists like carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
 
-First, we need to make sure the data meets the brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
+First, we need to make sure the data meets the Brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
 # Plot disparity through time
 mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)

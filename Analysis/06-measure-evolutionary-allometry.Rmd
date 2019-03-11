@@ -1,5 +1,5 @@
 ---
-title: "05-measure-evolutionary-allometry"
+title: "06-measure-evolutionary-allometry"
 author: "Ariel Marcy"
 date: "2/14/2019"
 output: html_document
@@ -126,5 +126,5 @@ write.table(evo.allo.gen.2$aov.table, "../Data/Results/PANOVA_no_int.csv", sep =
 
 ### Save intermediate data
 ```{r}
-save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/05-phylo-data.rda")
+save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/06-phylo-data.rda")
 ```
