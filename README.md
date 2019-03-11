@@ -4,7 +4,7 @@ Code author: Ariel E. Marcy
 To cite the paper and/or code:
 > Coming soonish
 
-As of February 2018, this is still a work in progress.
+As of March 2018, this is still a work in progress.
 
 *All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
 
@@ -36,10 +36,11 @@ The analysis workflow is broken down into smaller scripts explained below. Each 
 
 * **01-extract-data-for-analyses.Rmd** Extracts both 3D coordinate data as well as the metadata data from Viewbox and prepares it for analysis in `geomorph`. Separates coordinate data into big and small patch protocol datasets. Runs GPA with bilateral symmetry, merges the symmetric shape component with centroid size, and calculates asymmetric variation for both patch datasets.
 * **02-calculate-user-error.Rmd** Allows users to view outliers and find major landmarking errors. Takes out replicated specimens from the shape data, finds their duplicates, and calculates user error based on repeatability for both patch datasets.
-* **03-measure-static-allometry.Rmd** Tests correlation of PC1 and PC2 with centroid size. Uses `geomorph`'s `procD.allometry()` and `advanced.procD.lm()` to test for significant differences in allometric slopes and intercepts by genus and by clade. Plots allometric relationships using the Common Allometric Component. Plots "size-less" residuals of static allometry.
-* **04-measure-evolutionary-allometry.Rmd** Organizes the tree, mean shape data, and metadata in preparation for phylogenetic analyses of shape using the 2018 Smissen & Rowe tree. Runs phylogenetic analyses including evolutionary signal, and phylogenetically-informed `procD.pgls()` linear model for evolutionary allometry.
-* **05-plot-heatmaps.Rmd** Plot heatmaps showing a statistically rigorous visualization of how landmarks vary from PC1 mininum to PC1 maximum. Ilustrates the allometric changes in Australian rodents.
-* **06-measure-evolutionary-rates.Rmd** Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. 
+* **03-measure-static-allometry.Rmd** Tests correlation of PC1 and PC2 with centroid size. Uses `geomorph`'s `procD.allometry()` and `advanced.procD.lm()` to test for significant differences in allometric slopes and intercepts by genus and by clade. Plots allometric relationships using the Common Allometric Component. Plots "size-less" residuals of static allometry. **Generates Figure 1**
+* **04-plot-evolutionary-allometry.Rmd** Finds mean shape and centroid size in preparation for evolutionary allometry and phylogenetic analyses. Plots PCA of shape data. **Generates Figure 2**
+* **05-plot-heatmaps.Rmd** Plot heatmaps showing a statistically rigorous visualization of how landmarks vary from PC1 mininum to PC1 maximum. Ilustrates the allometric changes in Australian rodents. **Generates Figure 3**
+* **06-measure-evolutionary-allometry** Organizes the tree, mean shape data, and metadata in preparation for phylogenetic analyses of shape using the 2018 Smissen & Rowe tree. Runs phylogenetic analyses including evolutionary signal, and phylogenetically-informed `procD.pgls()` linear model for evolutionary allometry. **Generates Table 1**
+* **06-find-evolutionary-rates.Rmd** Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table 2**
 
 * **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the 4 museums' original metadata.  
 
