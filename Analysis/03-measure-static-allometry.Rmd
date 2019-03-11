@@ -142,6 +142,7 @@ plot(x = log(spp.results$size),
      xlab = NA,
      ylab = "Shape (Proj. Reg. Score)")
 abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
+text(min(log(spp.results$size)), max(spp.results$Reg.proj), "a")
 
 # Species Legend
 legend(6.05, 0.06, legend = sort(unique(info$Taxa)), col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
@@ -158,6 +159,7 @@ plot(x = log(spp.results$size),
      ylab = "Shape (Proj. Reg. Score)")
 abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
 text(6.2, 0.02, paste("r = ", cor.static.assoc), cex = 1.3, col = "dark grey")
+text(min(log(spp.results$size)), max(spp.results$Reg.proj), "b")
 
 # Line segments to represent the static allometry for each species
 taxa <- sort(unique(info$Taxa))  # ABC order

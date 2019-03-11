@@ -17,11 +17,7 @@ Here we plot the PCA and evolutionary allometry plots as well as the PC1 min and
 ```{r message = FALSE}
 library(stringr)
 library(geomorph)
-library(plotrix)
-# Load libraries (and install if necessary) for landvR package
-if(!require(devtools)) install.packages("devtools")
-if(!require(dispRity)) install.packages("dispRity")
-if(!require(landvR)) install_github("TGuillerme/landvR")
+library(plotrix)  # needed to draw ellipses
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
@@ -139,43 +135,6 @@ cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pe
 cor.allo.short <- round(cor.allo$estimate, 2)  # 2 sig figs
 ```
 
-### Plot PC1 Min/Max
-For the heatmap, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along the PC axes. Much of the below was adapted from [this vignette written by Dr Guillerme](https://cdn.rawgit.com/TGuillerme/landvR/8a6a6bd5/inst/vignettes/Landmark_partition_test.html).
-```{r}
-# Find mean configuration - i.e. mean shape in dataset
-consensus <- (select.procrustes(shape, selector = mean))[[1]]
-
-# Measure spherical coordinates differences from the mean for each specimen for each landmark
-diff.from.mean <- coordinates.difference(coordinates = shape, reference = consensus, type = "spherical")
-
-# Ordinate the data
-twoD.shape <- two.d.array(shape)
-ordination <- stats::prcomp(twoD.shape)
-
-# Force the symmetric component of shape into class "gpagen" (required for variation.range)
-gpagen.shape <- list()
-gpagen.shape$coords <- shape
-gpagen.shape$consensus <- consensus
-class(gpagen.shape) <- "gpagen"
-
-# Measure extremes of variation from mean on PC1
-PC1.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 1, ordination = ordination, type = "spherical")
-
-# Wrap specimens on the tangent space
-wrap.PCA <- plotTangentSpace(shape, verbose = FALSE)
-
-# Select extreme specimens (the ones that make the warp-meshes)
-hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
-hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
-
-# Plot the range of variation along PC1 using a heat color scheme
-open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
-view3d(phi = 90)  # flip cranium
-rgl.snapshot("PC1heatmap.png")  # save screenshot for multipanel plot
-
-```
-
 ### Plot and export the multi-panel figure
 PCA on top and evolutionary allometry plot on the bottom
 ```{r}
@@ -190,7 +149,7 @@ plot(x = -pca.means$pc.scores[, 1],
      col = col.means,
      pch = pch.means,
      bg = col.means,
-     main = "Principal Component Analysis",
+     main = "a) Principal Component Analysis",
      xlab = PC1.lab, 
      ylab = PC2.lab)
 text(.105, -0.003, "Frugivores", col = "darkgoldenrod4")
@@ -211,7 +170,7 @@ plot(x = log(info.means$MeanCsize),
      xlim = c(4.75, 6),
      col = col.means, 
      pch = pch.evo.allo,
-     main = "Evolutionary Allometry",
+     main = "b) Evolutionary Allometry",
      xlab = "Log centroid size", 
      ylab = "Shape (proj. reg. score)")
 legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)

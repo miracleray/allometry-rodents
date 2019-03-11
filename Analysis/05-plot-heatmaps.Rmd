@@ -1,0 +1,104 @@
+---
+title: "05-plot-heatmaps"
+author: "Ariel Marcy"
+date: "3/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
+```
+
+# Plot PC1 Min/Max
+For the heatmap, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along the PC axes. 
+
+```{r message = FALSE}
+library(geomorph)
+library(png)  # needed to work with screenshots
+# Load libraries (and install if necessary) for landvR package
+if(!require(devtools)) install.packages("devtools")
+if(!require(dispRity)) install.packages("dispRity")
+if(!require(landvR)) install_github("TGuillerme/landvR")
+source("../Functions/utilities.R")  # loads custom functions
+load(file = "../Data/Processed/02-main-data.rda")
+```
+
+### Set up
+The below was adapted from a [vignette written by Dr Guillerme](https://cdn.rawgit.com/TGuillerme/landvR/8a6a6bd5/inst/vignettes/Landmark_partition_test.html).
+```{r}
+# Find mean configuration - i.e. mean shape in dataset
+consensus <- (select.procrustes(shape, selector = mean))[[1]]
+
+# Measure spherical coordinates differences from the mean for each specimen for each landmark
+diff.from.mean <- coordinates.difference(coordinates = shape, reference = consensus, type = "spherical")
+
+# Ordinate the data
+twoD.shape <- two.d.array(shape)
+ordination <- stats::prcomp(twoD.shape)
+
+# Force the symmetric component of shape into class "gpagen" (required for variation.range)
+gpagen.shape <- list()
+gpagen.shape$coords <- shape
+gpagen.shape$consensus <- consensus
+class(gpagen.shape) <- "gpagen"
+
+# Measure extremes of variation from mean on PC1
+PC1.var <- variation.range(gpagen.shape, return.ID = FALSE, axis = 1, ordination = ordination, type = "spherical")
+
+# Wrap specimens on the tangent space
+wrap.PCA <- plotTangentSpace(shape, verbose = FALSE)
+
+# Select extreme specimens (the ones that make the warp-meshes)
+hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
+hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
+```
+
+## Plot the range of variation along PC1 using a heat color scheme
+`3d` commands allow precise control of 3D visualization to get dorsal and lateral views
+```{r, echo = FALSE}
+# Dorsal view
+open3d(windowRect = c(0, 0, 600, 600))
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+view3d(phi = 0)  # flip cranium
+rgl.snapshot("PC1heatmap_dor.png")  # save screenshot for multipanel plot
+
+# Lateral view
+open3d(windowRect = c(0, 0, 600, 600))
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+view3d(phi = 90)
+rgl.snapshot("PC1heatmap_lat.png")
+```
+
+### Prep images for multi-panel figure
+This step assumes you have ImageMagik installed
+```{r}
+system("mogrify PC1heatmap_*.png -trim *.png")  # removes whitespace (requires ImageMagik)
+dor <- readPNG("PC1heatmap_dor.png")
+lat <- readPNG("PC1heatmap_lat.png")
+```
+
+## Make multipanel figure
+```{r}
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure3_Heatmaps.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
+par(mar=c(0, 0, 0, 0))
+
+# Plot dorsal view
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
+rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
+text(dim(dor)[2]-10, dim(dor)[1]-10, "a", cex = 2)
+
+# Plot lateral view with same dimensions as above
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
+rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
+text(dim(dor)[2]-10, dim(dor)[1]-10, "b", cex = 2)
+
+# Make gradient legend
+legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
+rasterImage(legend_image, 0, 220, 25, 160)
+text(70, 210, "High variation", col = "dark grey")
+text(50, 172, "Low", col = "dark grey")
+dev.off()
+```
