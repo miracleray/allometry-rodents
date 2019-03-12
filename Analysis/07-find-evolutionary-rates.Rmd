@@ -87,6 +87,13 @@ summary(frug.test)
 p.values.bon <- p.adjust(c(herb.test$P.value, carn.test$P.value, not.test$P.value, frug.test$P.value), method = "bonferroni")
 ```
 
+### Plot branch lengths
+
+```{r}
+plot(aus.tree)
+
+```
+
 ## Create and export Table 2
 ```{r}
 # Evolutionary rate ratio to 1 decimal place
@@ -108,11 +115,10 @@ FindRateDiff <- function(test) {
                 "Slower"
         }
 }
-
 found <- c(FindRateDiff(herb.test), FindRateDiff(carn.test), FindRateDiff(not.test), FindRateDiff(frug.test))
 found[which(p.value > 0.05)] <- "No difference"
 
-# Combine columns and give names to rows and columns
+# Combine and name rows and columns
 table2 <- cbind(ratio, p.value, expected, found)
 colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
 row.names(table2) <- c("Herbivores", "Hopping Notomys", "Carnivores", "Frugivores")

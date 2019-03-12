@@ -124,8 +124,8 @@ table1b <- as.data.frame(round(evo.allo.gen.2$aov.table, 3))
 table1b[is.na(table1b)] <- ""
 
 # Export
-write.table(table1a, "../Data/Results/PANOVA_interaction.csv", sep = ",", col.names = NA)
-write.table(table1b, "../Data/Results/PANOVA_no_int.csv", sep = ",", col.names = NA)
+write.table(table1a, "../Data/Results/Table1a_ANOVA_int.csv", sep = ",", col.names = NA)
+write.table(table1b, "../Data/Results/Table1b_ANOVA_no_int.csv", sep = ",", col.names = NA)
 ```
 
 ### Save intermediate data
