@@ -11,11 +11,11 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Plot PC1 Min/Max
-For the heatmap, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along the PC axes. 
+To make the landmark variation heatmaps, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along PC1. 
 
 ```{r message = FALSE}
-library(geomorph)
 library(png)  # needed to work with screenshots
+library(geomorph)
 # Load libraries (and install if necessary) for landvR package
 if(!require(devtools)) install.packages("devtools")
 if(!require(dispRity)) install.packages("dispRity")
@@ -56,7 +56,9 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 
 ## Plot the range of variation along PC1 using a heat color scheme
 `3d` commands allow precise control of 3D visualization to get dorsal and lateral views
-```{r, echo = FALSE}
+
+ERROR: rgl.snapshot() can't save the png files to the Data/Results folder so the screenshots end up in the Analysis folder
+```{r}
 # Dorsal view
 open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
@@ -71,14 +73,15 @@ rgl.snapshot("PC1heatmap_lat.png")
 ```
 
 ### Prep images for multi-panel figure
-This step assumes you have ImageMagik installed
+This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify PC1heatmap_*.png -trim *.png")  # removes whitespace (requires ImageMagik)
 dor <- readPNG("PC1heatmap_dor.png")
 lat <- readPNG("PC1heatmap_lat.png")
 ```
 
-## Make multipanel figure
+## Make multipanel Figure 3
+ERROR: memory issues when trying to add legend within setEPS. Works when lines 86-103 are run through the console, plot is "zoomed" and then screenshot from that window
 ```{r}
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure3_Heatmaps.eps")
@@ -88,17 +91,17 @@ par(mar=c(0, 0, 0, 0))
 # Plot dorsal view
 plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
 rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
-text(dim(dor)[2]-10, dim(dor)[1]-10, "a", cex = 2)
+text(0, dim(dor)[1]-10, "a", cex = 2)
 
 # Plot lateral view with same dimensions as above
 plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
 rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
-text(dim(dor)[2]-10, dim(dor)[1]-10, "b", cex = 2)
+text(0, dim(dor)[1]-10, "b", cex = 2)
 
 # Make gradient legend
 legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
-rasterImage(legend_image, 0, 220, 25, 160)
-text(70, 210, "High variation", col = "dark grey")
-text(50, 172, "Low", col = "dark grey")
+rasterImage(legend_image, 440, 220, 465, 160)
+text(393, 213, "High variation", col = "dark grey", cex = 1.4)
+text(420, 168, "Low", col = "dark grey", cex = 1.4)
 dev.off()
 ```

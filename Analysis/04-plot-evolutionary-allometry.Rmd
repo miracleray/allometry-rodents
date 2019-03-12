@@ -10,8 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Plot evolutionary allometry and PC1 heatmap
-Here we plot the PCA and evolutionary allometry plots as well as the PC1 min and max heatmap showing what shape changes occur. PC1 is highly correlated allometric shape. 
+# Plot PCA and evolutionary allometry
+Here we plot the Principal Components Analysis to visualize morphological variation. PC1 is highly correlated allometric shape. We also plot evolutionary allometry to visualize species which diverge.
+
+This script generates Figure 2. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
@@ -82,7 +84,7 @@ cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)  
 info.means$MeanCsize <- cs.means[, 2]  # store in vector
 ```
 
-## Make multipanel figure: mean PCA, evolutionary allometry, and PC1 heatmap
+## Make multipanel Figure 2: mean shape PCA and evolutionary allometry
 First, set up colors and points by genera and important taxa
 ```{r}
 # Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
@@ -90,7 +92,7 @@ info.means$EGenus <- info.means$Genus
 info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
 
 # Colors for genera and different points by species within each genus; used for PCA
-col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors
+col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03
 pch.means <- PointOutDiffSpp(info.means)  # pts by unique species in a genus
 pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
@@ -107,24 +109,24 @@ pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
 # Write x and y labels with proportion of variance for PC1 and PC2
 PCs <- pca.means$pc.summary$importance
 PC1.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
-PC1.lab <- paste("PC", 1, " (", PCx.per, "%)", sep = "")
+PC1.lab <- paste("PC", 1, " (", PC1.per, "%)", sep = "")
 PC2.per <- round(PCs[2, 2] * 100, digits = 1)
-PC2.lab <- paste("PC", 2, " (", PCy.per, "%)", sep = "")
+PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 
 # Find Pearson's r for correlation with PC1
 cor <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 1], method = "pearson")
 cor.assoc <- round(unname(cor$estimate), digits = 3)  # 3 sig figs
 cor.assoc
-cor$p.value
+cor$p.value  # reported in paper
 
 # Find Pearson's r for correlation with PC2
 cor2 <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 2], method = "pearson")
 cor.assoc2 <- round(unname(cor2$estimate), digits = 3)  # 3 sig figs
 cor.assoc2
-cor2$p.value
+cor2$p.value  # reported in paper
 ```
 
-### ProcD Allometry visualization
+### Generate data for Evolutionary Allometry plot
 ```{r}
 # Run allometry on all 34 species
 evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
@@ -135,7 +137,7 @@ cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pe
 cor.allo.short <- round(cor.allo$estimate, 2)  # 2 sig figs
 ```
 
-### Plot and export the multi-panel figure
+### Plot and export the multi-panel Figure 2
 PCA on top and evolutionary allometry plot on the bottom
 ```{r}
 setEPS()  # sets up plot export

@@ -63,7 +63,7 @@ Interspersed throughout the data collection process, AEM landmarked 20 specimens
 We correct the naming scheme to be machine-readable and in the process create a list of specimen names which were landmarked twice. In script 02-calculate-user-error.Rmd, we use this list to analyze user error.
 ```{r}
 # Detect replicates
-names <- dimnames(A)[[3]]
+names <- dimnames(A)[[3]]  # user-entered names from shape data
 is.rep <- which(str_detect(names, "_ERR"))
 
 # Remove unpredictable or extra characters in specimen names
@@ -81,7 +81,7 @@ for (i in 1:dim(A)[3]){  # 1 to highest number of specimens
 
 # Make list of replicated specimens for later
 names <- gsub("_small", "", names)
-names <- gsub("_big", "", names)
+names <- gsub("_big", "", names)  # these two lines remove patch protocol distinctions (not relevant for this paper)
 rep.spec <- unique(names[is.rep])
 ```
 
@@ -117,17 +117,17 @@ sp.info <- sp.info[c(-dataset.rm), ]  # Metadata
 A <- A[, , c(-dataset.rm)]  # Shape dataset
 ```
 
-## Create shape matrices for each patch protocol
-Our methodology tested whether different patch protocols (big and small) impact later shape analyses. To save time, we digitized the patches at the same time so we have two different patch protocols to extract from the same shape coordinate file. 
+## Isolate shape matrix for small patch protocol only
+Originally we had a methodology to test whether different patch protocols (big and small) impacted later shape analyses. We don't analyze this in this paper. To save time, however, we digitized the patches at the same time so we have two different patch protocols to extract from the same shape coordinate file. 
 ```{r}
 # Extract landmark point names
 pt.names <- coords.3D[, 1]  # gets 3D point names from Viewbox
-no.XYZ <- str_remove(pt.names, "[XYZ] ") # removes XYZ appended by Viewbox
+no.XYZ <- str_remove(pt.names, "[XYZ] ")  # removes XYZ appended by Viewbox
 u.pt.names<- unique(no.XYZ)  # returns unique point and curve names
 ```
 
 ### Isolate the small patch dataset
-The dataset contains two different shape datasets from two different landmarking protocols. This study, however, uses just one protocol, the small patch dataset as shown in the supplementary material of the paper. 
+The dataset contains two different shape datasets from two different landmarking protocols. This study, however, uses just one protocol, the small patch dataset (shown in the supplementary Figure S1). 
 ```{r}
 # Create data from small patch protocol
 sm.data <- sp.info$Patch == "small"
@@ -139,7 +139,7 @@ pt.names <- u.pt.names[sm.pts]  # creates table of unique point names
 ```
 
 ## Run GPA and bilateral symmetry
-Because we already slid our curve semi-landmarks and patch semi-landmarks in Viewbox, we pass their coordinates to _geomorph_ as if they are fixed landmarks. This avoids "over-sliding" the shape data. 
+Because we already slid our curve and patch semi-landmarks in Viewbox, we pass their coordinates to _geomorph_ as if they are fixed landmarks. This avoids "over-sliding" the shape data. 
 ```{r}
 Y <- gpagen(S, Proj = TRUE, ProcD = TRUE)
 ```
@@ -170,7 +170,7 @@ land.pairs <- FindPairs(pt.names)
 ### Run bilateral GPA
 Now we are ready to re-run the generalized Procrustes alignment using bilateral landmark designations and extract the symmetric component of shape.
 
-The two bilateral GPAs can take some time (~5min total to run).
+The bilateral GPA can take some time (~7 min total to run).
 
 WARNING: the `bilat.symmetry()` function will change the order of specimens in the shape file IF you have any non-unique names in the vector given to argument `ind =` of `bilat.symmetry()`. For example, if we had used `$CatNum`, then we would have 2 of the same CatNums for specimens with replicates. To avoid this, have a column for Replicate Status ("Rep" in this script), merge this with the CatNum column and any other columns of interest, and use this `$All` column for the `ind =` argument of `bilat.symmetry()`.
 ```{r}
@@ -180,7 +180,7 @@ shape <- biY$symm.shape
 ```
 
 ### Save intermediate data
-Now that we have extracted the 2 patch protocol datasets and the specimen metadata, we are ready for the next analysis step: 02-calculate-user-error.Rmd.
+Now that we have extracted the shape coordinates and the specimen metadata, we are ready for the next analysis step: 02-calculate-user-error.Rmd.
 
 Here we save the R objects we will need for later steps so this script does not have to be run again.
 ```{r}

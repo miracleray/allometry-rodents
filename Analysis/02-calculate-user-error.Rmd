@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 # Calculate user error
 Geometric morphometric studies require a lot of user-generated data and it's important to assess how much user error is created during landmarking. 
 
-First, we visualize whether any outliers can be explained by mistakes in landmark placement (e.g. a point "falling through" the nasal to land on the inner basicranium).
+First, we visualized whether any outliers can be explained by mistakes in landmark placement (e.g. a point "falling through" the nasal to land on the inner basicranium).
 
 Second, we compare the shape variation between 20 individuals, from a variety of different species, landmarked twice to calculate the intra-observer (i.e. digitizer) error.
 
@@ -30,7 +30,7 @@ load(file = "../Data/Processed/01-bilat-data-w-ERR.rda")  # data created by the 
 ```
 
 ## 1) Check for outliers and fix landmarking errors
-_geomorph_ comes with a handy function to check for outliers. Since our sample has a wide range of species, we decided to include the groups factor. This means the plotOutliers returns likely outliers for each genus instead of the group as a whole. When groups were not defined, only large species were returned as "outliers". 
+_geomorph_ comes with a handy function to check for outliers. Since our sample has a wide range of species, we decided to include the groups factor. This means the `plotOutliers` returns likely outliers for each genus instead of the group as a whole. When groups were not defined, only large species were returned as "outliers". 
 ```{r}
 # Plot outliers by genus for small patch dataset
 outliers <- plotOutliers(shape, groups = sp.info$Genus, inspect.outliers = T)
@@ -52,29 +52,27 @@ med.shape <- MatchSpecShape(med.spec, sp.info, shape)
 
 # Compare landmark locations in outlier specimens to median specimen
 plotRefToTarget(med.shape, out.1, method = "vector", label = FALSE)
-
-outliers
 ```
 **Repeat the above for each genus/patch protocol as needed. When landmarking errors are found, fix in Viewbox, export new coordinates, and begin again from script 01.** 
 
-### ID outliers within genus Pseudomys
-To ID outliers within each species of the speciose genus Pseudomys, we needed to create shape and metadata files just for them so the `plotOutliers()` function can separate them. Otherwise only individuals from P oralis show up as outliers. 
+### ID outliers within genus *Pseudomys*
+To ID outliers within each species of the speciose genus *Pseudomys*, we needed to create shape and metadata files just for them so the `plotOutliers()` function can separate them. Otherwise only individuals from P oralis show up as outliers. 
 ```{r}
 # Isolate Pseudomys species
-is.Pse <- which(sp.info$Species == "Pse")
+is.Pse <- which(sp.info$Genus == "Pse")
 Pse.sm.shape <- shape[, , is.Pse]  # shape
-Pse.sm.info <- sp.info[is.Pse, ]  # metadata
+Pse.sm.info <- droplevels(sp.info[is.Pse, ])  # metadata
 
 # Run plotOutliers
-outliers.Pse <- plotOutliers(Pse.sm.shape, sp.info$Species, inspect.outliers = TRUE)
+outliers.Pse <- plotOutliers(Pse.sm.shape, Pse.sm.info$Species, inspect.outliers = TRUE)
 ```
 
 ## 2) Calculate intra-observer error
 Now that the shape data have been processed via GPA + bilateral symmetry and corrected for obvious landmarking errors, we can separate the data intended to measure user error from the main data for the remaining analyses. 
 
-Create an error measurement dataset for both protocols that includes replicates and the specimens they duplicated (i.e. each CatNum should have two entries, one labeled "ERR", and one labled "non"). These data will be used to calculate user error. 
+First, create an error measurement dataset for both protocols that includes replicates and the specimens they duplicated (i.e. each CatNum should have two entries, one labeled "ERR", and one labled "non"). These data will be used to calculate user error. 
 ```{r}
-# Find index for both versions of specimens with replicates using rep.spec list make in script 01.
+# Find index for both versions of specimens with replicates using rep.spec list made in script 01.
 rep.CatNums <- as.character(str_sub(rep.spec, 9, -1))  # isolate CatNum
 error.data <- which(sp.info$CatNum %in% rep.CatNums)
 
@@ -90,9 +88,7 @@ RepAbility(err.shape, err.info$CatNum, n.Rep = 2)  # note: n.Rep = 2 in this cas
 ```
 
 ### Calculate repeatability without patch points
-Patch points could artificially inflate our repeatability numbers since they are placed automatically by the Viewbox software. To test this, we calculated repeatability for each protocol with patch points removed. 
-
-Note that removing patch points will remove 16 more points from the big patch protocol than from the small patch protocol. 
+Patch points could artificially inflate our repeatability numbers since they are placed automatically by the Viewbox software. To test this, we calculated repeatability with patch points removed. 
 ```{r}
 # Find patch numbers
 patches <- str_detect(pt.names, "PAT")
@@ -104,7 +100,7 @@ patchless.shape <- err.shape[-pat.num, , ]
 # Re-run repeatability
 RepAbility(patchless.shape, err.info$CatNum, n.Rep = 2)
 ```
-Taking out patch points decreases the repeatability by less than 2%.
+Taking out patch points decreases the repeatability by ~1.4%.
 
 ## 3) Make main dataset
 Make the datasets without replicates to be used for the rest of the analyses.
@@ -114,15 +110,15 @@ shape <- shape[, , main]
 sp.info <- sp.info[main, ]
 ```
 
-### Remove 2 outliers from dataset
-Two specimens had major landmarking errors: landmarks consistently placed in the wrong places. Therefore, we opted to remove these two specimens.
+### Remove 3 outliers from dataset
+Three specimens had major landmarking errors: landmarks consistently placed in the wrong places. Therefore, we opted to remove these specimens.
 ```{r}
-# Find indices (same for both big and small datasets)
+# Find indices
 mel.out <- which(sp.info$CatNum == "C11381")  # Melomys burtoni
 rat.out <- which(sp.info$CatNum == "C11381")  # Rattus norvegicus
 uro.out <- which(sp.info$CatNum == "J17610")  # Uromys caudimaculatus
 
-# Remove from both datasets
+# Remove from datasets
 info <- sp.info[-c(rat.out, uro.out), ]  # metadata
 shape <- shape[, , -c(rat.out, uro.out)]  # shape data
 ```

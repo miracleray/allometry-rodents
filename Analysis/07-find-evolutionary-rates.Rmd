@@ -15,7 +15,7 @@ Evolutionary studies must take into account the phylogenetic tree because relate
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-library(dispRity)
+#library(dispRity)
 library(geomorph)
 library(geiger)
 source("../Functions/utilities.R")  # loads custom functions
@@ -33,25 +33,7 @@ mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
 aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
 ```
 
-**_Notomys_ versus other species**
-```{r}
-# Set up grouping factor
-gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
-gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
-names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
-
-# Run analysis
-not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
-summary(not.test)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
-names(is.carnivore) <- info.means.tree$FullName
-carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
-summary(carn.test)
-```
+Next, we can compare evolutionary rates:
 
 **Herbivores vs other species**
 ```{r}
@@ -65,6 +47,26 @@ herb.grps[is.sp.herb] <- 1
 names(herb.grps) <- info.means.tree$FullName
 herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
 summary(herb.test)
+```
+
+**Carnivores vs non-carnivores**
+```{r}
+is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
+names(is.carnivore) <- info.means.tree$FullName
+carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
+summary(carn.test)
+```
+
+**_Notomys_ versus other species**
+```{r}
+# Set up grouping factor
+gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
+gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
+names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
+
+# Run analysis
+not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
+summary(not.test)
 ```
 
 **Large frugivores vs others**
@@ -81,7 +83,13 @@ frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 50
 summary(frug.test)
 ```
 
-### Adujust p-values for multiple comparisons
+### Adjust p-values for multiple comparisons
 ```{r}
-p.adjust(c(not.test$P.value, carn.test$P.value, herb.test$P.value, frug.test$P.value), method = "bonferroni")
+p.adjust(c(herb.test$P.value, carn.test$P.value, not.test$P.value, frug.test$P.value), method = "bonferroni")
+```
+
+## Export Table 2
+```{r}
+
+
 ```

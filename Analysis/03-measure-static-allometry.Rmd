@@ -10,16 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Allometry and Morphological Disparity
-Changing size is one of the most common ways that organisms can also change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample. 
+# Static Allometry
+Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
 
-Morphological disparity tests how much Procrustes variation exists within each group (species, clade, or wave) and whether that variation is significantly different from the variation within another group. Strong allometry can constrain variation, therefore a higher morphological disparity could suggest a species' evolution is less constrained by allometry than another's. 
+This script generates Figure 1. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-# library(devtools)  # needed to install dispRity package
-# install_github("TGuillerme/dispRity", ref = "release")  # needed only once
-library(dispRity)
 library(stringr)
 library(data.table)
 library(geomorph)
@@ -28,20 +25,20 @@ load(file = "../Data/Processed/02-main-data.rda")
 ```
 
 ### Set up for analyses
-Since Mastacomys is technically within the genus Pseudomys (Smissen & Rowe 2018), we'll make an "Effective Genus" column where this genus is classified under Pseudomys.
+Since *Mastacomys* is technically within the genus *Pseudomys* (Smissen & Rowe 2018), we'll make an "Effective Genus" column where this genus is classified under *Pseudomys*.
 ```{r}
-# Make an Effective Genus column to better categorize Mas phylogenetically
+# Make Effective Genus column
 info$EGenus <- info$Genus
-info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas is effectively Pseudomys (Pse)
+info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
 ```
 
-Colors for subsequent figures are set up according to column "EGenus":
+Colors for subsequent figures are set up according to column "EGenus". Colors roughtly correspond to phylogenetics such that similar color hues indicate closer evolutionary relationships.
 ```{r}
 # Colors by EGenus: Con Hyd Leg Lep Mel Mes Mus Not Pog Pse(+Mas) Rat Uro Xer Zyz
 col.gen <- c("light green", "red", "cornflowerblue", "dark green", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
 
 # Colors by specimen, ordered in same way as metadata
-sp.col.gen <- PlotByGroup(info, "EGenus", col.gen)  # is the same for big and small protocols, tested with all.equal()
+sp.col.gen <- PlotByGroup(info, "EGenus", col.gen)
 
 # Scheme for legend: taxa listed in order presented in phylogeny
 col.phylo <- c("yellow", "darkgoldenrod4", "dark green", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")
@@ -66,7 +63,7 @@ info.HOS <- info[c(-dataset.rm), ]  # Metadata
 shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
 
-Run allometry tests as well as a homogeneity of slopes test
+Run allometry tests as well as a homogeneity of slopes test. These tests take about 5 min to run. 
 ```{r}
 # Run static allometry test
 spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
@@ -95,7 +92,7 @@ write.csv(pwHOS.pvals, "../Data/Results/19_02_25_static_pwHOS.csv")  # save in R
 ```
 
 ## 2) Visualize static Allometry: Predicted Value
-In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the predicted value of crania shape.
+In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape.
 ```{r}
 # Run static allometry test with all specimens
 spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
@@ -124,7 +121,8 @@ cor.static.assoc
 cor.static$p.value
 ```
 
-### Plot/export static and evolutionary allometry multipanel figure
+### Plot/export static and evolutionary allometry multipanel Figure 1
+Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure1_Static_Evo_Allo.eps")
