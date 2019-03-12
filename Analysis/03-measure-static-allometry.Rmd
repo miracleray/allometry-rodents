@@ -87,8 +87,13 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
 # Correct for multiple comparisons
 pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
 
-# Export p-values
-write.csv(pwHOS.pvals, "../Data/Results/19_02_25_static_pwHOS.csv")  # save in Results folder
+# Turn back into data frame
+HOS.matrix <- matrix(pwHOS.pvals, nrow = dim(pwHOS.spp$P.slopes.dist)[1], ncol = dim(pwHOS.spp$P.slopes.dist)[2])
+rownames(HOS.matrix) <- rownames(pwHOS.spp$P.slopes.dist)
+colnames(HOS.matrix) <- colnames(pwHOS.spp$P.slopes.dist)
+
+# Export p-value matrix
+write.csv(HOS.matrix, "../Data/Results/TableS4_HOS_test.csv")  # save in Results folder
 ```
 
 ## 2) Visualize static Allometry: Predicted Value
