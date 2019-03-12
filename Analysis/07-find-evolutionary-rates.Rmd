@@ -15,7 +15,6 @@ Evolutionary studies must take into account the phylogenetic tree because relate
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-#library(dispRity)
 library(geomorph)
 library(geiger)
 source("../Functions/utilities.R")  # loads custom functions
@@ -42,7 +41,7 @@ P.ora <- which(info.means.tree$Taxa == "P_ora")
 M.fus <- which(info.means.tree$Taxa == "M_fus")
 is.sp.herb <- c(P.ora, M.fus)
 herb.grps <- rep(2, dim(info.means.tree)[1])
-herb.grps[is.sp.herb] <- 1
+herb.grps[is.sp.herb] <- 1  # species of interest is always 1
 
 names(herb.grps) <- info.means.tree$FullName
 herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
@@ -51,7 +50,7 @@ summary(herb.test)
 
 **Carnivores vs non-carnivores**
 ```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding == "Carnivorous")
+is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
 names(is.carnivore) <- info.means.tree$FullName
 carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
 summary(carn.test)
@@ -60,7 +59,7 @@ summary(carn.test)
 **_Notomys_ versus other species**
 ```{r}
 # Set up grouping factor
-gp.notomys <- rep(0, dim(info.means.tree)[1])  # set "other" as 0
+gp.notomys <- rep(2, dim(info.means.tree)[1])  # set "other" as 2
 gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
 names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
 
@@ -85,11 +84,39 @@ summary(frug.test)
 
 ### Adjust p-values for multiple comparisons
 ```{r}
-p.adjust(c(herb.test$P.value, carn.test$P.value, not.test$P.value, frug.test$P.value), method = "bonferroni")
+p.values.bon <- p.adjust(c(herb.test$P.value, carn.test$P.value, not.test$P.value, frug.test$P.value), method = "bonferroni")
 ```
 
-## Export Table 2
+## Create and export Table 2
 ```{r}
+# Evolutionary rate ratio to 1 decimal place
+ratio <- paste("1:", round(c(herb.test$sigma.d.ratio, not.test$sigma.d.ratio, carn.test$sigma.d.ratio, frug.test$sigma.d.ratio), 1), sep = "")
 
+# P values and remove rates that aren't significant
+p.value <- round(p.values.bon, 3)  # 3 decimal places
+ratio[which(p.value > 0.05)] <- "N.S." 
 
+# Expected rate, hard coded from hypotheses
+expected <- c("Slower", "Slower", "Slower", "Faster")
+
+# Rate difference found
+FindRateDiff <- function(test) {
+        difference <- test$sigma.d.gp[1] - test$sigma.d.gp[2]
+        if (difference > 0) {
+                return("Faster")
+        } else {
+                "Slower"
+        }
+}
+
+found <- c(FindRateDiff(herb.test), FindRateDiff(carn.test), FindRateDiff(not.test), FindRateDiff(frug.test))
+found[which(p.value > 0.05)] <- "No difference"
+
+# Combine columns and give names to rows and columns
+table2 <- cbind(ratio, p.value, expected, found)
+colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
+row.names(table2) <- c("Herbivores", "Hopping Notomys", "Carnivores", "Frugivores")
+
+# Export Table 2
+write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
 ```
