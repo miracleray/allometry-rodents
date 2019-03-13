@@ -106,15 +106,7 @@ ratio[which(p.value > 0.05)] <- "N.S."
 # Expected rate, hard coded from hypotheses
 expected <- c("Slower", "Slower", "Slower", "Faster")
 
-# Rate difference found
-FindRateDiff <- function(test) {
-        difference <- test$sigma.d.gp[1] - test$sigma.d.gp[2]
-        if (difference > 0) {
-                return("Faster")
-        } else {
-                "Slower"
-        }
-}
+# Rate difference found using custom function FindRateDiff
 found <- c(FindRateDiff(herb.test), FindRateDiff(carn.test), FindRateDiff(not.test), FindRateDiff(frug.test))
 found[which(p.value > 0.05)] <- "No difference"
 

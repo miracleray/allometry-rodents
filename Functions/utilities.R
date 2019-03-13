@@ -526,3 +526,23 @@ ReadableTable <- function(table, morph.dis) {
         }
         return(table)
 }
+
+##########################
+# FindRateDiff
+##########################
+
+FindRateDiff <- function(test) {
+        # Determines if rate of group of interest is greater or less than other group.
+        #
+        # Args:
+        #    test: object of class "evolrate" produced by geomorph's compare.evol.rates function with 2 groups and group 1 defined as the group of interest. 
+        #
+        # Returns: 
+        #    A string of "Faster" or "Slower" based on test outcome.
+        difference <- test$sigma.d.gp[1] - test$sigma.d.gp[2]
+        if (difference > 0) {
+                return("Faster")
+        } else {
+                "Slower"
+        }
+}
