@@ -57,31 +57,30 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 ## Plot the range of variation along PC1 using a heat color scheme
 `3d` commands allow precise control of 3D visualization to get dorsal and lateral views
 
-ERROR: rgl.snapshot() can't save the png files to the Data/Results folder so the screenshots end up in the Analysis folder
 ```{r}
 # Dorsal view
 open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
 view3d(phi = 0)  # flip cranium
-rgl.snapshot("PC1heatmap_dor.png")  # save screenshot for multipanel plot
+rgl.snapshot("../Data/Processed/PC1heatmap_dor.png")  # save screenshot for multipanel plot
 
 # Lateral view
 open3d(windowRect = c(0, 0, 600, 600))
 PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
 view3d(phi = 90)
-rgl.snapshot("PC1heatmap_lat.png")
+rgl.snapshot("../Data/Processed/PC1heatmap_lat.png")
 ```
 
 ### Prep images for multi-panel figure
 This step assumes you have ImageMagik installed on your computer
 ```{r}
-system("mogrify PC1heatmap_*.png -trim *.png")  # removes whitespace (requires ImageMagik)
-dor <- readPNG("PC1heatmap_dor.png")
-lat <- readPNG("PC1heatmap_lat.png")
+system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)
+dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
+lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 ```
 
 ## Make multipanel Figure 3
-ERROR: memory issues when trying to add legend within setEPS. Works when lines 86-103 are run through the console, plot is "zoomed" and then screenshot from that window
+ERROR: memory issues when trying to add legend within setEPS. Works when lines 87-104 are run through the console, plot is "zoomed" from RStudio, and then screenshot from that window
 ```{r}
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure3_Heatmaps.eps")
