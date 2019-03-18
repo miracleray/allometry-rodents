@@ -107,6 +107,7 @@ Here we run Procrustes ANOVAs to compare the relative impact of genus, size, and
 ```{r}
 # Procrustes ANOVA with interaction
 evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
+
 evo.allo.gen <- procD.pgls(Shape ~log(CS) * Genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
 evo.allo.gen
 
