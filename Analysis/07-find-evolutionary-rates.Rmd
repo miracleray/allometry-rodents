@@ -36,10 +36,11 @@ Next, we can compare evolutionary rates:
 
 **Herbivores vs other species**
 ```{r}
-# Only specialized herbivores P. oralis and M. fuscus
+# Only specialized herbivores P. oralis, M. fuscus, and L. conditor 
 P.ora <- which(info.means.tree$Taxa == "P_ora")
 M.fus <- which(info.means.tree$Taxa == "M_fus")
-is.sp.herb <- c(P.ora, M.fus)
+L.con <- which(info.means.tree$Taxa == "L_con")
+is.sp.herb <- c(P.ora, M.fus, L.con)
 herb.grps <- rep(2, dim(info.means.tree)[1])
 herb.grps[is.sp.herb] <- 1  # species of interest is always 1
 
@@ -84,7 +85,7 @@ summary(frug.test)
 
 ### Adjust p-values for multiple comparisons
 ```{r}
-p.values.bon <- p.adjust(c(herb.test$P.value, carn.test$P.value, not.test$P.value, frug.test$P.value), method = "bonferroni")
+p.values.bon <- p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel")
 ```
 
 ### Plot branch lengths
@@ -97,23 +98,23 @@ plot(aus.tree)
 ## Create and export Table 2
 ```{r}
 # Evolutionary rate ratio to 1 decimal place
-ratio <- paste("1:", round(c(herb.test$sigma.d.ratio, not.test$sigma.d.ratio, carn.test$sigma.d.ratio, frug.test$sigma.d.ratio), 1), sep = "")
+ratio <- paste("1:", round(c(frug.test$sigma.d.ratio, herb.test$sigma.d.ratio, not.test$sigma.d.ratio, carn.test$sigma.d.ratio), 1), sep = "")
 
 # P values and remove rates that aren't significant
 p.value <- round(p.values.bon, 3)  # 3 decimal places
 ratio[which(p.value > 0.05)] <- "N.S." 
 
 # Expected rate, hard coded from hypotheses
-expected <- c("Slower", "Slower", "Slower", "Faster")
+expected <- c("Faster", "Slower", "Slower", "Slower")
 
 # Rate difference found using custom function FindRateDiff
-found <- c(FindRateDiff(herb.test), FindRateDiff(carn.test), FindRateDiff(not.test), FindRateDiff(frug.test))
+found <- c(FindRateDiff(frug.test), FindRateDiff(herb.test), FindRateDiff(not.test), FindRateDiff(carn.test))
 found[which(p.value > 0.05)] <- "No difference"
 
 # Combine and name rows and columns
 table2 <- cbind(ratio, p.value, expected, found)
 colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
-row.names(table2) <- c("Herbivores", "Hopping Notomys", "Carnivores", "Frugivores")
+row.names(table2) <- c("Frugivores", "Herbivores", "Hopping Notomys", "Carnivores")
 
 # Export Table 2
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
