@@ -176,16 +176,18 @@ plot(x = log(info.means$MeanCsize),
      xlab = "Log centroid size", 
      ylab = "Shape (proj. reg. score)")
 legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+
+abline(lm(mean.allo$Reg.proj ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 text(4.81, 0.105, paste("r = ", cor.allo.short), col = "dark grey")
 
-text(5.76, 0.11, "Frugivores", col = "darkgoldenrod4")
+text(5.75, 0.11, "Frugivores", col = "darkgoldenrod4")
 draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "darkgoldenrod4")
 
 text(5.35, 0.08, "Herbivores", col = "dark blue")
 draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark blue")
 
-text(5.81, 0.075, "Carnivore", col = "red")
-text(5.03, 0.02, "Carnivore", col = "orange")
+text(5.8, 0.066, "Carnivore", col = "red")
+text(5.03, 0.015, "Carnivore", col = "orange")
 
 text(5.3, -0.065, "Hopping Notomys", col = "blue")
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "blue")
