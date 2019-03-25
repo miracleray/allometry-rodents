@@ -17,6 +17,10 @@ Evolutionary studies must take into account the phylogenetic tree because relate
 ```{r message = FALSE}
 library(geomorph)
 library(geiger)
+library(stringr)
+library(RColorBrewer)
+library(phylotate)
+library(phytools)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/06-phylo-data.rda")
@@ -88,13 +92,6 @@ summary(frug.test)
 p.values.bon <- p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel")
 ```
 
-### Plot branch lengths
-
-```{r}
-plot(aus.tree)
-
-```
-
 ## Create and export Table 2
 ```{r}
 # Evolutionary rate ratio to 1 decimal place
@@ -118,4 +115,83 @@ row.names(table2) <- c("Frugivores", "Herbivores", "Hopping Notomys", "Carnivore
 
 # Export Table 2
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
+```
+
+## Plot phylogeny by evolutionary rate and centroid size
+```{r}
+annotations <- aus.tree$node.comment
+
+# Use function to strip rates from annotated NEXUS file
+StripAnnotation <- function(input, annotation) {
+        strsplit(strsplit(input, split = annotation)[[1]][2], split = ",")[[1]][1]
+}
+rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation = ",rate="))
+```
+
+### Isolate rates used for phylogeny in paper
+Node rates
+```{r}
+# Save node rates in node.label vector so it gets handled by drop.tip()
+first.node <- length(renamed.tree$tip.label) + 1
+renamed.tree$node.label <- rates[first.node:length(rates)]  # grab node rates; length(node.label) should = Nnode
+
+concord <- name.check(renamed.tree, renamed.tree$tip.label, dimnames(mean.shapes.tree)[[3]])  # check concordance
+aus.tree <- drop.tip(renamed.tree, concord$tree_not_data)  # prune tree to Aus sample
+```
+
+Tip rates
+```{r}
+aus.rates <- rates[which(!is.element(renamed.tree$tip.label, concord$tree_not_data))]
+names(rates) <- aus.tree$tip.label
+```
+
+## Plot phylogeny colored by rates and tip.names by phylogeny
+```{r}
+# Combined tip and node rates
+combined.rates <- c(aus.rates, aus.tree$node.label)
+
+# Colors by Genus: Hyd Leg Lep Mas Mel Mes Mus Not Pog Pse Rat Uro Xer Zyz
+col.gen <- c("red", "cornflowerblue", "dark green", "dark blue", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
+
+# Colors by species, ordered in same way as tree
+grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
+names(col.gen) <- sort(unique(grp))
+col.tree <- col.gen[match(grp, names(col.gen))]
+
+plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree)
+```
+
+
+
+
+
+
+
+
+### BIN
+### Find relative evolutionary rates for each taxa
+```{r}
+# Set up new metadata table
+evol.rates <- info.means.tree[, c(1:3, 9:11)]  
+evol.rates$ratio <- "NA"
+evol.rates$P.value <- "NA"
+evol.rates$rel.rate <- "NA"
+
+# Run for loop to find evolutionary rates for each taxa (~22 min)
+for(i in 1:length(evol.rates$Taxa)){
+        taxa.grp <- rep(2, dim(info.means.tree)[1])
+        taxa.grp[i] <- 1  # taxa of interest
+        names(taxa.grp) <- evol.rates$FullName
+        
+        # Run evolutionary rate test and store results
+        taxa.test <- compare.evol.rates(mean.shapes.tree, aus.tree, taxa.grp, iter = 499)
+        evol.rates$ratio[i] <- round(taxa.test$sigma.d.ratio, 3)
+        evol.rates$P.value[i] <- taxa.test$P.value
+        evol.rates$rel.rate[i] <- FindRateDiff(taxa.test)
+}
+
+# Adjust table to account for p value results
+evol.rates$cor.P.val <- p.adjust(evol.rates$P.value, "hommel")  # correct for multiple comparisons
+evol.rates$rel.rate[which(evol.rates$cor.P.val > 0.05)] <- paste("(", evol.rates$rel.rate, ")", sep = "")  # ID non-significant results
+evol.rates$rel.rate[which(evol.rates$P.value < 0.05)] <- paste(evol.rates$rel.rate, "*", sep = "")  # ID marginal results
 ```

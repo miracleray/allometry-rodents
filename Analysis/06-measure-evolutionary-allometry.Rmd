@@ -38,7 +38,7 @@ The most recent tree for Australian rodents is from Smissen & Rowe 2018. The tre
 
 This tree adds 6 more species from Australia to the Smissen & Rowe phylogeny. 
 ```{r}
-raw.tree <- read.nexus("../Data/Processed/Marcy-BEAST01.con.tre")
+raw.tree <- read_annotated("../Data/Processed/Marcy-BEAST01.con.tre")
 ```
 
 ### Extract only Genus and Species names from the tree
@@ -131,5 +131,5 @@ write.table(table1b, "../Data/Results/Table1b_ANOVA_no_int.csv", sep = ",", col.
 
 ### Save intermediate data
 ```{r}
-save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/06-phylo-data.rda")
+save(mean.shapes.tree, info.means.tree, aus.tree, renamed.tree, file = "../Data/Processed/06-phylo-data.rda")
 ```
