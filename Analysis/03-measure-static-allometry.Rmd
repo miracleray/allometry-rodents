@@ -20,6 +20,9 @@ This script generates Figure 1.
 library(stringr)
 library(data.table)
 library(geomorph)
+library(wesanderson)
+library(viridis)
+
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 ```
@@ -34,15 +37,21 @@ info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
 
 Colors for subsequent figures are set up according to column "EGenus". Colors roughtly correspond to phylogenetics such that similar color hues indicate closer evolutionary relationships.
 ```{r}
-# Colors by EGenus: Con Hyd Leg Lep Mel Mes Mus Not Pog Pse(+Mas) Rat Uro Xer Zyz
-col.gen <- c("light green", "red", "cornflowerblue", "dark green", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
+# Choose colors from attractive Wes Anderson palettes
+GB1 <- wes_palette("GrandBudapest1")  # Uromyini clade
+GB2 <- wes_palette("GrandBudapest2")  # Conilurus clade
+Z1 <- wes_palette("Zissou1", 6, "continuous") # Pseudomys clade
+BR1 <- wes_palette("BottleRocket1")  # Carnivores and Pogonomys
+IoD1 <- wes_palette("IsleofDogs1")  # Mus and Rattus
 
-# Colors by specimen, ordered in same way as metadata
-sp.col.gen <- PlotByGroup(info, "EGenus", col.gen)
-
-# Scheme for legend: taxa listed in order presented in phylogeny
-col.phylo <- c("yellow", "darkgoldenrod4", "dark green", "green", "light green", "cornflowerblue", "light blue", "blue", "dark blue", "red", "orange", "magenta", "grey", "black")
+# Colors in order of phylogeny
 names.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
+col.phylo <- c(IoD1[1], GB1[2], GB2[1], GB2[2], GB2[4], Z1[5], Z1[4], Z1[3], Z1[1], BR1[3], GB1[3], BR1[4], IoD1[6], IoD1[4])
+names(col.phylo) <- names.phylo
+
+# Colors in order of alphabetical genus names
+col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))]
+sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]  # color vector for all data
 ```
 
 ## 1) Measure static allometry: Homogeneity of Slopes Test by species
@@ -104,8 +113,6 @@ spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize
 spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
 
 # Set colors for genera and different points for species within each genus
-info$EGenus <- info$Genus
-info$EGenus[which(info$EGenus == "Mas")] <- "Pse"
 pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
 pch.unique.spp[which(sort(unique(info$Taxa)) == "M_fus")] <- 2
 pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
@@ -130,7 +137,7 @@ cor.static$p.value
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure1_Static_Evo_Allo.eps")
+postscript("../Data/Results/Figure1_Static_Evo_Allo7.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry

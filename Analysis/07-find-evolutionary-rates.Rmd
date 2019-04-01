@@ -147,9 +147,6 @@ names(rates) <- aus.tree$tip.label
 
 ## Plot phylogeny colored by rates and tip.names by phylogeny
 ```{r}
-# Combined tip and node rates
-combined.rates <- c(aus.rates, aus.tree$node.label)
-
 # Colors by Genus: Hyd Leg Lep Mas Mel Mes Mus Not Pog Pse Rat Uro Xer Zyz
 col.gen <- c("red", "cornflowerblue", "dark green", "dark blue", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
 
@@ -161,37 +158,9 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree)
 ```
 
-
-
-
-
-
-
-
-### BIN
-### Find relative evolutionary rates for each taxa
+## Find morphological disparity
 ```{r}
-# Set up new metadata table
-evol.rates <- info.means.tree[, c(1:3, 9:11)]  
-evol.rates$ratio <- "NA"
-evol.rates$P.value <- "NA"
-evol.rates$rel.rate <- "NA"
-
-# Run for loop to find evolutionary rates for each taxa (~22 min)
-for(i in 1:length(evol.rates$Taxa)){
-        taxa.grp <- rep(2, dim(info.means.tree)[1])
-        taxa.grp[i] <- 1  # taxa of interest
-        names(taxa.grp) <- evol.rates$FullName
-        
-        # Run evolutionary rate test and store results
-        taxa.test <- compare.evol.rates(mean.shapes.tree, aus.tree, taxa.grp, iter = 499)
-        evol.rates$ratio[i] <- round(taxa.test$sigma.d.ratio, 3)
-        evol.rates$P.value[i] <- taxa.test$P.value
-        evol.rates$rel.rate[i] <- FindRateDiff(taxa.test)
-}
-
-# Adjust table to account for p value results
-evol.rates$cor.P.val <- p.adjust(evol.rates$P.value, "hommel")  # correct for multiple comparisons
-evol.rates$rel.rate[which(evol.rates$cor.P.val > 0.05)] <- paste("(", evol.rates$rel.rate, ")", sep = "")  # ID non-significant results
-evol.rates$rel.rate[which(evol.rates$P.value < 0.05)] <- paste(evol.rates$rel.rate, "*", sep = "")  # ID marginal results
+md.data <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tree$MeanCsize, taxa = info.means.tree$Taxa)
+morph.disp <- morphol.disparity(f1 = shape ~ size, groups = ~taxa, iter = 499, data = md.data)
 ```
+
