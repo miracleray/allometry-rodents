@@ -175,7 +175,7 @@ plot(x = log(info.means$MeanCsize),
      pch = pch.evo.allo,
      main = "b) Evolutionary Allometry",
      xlab = "Log centroid size", 
-     ylab = "Shape (proj. reg. score)")
+     ylab = "Shape (regression score)")
 legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
 
 abline(lm(mean.allo$Reg.proj ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit

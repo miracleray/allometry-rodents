@@ -38,6 +38,20 @@ aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
 
 Next, we can compare evolutionary rates:
 
+**Large frugivores vs others**
+```{r}
+# Only large frugivores U. caudimaculatus and M. gouldii
+U.cau <- which(info.means.tree$Taxa == "U_cau")
+M.gou <- which(info.means.tree$Taxa == "M_gou")
+is.frug <- c(U.cau, M.gou)
+frug.grps <- rep(2, dim(info.means.tree)[1])
+frug.grps[is.frug] <- 1
+
+names(frug.grps) <- info.means.tree$FullName
+frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 499)
+summary(frug.test)
+```
+
 **Herbivores vs other species**
 ```{r}
 # Only specialized herbivores P. oralis, M. fuscus, and L. conditor 
@@ -49,16 +63,8 @@ herb.grps <- rep(2, dim(info.means.tree)[1])
 herb.grps[is.sp.herb] <- 1  # species of interest is always 1
 
 names(herb.grps) <- info.means.tree$FullName
-herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 500)
+herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 499)
 summary(herb.test)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
-names(is.carnivore) <- info.means.tree$FullName
-carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 500)
-summary(carn.test)
 ```
 
 **_Notomys_ versus other species**
@@ -69,47 +75,41 @@ gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
 names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
 
 # Run analysis
-not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 500)
+not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 499)
 summary(not.test)
 ```
 
-**Large frugivores vs others**
+**Carnivores vs non-carnivores**
 ```{r}
-# Only large frugivores U. caudimaculatus and M. gouldii
-U.cau <- which(info.means.tree$Taxa == "U_cau")
-M.gou <- which(info.means.tree$Taxa == "M_gou")
-is.frug <- c(U.cau, M.gou)
-frug.grps <- rep(2, dim(info.means.tree)[1])
-frug.grps[is.frug] <- 1
-
-names(frug.grps) <- info.means.tree$FullName
-frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 500)
-summary(frug.test)
+is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
+names(is.carnivore) <- info.means.tree$FullName
+carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 499)
+summary(carn.test)
 ```
 
 ### Adjust p-values for multiple comparisons
 ```{r}
-p.values.bon <- p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel")
+p.values.bon <- round(p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel"), 3)
 ```
 
 ## Create and export Table 2
 ```{r}
 # Evolutionary rate ratio to 1 decimal place
-ratio <- paste("1:", round(c(frug.test$sigma.d.ratio, herb.test$sigma.d.ratio, not.test$sigma.d.ratio, carn.test$sigma.d.ratio), 1), sep = "")
-
-# P values and remove rates that aren't significant
-p.value <- round(p.values.bon, 3)  # 3 decimal places
-ratio[which(p.value > 0.05)] <- "N.S." 
+FindRateRatio <- function(rate.test) {
+        round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
+}
+ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(herb.test), FindRateRatio(not.test), FindRateRatio(carn.test)), sep = "")
 
 # Expected rate, hard coded from hypotheses
+# Order is: frugivores, herbivores, Notomys, carnivores
 expected <- c("Faster", "Slower", "Slower", "Slower")
 
 # Rate difference found using custom function FindRateDiff
 found <- c(FindRateDiff(frug.test), FindRateDiff(herb.test), FindRateDiff(not.test), FindRateDiff(carn.test))
-found[which(p.value > 0.05)] <- "No difference"
+found[which(p.values.bon > 0.05)] <- "No difference"
 
 # Combine and name rows and columns
-table2 <- cbind(ratio, p.value, expected, found)
+table2 <- cbind(ratio, p.values.bon, expected, found)
 colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
 row.names(table2) <- c("Frugivores", "Herbivores", "Hopping Notomys", "Carnivores")
 

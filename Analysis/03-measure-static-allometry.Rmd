@@ -90,7 +90,7 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp,
                                      f2 = ~log(size) * spp, 
                                      groups = ~spp,  
                                      slope = ~log(size),
-                                     iter = 500,
+                                     iter = 999,
                                      angle.type = "deg")
 
 # Correct for multiple comparisons
@@ -102,7 +102,7 @@ rownames(HOS.matrix) <- rownames(pwHOS.spp$P.slopes.dist)
 colnames(HOS.matrix) <- colnames(pwHOS.spp$P.slopes.dist)
 
 # Export p-value matrix
-write.csv(HOS.matrix, "../Data/Results/TableS4_HOS_test.csv")  # save in Results folder
+write.csv(pwHOS.spp, "../Data/Results/TableS4_HOS_test2.csv")  # save in Results folder
 ```
 
 ## 2) Visualize static Allometry: Predicted Value
