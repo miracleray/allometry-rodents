@@ -33,7 +33,7 @@ First, we need to make sure the data meets the Brownian motion assumption requir
 ```{r} 
 # Plot disparity through time
 mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
-aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 500, plot = TRUE)
+aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 499, plot = TRUE)
 ```
 
 Next, we can compare evolutionary rates:
@@ -163,4 +163,3 @@ plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color =
 md.data <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tree$MeanCsize, taxa = info.means.tree$Taxa)
 morph.disp <- morphol.disparity(f1 = shape ~ size, groups = ~taxa, iter = 499, data = md.data)
 ```
-

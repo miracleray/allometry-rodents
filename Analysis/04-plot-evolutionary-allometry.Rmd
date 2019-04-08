@@ -102,7 +102,7 @@ pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11  # star
 pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 ```
 
-### Run PCA and find Pearson's correlations for PC1 and PC2 with size
+### Run PCA
 ```{r}
 pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
 
@@ -112,18 +112,6 @@ PC1.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
 PC1.lab <- paste("PC", 1, " (", PC1.per, "%)", sep = "")
 PC2.per <- round(PCs[2, 2] * 100, digits = 1)
 PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
-
-# Find Pearson's r for correlation with PC1
-cor <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 1], method = "pearson")
-cor.assoc <- round(unname(cor$estimate), digits = 3)  # 3 sig figs
-cor.assoc
-cor$p.value  # reported in paper
-
-# Find Pearson's r for correlation with PC2
-cor2 <- cor.test(log(info.means$MeanCsize), pca.means$pc.scores[, 2], method = "pearson")
-cor.assoc2 <- round(unname(cor2$estimate), digits = 3)  # 3 sig figs
-cor.assoc2
-cor2$p.value  # reported in paper
 ```
 
 ### Generate data for Evolutionary Allometry plot
@@ -131,17 +119,13 @@ cor2$p.value  # reported in paper
 # Run allometry on all 34 species
 evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
-
-# Find correlation of mean shape to log centroid size
-cor.allo <- cor.test(log(info.means$MeanCsize), mean.allo$Reg.proj, method = "pearson")
-cor.allo.short <- round(cor.allo$estimate, 2)  # 2 sig figs
 ```
 
 ### Plot and export the multi-panel Figure 2
 PCA on top and evolutionary allometry plot on the bottom
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_PCA_EvoAllo2.eps")
+postscript("../Data/Results/Figure2_PCA_EvoAllo.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
 
 # PCA plot

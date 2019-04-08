@@ -99,7 +99,7 @@ mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
 ## Phylogenetic Analyses
 First, test for phylogenetic signal in the shape data. 
 ```{r}
-physignal(mean.shapes.tree, aus.tree, iter = 500)
+physignal(mean.shapes.tree, aus.tree, iter = 499)
 ```
 
 ### Evolutionary Allometry, reported in Table 1
@@ -108,12 +108,8 @@ Here we run Procrustes ANOVAs to compare the relative impact of genus, size, and
 # Procrustes ANOVA with interaction
 evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
 
-evo.allo.gen <- procD.pgls(Shape ~log(CS) * Genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
+evo.allo.gen <- procD.pgls(Shape ~log(CS) * Genus, aus.tree, iter = 499, data = evo.allo.gen.gdf)
 evo.allo.gen
-
-# Procrustes ANOVA without interaction
-evo.allo.gen.2 <- procD.pgls(Shape ~log(CS) + Genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
-evo.allo.gen.2
 ```
 
 ### Export Tables 1a and 1b as CSV files
@@ -121,12 +117,9 @@ evo.allo.gen.2
 # Round all values to 3 decimals and remove NAs from the tables
 table1a <- as.data.frame(round(evo.allo.gen$aov.table, 3))
 table1a[is.na(table1a)] <- ""
-table1b <- as.data.frame(round(evo.allo.gen.2$aov.table, 3))
-table1b[is.na(table1b)] <- ""
 
 # Export
 write.table(table1a, "../Data/Results/Table1a_ANOVA_int.csv", sep = ",", col.names = NA)
-write.table(table1b, "../Data/Results/Table1b_ANOVA_no_int.csv", sep = ",", col.names = NA)
 ```
 
 ### Save intermediate data

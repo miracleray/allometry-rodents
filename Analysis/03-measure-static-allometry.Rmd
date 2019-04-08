@@ -76,7 +76,7 @@ Run allometry tests as well as a homogeneity of slopes test. These tests take ab
 ```{r}
 # Run static allometry test
 spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 499, data = spp.gdf)
 
 # Examine results
 spp.results$aov.table
@@ -84,25 +84,25 @@ spp.results$HOS.test
 summary(spp.results)
 
 # Find pair-wise p-values for slopes for each taxa
-size <- info$Csize
-spp <- info$Taxa
-pwHOS.spp <- advanced.procD.lm(f1 = shape ~log(size) + spp, 
+size <- info.HOS$Csize
+spp <- info.HOS$Taxa
+pwHOS.spp <- advanced.procD.lm(f1 = shape.HOS ~log(size) + spp, 
                                      f2 = ~log(size) * spp, 
                                      groups = ~spp,  
                                      slope = ~log(size),
-                                     iter = 999,
+                                     iter = 499,
                                      angle.type = "deg")
 
 # Correct for multiple comparisons
-pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
+#pwHOS.pvals <- p.adjust(pwHOS.spp$P.slopes.dist, method = "hommel")  # Hommel is a more powerful method for independent hypothesis tests
 
 # Turn back into data frame
-HOS.matrix <- matrix(pwHOS.pvals, nrow = dim(pwHOS.spp$P.slopes.dist)[1], ncol = dim(pwHOS.spp$P.slopes.dist)[2])
-rownames(HOS.matrix) <- rownames(pwHOS.spp$P.slopes.dist)
-colnames(HOS.matrix) <- colnames(pwHOS.spp$P.slopes.dist)
+#HOS.matrix <- matrix(pwHOS.pvals, nrow = dim(pwHOS.spp$P.slopes.dist)[1], ncol = dim(pwHOS.spp$P.slopes.dist)[2])
+#rownames(HOS.matrix) <- rownames(pwHOS.spp$P.slopes.dist)
+#colnames(HOS.matrix) <- colnames(pwHOS.spp$P.slopes.dist)
 
 # Export p-value matrix
-write.csv(pwHOS.spp, "../Data/Results/TableS4_HOS_test2.csv")  # save in Results folder
+write.csv(HOSresults, "../Data/Results/TableS4_HOS_test2.csv")  # save in Results folder
 ```
 
 ## 2) Visualize static Allometry: Predicted Value
@@ -110,7 +110,7 @@ In _geomorph_, static allometry can be visualized with log(centroid size) plotte
 ```{r}
 # Run static allometry test with all specimens
 spp.gdf <- geomorph.data.frame(shape = shape, spp = info$Taxa, size = info$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 499, data = spp.gdf)
 
 # Set colors for genera and different points for species within each genus
 pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
@@ -197,7 +197,7 @@ dev.off()
 ```{r}
 # Run allometry test on genera
 gen.gdf <- geomorph.data.frame(shape = shape, gen = info$EGenus, size = info$Csize)
-gen.results <- procD.allometry(shape ~ log(size), f2 = ~gen, iter = 500, data = gen.gdf)
+gen.results <- procD.allometry(shape ~ log(size), f2 = ~gen, iter = 499, data = gen.gdf)
 summary(gen.results)
 
 # Plot predicted allometric shape
