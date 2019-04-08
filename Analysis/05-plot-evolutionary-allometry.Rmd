@@ -121,7 +121,6 @@ plot(x = log(info.means.tree$MeanCsize),
 legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
 
 abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
-text(4.81, 0.105, paste("r = ", cor.allo.short), col = "dark grey")
 
 text(5.75, 0.11, "Frugivores", col = "dark grey")
 draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
@@ -134,6 +133,5 @@ text(5.03, 0.015, "Carnivore", col = "dark grey")
 
 text(5.3, -0.065, "Hopping Notomys", col = "dark grey")
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
-
 dev.off()  # finishes plot export
 ```

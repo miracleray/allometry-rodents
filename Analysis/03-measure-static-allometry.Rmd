@@ -20,9 +20,7 @@ This script generates Figure 1.
 library(stringr)
 library(data.table)
 library(geomorph)
-library(wesanderson)
-library(viridis)
-
+library(wesanderson)  # colors
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 ```
@@ -125,12 +123,6 @@ col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 # Find the mean point for each static allometry
 mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
 mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
-
-# Find the correlation
-cor.static <- cor.test(log(spp.results$size), spp.results$Reg.proj, method = "pearson")
-cor.static.assoc <- round(unname(cor.static$estimate), digits = 2)  # round to 3 sig figs
-cor.static.assoc
-cor.static$p.value
 ```
 
 ### Plot/export static and evolutionary allometry multipanel Figure 1
@@ -191,25 +183,6 @@ for(i in 1:length(taxa)) {
         segments(x.0, y.0, x.1, y.1, col = col.unique.spp[i], lwd = 1.5)
 }
 dev.off()
-```
-
-### Create the same figure for genera (supplemental info)
-```{r}
-# Run allometry test on genera
-gen.gdf <- geomorph.data.frame(shape = shape, gen = info$EGenus, size = info$Csize)
-gen.results <- procD.allometry(shape ~ log(size), f2 = ~gen, iter = 499, data = gen.gdf)
-summary(gen.results)
-
-# Plot predicted allometric shape
-plot(x = log(gen.results$size),
-     y = gen.results$Reg.proj,
-     xlim = c(4.7, 6.15),
-     col = sp.col.gen, 
-     pch = 16,
-     main = "Allometric Shape by Genus",
-     xlab = "Log centroid size", 
-     ylab = "Shape (projected regression score)")
-legend(6.04, 0.06, legend = names.phylo, col = col.phylo, pch = 16, cex = 0.60)
 ```
 
 ### Save intermediate data
