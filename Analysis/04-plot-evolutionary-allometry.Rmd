@@ -1,5 +1,5 @@
 ---
-title: "04-plot-evolutionary-allometry"
+title: "04-test-evolutionary-allometry"
 author: "Ariel Marcy"
 date: "2019-01-11"
 output: html_document
@@ -10,16 +10,20 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Plot PCA and evolutionary allometry
-Here we plot the Principal Components Analysis to visualize morphological variation. PC1 is highly correlated allometric shape. We also plot evolutionary allometry to visualize species which diverge.
+# Evolutionary allometry with Procrustes ANOVA
+Evolutionary studies must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
-This script generates Figure 2. 
+This script generates Table 1.
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(stringr)
 library(geomorph)
-library(plotrix)  # needed to draw ellipses
+library(ape)  # needed to work with phylogenies
+library(geiger)  # needed to work with phylogenies
+library(phylotate)  # needed to work with phylogenies
+library(data.table)
+library(vegan)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
@@ -84,103 +88,85 @@ cs.means <- aggregate(info.phylo[, 6], list(Taxa = info.phylo$FullName), mean)  
 info.means$MeanCsize <- cs.means[, 2]  # store in vector
 ```
 
-## Make multipanel Figure 2: mean shape PCA and evolutionary allometry
-First, set up colors and points by genera and important taxa
+## Prepare the tree data for phylogenetic analyses
+The commands in `geomorph` require the tree and datasets to have exactly the same set of species.
+
+### Load in phylogenetic tree
+The most recent tree for Australian rodents is from Smissen & Rowe 2018. The tree is a fossil calibrated ultrametric tree from BEAST2 for Hydromini, which includes all the Australo-Papuan old endemics in Murinae. This tree adds 6 more species from Australia to the Smissen & Rowe phylogeny. 
 ```{r}
-# Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
-info.means$EGenus <- info.means$Genus
-info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
-
-# Colors for genera and different points by species within each genus; used for PCA
-col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03
-pch.means <- PointOutDiffSpp(info.means)  # pts by unique species in a genus
-pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
-
-# Points to call out only specialized herbivores with special characters; used for Evolutionary Allometry plot
-pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
-pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11  # star
-pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
+raw.tree <- read_annotated("../Data/Processed/Marcy-BEAST01.con.tre")
 ```
 
-### Run PCA
-```{r}
-pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
+### Extract only Genus and Species names from the tree
+The tree file has uneven amounts of information for each entry, some entries have catalog numbers and others do not. Therefore we needed a `for` loop to grab the first two elements from a list, which always corresponded to Genus and Species.
 
-# Write x and y labels with proportion of variance for PC1 and PC2
-PCs <- pca.means$pc.summary$importance
-PC1.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
-PC1.lab <- paste("PC", 1, " (", PC1.per, "%)", sep = "")
-PC2.per <- round(PCs[2, 2] * 100, digits = 1)
-PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
+We reassign only Genus and Species names (in the form "Genus_species") to the tree so that it is easier to compare to the shape data. 
+```{r}
+no.cat.tree <- raw.tree  # initiate new, modified tree with no CatNums
+label.list <- strsplit(raw.tree$tip.label, "_")  # separate info into list
+
+# For loop finds Genus & Species and makes tip name "Genus_species"
+for (i in 1:length(label.list)) {
+        label <- unlist(label.list[i])
+        no.cat.tree$tip.label[i] <- paste(label[1], label[2], sep = "_")
+}
 ```
 
-### Generate data for Evolutionary Allometry plot
+### Re-label node
+Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species. 
+
+**Renamed node:**
+_Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
+
 ```{r}
-# Run allometry on all 34 species
-evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
-mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
+relabel.tree <- no.cat.tree
+P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
+relabel.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
 ```
 
-### Plot and export the multi-panel Figure 2
-PCA on top and evolutionary allometry plot on the bottom
+### Prune the tree and shape datasets to match each other
+Now that the names in the Smissen & Rowe tree can be compared to our info.phylo metadata, we can prune both datasets to have the same species.
+
+First, prune the tree of species not in the shape data
 ```{r}
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_PCA_EvoAllo.eps")
-layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
+concord <- name.check(relabel.tree, relabel.tree$tip.label, dimnames(mean.shapes)[[3]])  # check concordance
+aus.tree <- drop.tip(relabel.tree, concord$tree_not_data)  # prune tree to Aus sample
+```
 
-# PCA plot
-plot(x = -pca.means$pc.scores[, 1],
-     y = pca.means$pc.scores[, 2],
-     xlim = c(-0.08, 0.12),
-     ylim = c(-0.08, 0.12),
-     col = col.means,
-     pch = pch.means,
-     bg = col.means,
-     main = "a) Principal Component Analysis",
-     xlab = PC1.lab, 
-     ylab = PC2.lab)
-text(.105, -0.003, "Frugivores", col = "dark grey")
-draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
+Next, subset and re-order the metadata and shape datasets to match the order of species found in the tree. 
+```{r}
+# Subsetting
+to.remove <- name.check(aus.tree, aus.tree$tip.label, dimnames(mean.shapes)[[3]])
+info.means.tree <- info.means[!is.element(info.means$FullName, to.remove$data_not_tree), ]  # metadata
+mean.shapes.tree <- mean.shapes[, , !is.element(info.means$FullName, to.remove$data_not_tree)]  # shape data
 
-text(.085, 0.041, "Herbivores", col = "dark grey")
-draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
+# Re-order to match tree tip order
+tree.order <- match(aus.tree$tip.label, info.means.tree$FullName)
+info.means.tree <- info.means.tree[tree.order, ]  # metadata
+mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
+```
 
-text(.045, -0.054, "Carnivores", col = "dark grey")
-draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
+## Evolutionary Allometry, reported in Table 1
+Here we run Procrustes ANOVAs to compare the relative impact of genus, size, and their interaction on shape.
+```{r}
+# Procrustes ANOVA with interaction
+evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
 
-text(-.055, 0.035, "Notomys", col = "dark grey")
-draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
+evo.allo.gen <- procD.pgls(Shape ~log(CS) * Genus, aus.tree, iter = 499, data = evo.allo.gen.gdf)
+evo.allo.gen
+```
 
-# Evolutionary Allometry plot
-plot(x = log(info.means$MeanCsize),
-     y = mean.allo$Reg.proj,
-     xlim = c(4.75, 6),
-     col = col.means, 
-     pch = pch.evo.allo,
-     main = "b) Evolutionary Allometry",
-     xlab = "Log centroid size", 
-     ylab = "Shape (regression score)")
-legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+### Export Tables 1a as CSV files
+```{r}
+# Round all values to 3 decimals and remove NAs from the tables
+table1a <- as.data.frame(round(evo.allo.gen$aov.table, 3))
+table1a[is.na(table1a)] <- ""
 
-abline(lm(mean.allo$Reg.proj ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
-text(4.81, 0.105, paste("r = ", cor.allo.short), col = "dark grey")
-
-text(5.75, 0.11, "Frugivores", col = "dark grey")
-draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
-
-text(5.35, 0.08, "Herbivores", col = "dark grey")
-draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
-
-text(5.8, 0.066, "Carnivore", col = "dark grey")
-text(5.03, 0.015, "Carnivore", col = "dark grey")
-
-text(5.3, -0.065, "Hopping Notomys", col = "dark grey")
-draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
-
-dev.off()  # finishes plot export
+# Export
+write.table(table1a, "../Data/Results/Table1a_ANOVA_int.csv", sep = ",", col.names = NA)
 ```
 
 ### Save intermediate data
 ```{r}
-save(mean.shapes, info.means, file = "../Data/Processed/04-mean-data.rda")
+save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
 ```

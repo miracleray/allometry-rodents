@@ -1,5 +1,5 @@
 ---
-title: "05-plot-heatmaps"
+title: "06-plot-heatmaps"
 author: "Ariel Marcy"
 date: "3/11/2019"
 output: html_document
