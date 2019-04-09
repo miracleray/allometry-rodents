@@ -150,20 +150,24 @@ mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
 Here we run Procrustes ANOVAs to compare the relative impact of genus, size, and their interaction on shape.
 ```{r}
 # Procrustes ANOVA with interaction
-evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, CS = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
+evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, size = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
 
-evo.allo.gen <- procD.pgls(Shape ~log(CS) * Genus, aus.tree, iter = 499, data = evo.allo.gen.gdf)
+evo.allo.gen <- procD.pgls(Shape ~log(size) * Genus, aus.tree, iter = 499, data = evo.allo.gen.gdf)
 evo.allo.gen
 ```
 
-### Export Tables 1a as CSV files
+### Export Tables 1a,b as CSV files
 ```{r}
 # Round all values to 3 decimals and remove NAs from the tables
-table1a <- as.data.frame(round(evo.allo.gen$aov.table, 3))
+table1a <- as.data.frame(round(spp.results$aov.table, 3))
 table1a[is.na(table1a)] <- ""
 
+table1b <- as.data.frame(round(evo.allo.gen$aov.table, 3))
+table1b[is.na(table1b)] <- ""
+
 # Export
-write.table(table1a, "../Data/Results/Table1a_ANOVA_int.csv", sep = ",", col.names = NA)
+write.table(table1a, "../Data/Results/Table1a_species_ANOVA.csv", sep = ",", col.names = NA)
+write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.names = NA)
 ```
 
 ### Save intermediate data
