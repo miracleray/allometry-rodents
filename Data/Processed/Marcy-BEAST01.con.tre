@@ -11,7 +11,7 @@ Begin taxa;
 		Apodemus_semotus
 		Apodemus_speciosus
 		Apodemus_sylvaticus
-		Conilurus_pencillatus_ABTC07411
+		Conilurus_penicillatus_ABTC07411
 		Grammomys_dolichurus
 		Hydromys_chrysogaster
 		Leggadina_forresti_ABTC36085
@@ -35,7 +35,7 @@ Begin taxa;
 		Notomys_aquilo_ABTC18252
 		Notomys_cervinus_ABTC27131
 		Notomys_fuscus_ABTC117695
-		Notomys_mitchelli_ABTC07351
+		Notomys_mitchellii_ABTC07351
 		Oenomys_hypoxanthus_CM102548
 		Parotomys_brantsii
 		Pogonomys_loriae
@@ -88,7 +88,7 @@ Begin trees;
 		6 Apodemus_semotus,
 		7 Apodemus_speciosus,
 		8 Apodemus_sylvaticus,
-		9 Conilurus_pencillatus_ABTC07411,
+		9 Conilurus_penicillatus_ABTC07411,
 		10 Grammomys_dolichurus,
 		11 Hydromys_chrysogaster,
 		12 Leggadina_forresti_ABTC36085,
@@ -112,7 +112,7 @@ Begin trees;
 		30 Notomys_aquilo_ABTC18252,
 		31 Notomys_cervinus_ABTC27131,
 		32 Notomys_fuscus_ABTC117695,
-		33 Notomys_mitchelli_ABTC07351,
+		33 Notomys_mitchellii_ABTC07351,
 		34 Oenomys_hypoxanthus_CM102548,
 		35 Parotomys_brantsii,
 		36 Pogonomys_loriae,
