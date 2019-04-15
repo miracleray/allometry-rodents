@@ -23,7 +23,7 @@ library(phylotate)
 library(phytools)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
-load(file = "../Data/Processed/06-phylo-data.rda")
+load(file = "../Data/Processed/04-phylo-data.rda")
 ```
 
 ## Compare evolutionary rates
@@ -48,7 +48,7 @@ frug.grps <- rep(2, dim(info.means.tree)[1])
 frug.grps[is.frug] <- 1
 
 names(frug.grps) <- info.means.tree$FullName
-frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 499)
+frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 999, method = "permutation")
 summary(frug.test)
 ```
 
@@ -63,8 +63,16 @@ fol.grps <- rep(2, dim(info.means.tree)[1])
 fol.grps[is.sp.fol] <- 1  # species of interest is always 1
 
 names(fol.grps) <- info.means.tree$FullName
-fol.test <- compare.evol.rates(mean.shapes.tree, aus.tree, fol.grps, iter = 499)
+fol.test <- compare.evol.rates(mean.shapes.tree, aus.tree, fol.grps, iter = 999, method = "permutation")
 summary(fol.test)
+```
+
+**Carnivores vs non-carnivores**
+```{r}
+is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
+names(is.carnivore) <- info.means.tree$FullName
+carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 999, method = "permutation")
+summary(carn.test)
 ```
 
 **_Notomys_ versus other species**
@@ -75,21 +83,14 @@ gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
 names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
 
 # Run analysis
-not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 499)
+not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 999, method = "permutation")
 summary(not.test)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
-names(is.carnivore) <- info.means.tree$FullName
-carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 499)
-summary(carn.test)
 ```
 
 ### Adjust p-values for multiple comparisons
 ```{r}
-p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel"), 3)
+p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "bonferroni"), 3)
+
 ```
 
 ## Create and export Table 2
@@ -98,20 +99,20 @@ p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$
 FindRateRatio <- function(rate.test) {
         round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
 }
-ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(not.test), FindRateRatio(carn.test)), sep = "")
+ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(carn.test), FindRateRatio(not.test)), sep = "")
 
 # Expected rate, hard coded from hypotheses
-# Order is: frugivores, folivores, Notomys, carnivores
+# Order is: frugivores, folivores, carnivores, Notomys
 expected <- c("Faster", "Slower", "Slower", "Slower")
 
 # Rate difference found using custom function FindRateDiff
-found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(not.test), FindRateDiff(carn.test))
+found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(carn.test), FindRateDiff(not.test))
 found[which(p.values.bon > 0.05)] <- "No difference"
 
 # Combine and name rows and columns
 table2 <- cbind(ratio, p.values.bon, expected, found)
 colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
-row.names(table2) <- c("Frugivores", "Folivores", "Hopping Notomys", "Carnivores")
+row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys")
 
 # Export Table 2
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
@@ -147,11 +148,9 @@ names(rates) <- aus.tree$tip.label
 
 ## Plot phylogeny colored by rates and tip.names by phylogeny
 ```{r}
-# Colors by Genus: Hyd Leg Lep Mas Mel Mes Mus Not Pog Pse Rat Uro Xer Zyz
-col.gen <- c("red", "cornflowerblue", "dark green", "dark blue", "yellow", "green", "grey", "blue", "magenta", "dark blue", "black", "darkgoldenrod4", "orange", "light blue")
-
 # Colors by species, ordered in same way as tree
 grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
+grp[which(grp == "Mas")] <- "Pse"
 names(col.gen) <- sort(unique(grp))
 col.tree <- col.gen[match(grp, names(col.gen))]
 
