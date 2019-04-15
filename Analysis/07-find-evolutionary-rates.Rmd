@@ -52,19 +52,19 @@ frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 49
 summary(frug.test)
 ```
 
-**Herbivores vs other species**
+**Folivores vs other species**
 ```{r}
-# Only specialized herbivores P. oralis, M. fuscus, and L. conditor 
+# Only specialized folivores P. oralis, M. fuscus, and L. conditor 
 P.ora <- which(info.means.tree$Taxa == "P_ora")
 M.fus <- which(info.means.tree$Taxa == "M_fus")
 L.con <- which(info.means.tree$Taxa == "L_con")
-is.sp.herb <- c(P.ora, M.fus, L.con)
-herb.grps <- rep(2, dim(info.means.tree)[1])
-herb.grps[is.sp.herb] <- 1  # species of interest is always 1
+is.sp.fol <- c(P.ora, M.fus, L.con)
+fol.grps <- rep(2, dim(info.means.tree)[1])
+fol.grps[is.sp.fol] <- 1  # species of interest is always 1
 
-names(herb.grps) <- info.means.tree$FullName
-herb.test <- compare.evol.rates(mean.shapes.tree, aus.tree, herb.grps, iter = 499)
-summary(herb.test)
+names(fol.grps) <- info.means.tree$FullName
+fol.test <- compare.evol.rates(mean.shapes.tree, aus.tree, fol.grps, iter = 499)
+summary(fol.test)
 ```
 
 **_Notomys_ versus other species**
@@ -89,7 +89,7 @@ summary(carn.test)
 
 ### Adjust p-values for multiple comparisons
 ```{r}
-p.values.bon <- round(p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel"), 3)
+p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "hommel"), 3)
 ```
 
 ## Create and export Table 2
@@ -98,20 +98,20 @@ p.values.bon <- round(p.adjust(c(frug.test$P.value, herb.test$P.value, carn.test
 FindRateRatio <- function(rate.test) {
         round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
 }
-ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(herb.test), FindRateRatio(not.test), FindRateRatio(carn.test)), sep = "")
+ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(not.test), FindRateRatio(carn.test)), sep = "")
 
 # Expected rate, hard coded from hypotheses
-# Order is: frugivores, herbivores, Notomys, carnivores
+# Order is: frugivores, folivores, Notomys, carnivores
 expected <- c("Faster", "Slower", "Slower", "Slower")
 
 # Rate difference found using custom function FindRateDiff
-found <- c(FindRateDiff(frug.test), FindRateDiff(herb.test), FindRateDiff(not.test), FindRateDiff(carn.test))
+found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(not.test), FindRateDiff(carn.test))
 found[which(p.values.bon > 0.05)] <- "No difference"
 
 # Combine and name rows and columns
 table2 <- cbind(ratio, p.values.bon, expected, found)
 colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
-row.names(table2) <- c("Frugivores", "Herbivores", "Hopping Notomys", "Carnivores")
+row.names(table2) <- c("Frugivores", "Folivores", "Hopping Notomys", "Carnivores")
 
 # Export Table 2
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
@@ -156,10 +156,4 @@ names(col.gen) <- sort(unique(grp))
 col.tree <- col.gen[match(grp, names(col.gen))]
 
 plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree)
-```
-
-## Find morphological disparity
-```{r}
-md.data <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tree$MeanCsize, taxa = info.means.tree$Taxa)
-morph.disp <- morphol.disparity(f1 = shape ~ size, groups = ~taxa, iter = 499, data = md.data)
 ```

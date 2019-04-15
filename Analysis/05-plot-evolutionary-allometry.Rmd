@@ -43,7 +43,7 @@ col.means <- PlotByGroup(info.means.tree, "EGenus", col.gen[2:length(col.gen)]) 
 pch.means <- PointOutDiffSpp(info.means.tree)  # pts by unique species in a genus
 pch.means[which(info.means.tree$Taxa == "M_fus")] <- 2  # open triangle
 
-# Points to call out only specialized herbivores with special characters; used for Evolutionary Allometry plot
+# Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
 pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
 pch.evo.allo[which(info.means.tree$Taxa == "P_ora")] <- 11  # star
 pch.evo.allo[which(info.means.tree$Taxa == "M_fus")] <- 2  # open triangle
@@ -75,6 +75,7 @@ PCA on top and evolutionary allometry plot on the bottom
 aus.rates <- as.numeric(aus.rates)
 greyPal <- colorRampPalette(c("white", "black"))
 gray.branch <- greyPal(10)[cut(aus.rates, breaks = 5)]
+gray.branch <- c(rep("gray", 34))
 
 plotGMPhyloMorphoSpace(aus.tree, mean.shapes.tree, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, l.col = gray.branch))
 
@@ -100,7 +101,7 @@ plot(x = -pca.means$pc.scores[, 1],
 text(.105, -0.003, "Frugivores", col = "dark grey")
 draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
 
-text(.085, 0.041, "Herbivores", col = "dark grey")
+text(.085, 0.041, "Folivores", col = "dark grey")
 draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
 
 text(.045, -0.054, "Carnivores", col = "dark grey")
@@ -125,7 +126,7 @@ abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey
 text(5.75, 0.11, "Frugivores", col = "dark grey")
 draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
 
-text(5.35, 0.08, "Herbivores", col = "dark grey")
+text(5.35, 0.08, "Folivores", col = "dark grey")
 draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
 
 text(5.8, 0.066, "Carnivore", col = "dark grey")
