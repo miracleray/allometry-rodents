@@ -172,5 +172,5 @@ write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.n
 
 ### Save intermediate data
 ```{r}
-save(mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
+save(relabel.tree, mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
 ```

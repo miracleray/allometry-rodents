@@ -20,12 +20,14 @@ This script generates Figure 2.
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
 library(stringr)
-library(plotrix)  # needed to draw ellipses
 library(ape)  # needed to work with phylogenies
 library(geiger)  # needed to work with phylogenies
 library(data.table)
 library(geomorph)
+library(colorspace)  # needed to darken colors programmatically
+library(plotrix)  # needed to draw ellipses
 source("../Functions/utilities.R")  # custom functions
+source("../Functions/plotGMPhyloMorphoSpace_axisflip.R")  # modified geomorph function
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
@@ -39,7 +41,7 @@ info.means.tree$EGenus <- info.means.tree$Genus
 info.means.tree$EGenus[which(info.means.tree$Genus == "Mas")] <- "Pse"
 
 # Colors for genera and different points by species within each genus; used for PCA
-col.means <- PlotByGroup(info.means.tree, "EGenus", col.gen[2:length(col.gen)])  # standard colors from script 03 minus genus Conilurus
+col.means <- PlotByGroup(info.means.tree, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
 pch.means <- PointOutDiffSpp(info.means.tree)  # pts by unique species in a genus
 pch.means[which(info.means.tree$Taxa == "M_fus")] <- 2  # open triangle
 
@@ -68,26 +70,71 @@ evo.procD <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tre
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 ```
 
-### Plot and export the multi-panel Figure 2
-PCA on top and evolutionary allometry plot on the bottom
-
+### Isolate molecular rates used for phylogeny in paper
 ```{r}
-aus.rates <- as.numeric(aus.rates)
-greyPal <- colorRampPalette(c("white", "black"))
-gray.branch <- greyPal(10)[cut(aus.rates, breaks = 5)]
-gray.branch <- c(rep("gray", 34))
+annotations <- aus.tree$node.comment
 
-plotGMPhyloMorphoSpace(aus.tree, mean.shapes.tree, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, l.col = gray.branch))
+# Use function to strip rates from annotated NEXUS file
+StripAnnotation <- function(input, annotation) {
+        strsplit(strsplit(input, split = annotation)[[1]][2], split = ",")[[1]][1]
+}
+rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation = ",rate="))
 
+aus.rates <- as.numeric(rates[which(!is.element(relabel.tree$tip.label, concord$tree_not_data))])
+names(aus.rates) <- aus.tree$tip.label
+
+# Plot branches by trait, molecular rate of evolution
+gray.branches <- phytools.branch.colors(aus.tree, aus.rates, gray)
+gray.branches.10 <- darken(gray.branches, 0.1)  # make white branches visible
 ```
 
-
+## Plot and export the multi-panel Figure 2
+Evolutionary allometry plot on top and phylomorphospace on the bottom
 ```{r}
+# Find Notomys' color
+Not.col <- col.gen[which(names(col.gen) == "Not")]
+
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_PCA_EvoAllo.eps")
+postscript("../Data/Results/Figure2_EvoAllo_PhyloPCA.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
 
-# PCA plot
+# Evolutionary Allometry plot
+plot(x = log(info.means.tree$MeanCsize),
+     y = mean.allo$Reg.proj,
+     xlim = c(4.75, 6),
+     col = col.means, 
+     pch = pch.evo.allo,
+     main = "a) Evolutionary Allometry",
+     xlab = "Log centroid size", 
+     ylab = "Shape (regression score)")
+legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+
+abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
+
+text(5.75, 0.11, "Frugivores", col = "dark grey")
+draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
+
+text(5.35, 0.08, "Folivores", col = "dark grey")
+draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
+
+text(5.8, 0.066, "Carnivore", col = "dark grey")
+text(5.03, 0.015, "Carnivore", col = "dark grey")
+
+text(5.3, -0.065, "Hopping Notomys", col = Not.col)
+draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
+
+# Phylomorphospace
+plotGMPhyloMorphoSpace_axisflip(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.25, main = "b) Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
+text(0.1, 0.025, "Frugivores", col = "dark grey")
+text(0.047, 0.065, "Folivores", col = "dark grey")
+text(0.04, -0.051, "Carnivores", col = "dark grey")
+text(-0.06, 0.047, "Notomys", col = Not.col)
+
+dev.off()  # finishes plot export
+```
+
+## Recycle Bin:
+```{r}
 plot(x = -pca.means$pc.scores[, 1],
      y = pca.means$pc.scores[, 2],
      xlim = c(-0.08, 0.12),
@@ -109,30 +156,4 @@ draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
 
 text(-.055, 0.035, "Notomys", col = "dark grey")
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
-
-# Evolutionary Allometry plot
-plot(x = log(info.means.tree$MeanCsize),
-     y = mean.allo$Reg.proj,
-     xlim = c(4.75, 6),
-     col = col.means, 
-     pch = pch.evo.allo,
-     main = "b) Evolutionary Allometry",
-     xlab = "Log centroid size", 
-     ylab = "Shape (regression score)")
-legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
-
-abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
-
-text(5.75, 0.11, "Frugivores", col = "dark grey")
-draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
-
-text(5.35, 0.08, "Folivores", col = "dark grey")
-draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
-
-text(5.8, 0.066, "Carnivore", col = "dark grey")
-text(5.03, 0.015, "Carnivore", col = "dark grey")
-
-text(5.3, -0.065, "Hopping Notomys", col = "dark grey")
-draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
-dev.off()  # finishes plot export
 ```

@@ -23,6 +23,7 @@ library(phylotate)
 library(phytools)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
+load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
 ```
 
@@ -90,7 +91,6 @@ summary(not.test)
 ### Adjust p-values for multiple comparisons
 ```{r}
 p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "bonferroni"), 3)
-
 ```
 
 ## Create and export Table 2
@@ -133,16 +133,16 @@ rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation =
 Node rates
 ```{r}
 # Save node rates in node.label vector so it gets handled by drop.tip()
-first.node <- length(renamed.tree$tip.label) + 1
-renamed.tree$node.label <- rates[first.node:length(rates)]  # grab node rates; length(node.label) should = Nnode
+first.node <- length(relabel.tree$tip.label) + 1
+relabel.tree$node.label <- rates[first.node:length(rates)]  # grab node rates; length(node.label) should = Nnode
 
-concord <- name.check(renamed.tree, renamed.tree$tip.label, dimnames(mean.shapes.tree)[[3]])  # check concordance
-aus.tree <- drop.tip(renamed.tree, concord$tree_not_data)  # prune tree to Aus sample
+concord <- name.check(relabel.tree, relabel.tree$tip.label, dimnames(mean.shapes.tree)[[3]])  # check concordance
+aus.tree <- drop.tip(relabel.tree, concord$tree_not_data)  # prune tree to Aus sample
 ```
 
 Tip rates
 ```{r}
-aus.rates <- rates[which(!is.element(renamed.tree$tip.label, concord$tree_not_data))]
+aus.rates <- rates[which(!is.element(relabel.tree$tip.label, concord$tree_not_data))]
 names(rates) <- aus.tree$tip.label
 ```
 
@@ -154,5 +154,7 @@ grp[which(grp == "Mas")] <- "Pse"
 names(col.gen) <- sort(unique(grp))
 col.tree <- col.gen[match(grp, names(col.gen))]
 
-plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree)
+plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree, mode = "nodes")
+
+plot.phylo(aus.tree, edge.color = gray.branches, tip.color = col.tree, no.margin = T); edgelabels(cex=0.5)
 ```
