@@ -33,7 +33,7 @@ load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
 ```
 
-## Make multipanel Figure 2: mean shape PCA and evolutionary allometry
+## Make multipanel Figure 3: evolutionary allometry and mean shape PCA/phylomorphosapce
 First, set up colors and points by genera and important taxa
 ```{r}
 # Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
@@ -70,7 +70,7 @@ evo.procD <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tre
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 ```
 
-### Isolate molecular rates used for phylogeny in paper
+### Isolate molecular rates used for phylogeny in paper and color-code branches by rates
 ```{r}
 annotations <- aus.tree$node.comment
 
@@ -83,19 +83,19 @@ rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation =
 aus.rates <- as.numeric(rates[which(!is.element(relabel.tree$tip.label, concord$tree_not_data))])
 names(aus.rates) <- aus.tree$tip.label
 
-# Plot branches by trait, molecular rate of evolution
+# Plot molecular rate of evolution, light branch = slower; dark =faster
 gray.branches <- phytools.branch.colors(aus.tree, aus.rates, gray)
 gray.branches.10 <- darken(gray.branches, 0.1)  # make white branches visible
 ```
 
-## Plot and export the multi-panel Figure 2
+## Plot and export the multi-panel Figure 3
 Evolutionary allometry plot on top and phylomorphospace on the bottom
 ```{r}
 # Find Notomys' color
 Not.col <- col.gen[which(names(col.gen) == "Not")]
 
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_EvoAllo_PhyloPCA.eps")
+postscript("../Data/Results/Figure3_EvoAllo_PhyloPCA.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
 
 # Evolutionary Allometry plot
@@ -131,29 +131,4 @@ text(0.04, -0.051, "Carnivores", col = "dark grey")
 text(-0.06, 0.047, "Notomys", col = Not.col)
 
 dev.off()  # finishes plot export
-```
-
-## Recycle Bin:
-```{r}
-plot(x = -pca.means$pc.scores[, 1],
-     y = pca.means$pc.scores[, 2],
-     xlim = c(-0.08, 0.12),
-     ylim = c(-0.08, 0.12),
-     col = col.means,
-     pch = pch.means,
-     bg = col.means,
-     main = "a) Principal Component Analysis",
-     xlab = PC1.lab, 
-     ylab = PC2.lab)
-text(.105, -0.003, "Frugivores", col = "dark grey")
-draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
-
-text(.085, 0.041, "Folivores", col = "dark grey")
-draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
-
-text(.045, -0.054, "Carnivores", col = "dark grey")
-draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
-
-text(-.055, 0.035, "Notomys", col = "dark grey")
-draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 ```

@@ -118,35 +118,7 @@ row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
 ```
 
-## Plot phylogeny by evolutionary rate and centroid size
-```{r}
-annotations <- aus.tree$node.comment
-
-# Use function to strip rates from annotated NEXUS file
-StripAnnotation <- function(input, annotation) {
-        strsplit(strsplit(input, split = annotation)[[1]][2], split = ",")[[1]][1]
-}
-rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation = ",rate="))
-```
-
-### Isolate rates used for phylogeny in paper
-Node rates
-```{r}
-# Save node rates in node.label vector so it gets handled by drop.tip()
-first.node <- length(relabel.tree$tip.label) + 1
-relabel.tree$node.label <- rates[first.node:length(rates)]  # grab node rates; length(node.label) should = Nnode
-
-concord <- name.check(relabel.tree, relabel.tree$tip.label, dimnames(mean.shapes.tree)[[3]])  # check concordance
-aus.tree <- drop.tip(relabel.tree, concord$tree_not_data)  # prune tree to Aus sample
-```
-
-Tip rates
-```{r}
-aus.rates <- rates[which(!is.element(relabel.tree$tip.label, concord$tree_not_data))]
-names(rates) <- aus.tree$tip.label
-```
-
-## Plot phylogeny colored by rates and tip.names by phylogeny
+## Recycling bin
 ```{r}
 # Colors by species, ordered in same way as tree
 grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
@@ -154,7 +126,10 @@ grp[which(grp == "Mas")] <- "Pse"
 names(col.gen) <- sort(unique(grp))
 col.tree <- col.gen[match(grp, names(col.gen))]
 
-plotBranchbyTrait(aus.tree, as.numeric(aus.rates), palette = "gray", tip.color = col.tree, mode = "nodes")
+aus.rates <- as.numeric(aus.rates)
+names(aus.rates) <- aus.tree$tip.label
 
-plot.phylo(aus.tree, edge.color = gray.branches, tip.color = col.tree, no.margin = T); edgelabels(cex=0.5)
+plotBranchbyTrait(aus.tree, aus.rates, palette = "gray", tip.color = col.tree, mode = "tips")
+
+plot.phylo(aus.tree, edge.color = gray.branches, tip.color = col.tree, no.margin = T)
 ```

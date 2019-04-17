@@ -20,7 +20,7 @@ This script generates Figure 1 (and data for Table 1a).
 library(stringr)
 library(data.table)
 library(geomorph)
-library(wesanderson)  # colors
+library(colorspace)  # colors
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 ```
@@ -34,16 +34,17 @@ info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
 
 Colors for subsequent figures are set up according to column "EGenus". Colors roughtly correspond to phylogenetics such that similar color hues indicate closer evolutionary relationships.
 ```{r}
-# Choose colors from attractive Wes Anderson palettes
-GB1 <- wes_palette("GrandBudapest1")  # Uromyini clade
-GB2 <- wes_palette("GrandBudapest2")  # Conilurus clade
-Z1 <- wes_palette("Zissou1", 6, "continuous") # Pseudomys clade
-BR1 <- wes_palette("BottleRocket1")  # Carnivores and Pogonomys
-IoD1 <- wes_palette("IsleofDogs1")  # Mus and Rattus
+# Make gradients for each clade
+Uro <- sequential_hcl(5, "Greens 3")  # Uromyini clade
+Con <- sequential_hcl(5, "Purples 3")  # Conilurus clade
+Pse <- sequential_hcl(5, "Blues 3")  # Pseudomys clade
+Hyd <- sequential_hcl(5, "Reds 3")  # Hydromini clade
+Pog <- sequential_hcl(5, "Heat 2")  # Pogonomys
+Inv <- sequential_hcl(5, "Light Grays")  # Mus and Rattus
 
 # Colors in order of phylogeny
 names.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
-col.phylo <- c(IoD1[1], GB1[2], GB2[1], GB2[2], GB2[4], Z1[5], Z1[4], Z1[3], Z1[1], BR1[3], GB1[3], BR1[4], IoD1[6], IoD1[4])
+col.phylo <- c(Uro[2], Uro[1], Con[1], Con[2], Con[3], Pse[3], Pse[4], Pse[1], Pse[2], Hyd[2], Hyd[1], Pog[3], Inv[3], Inv[1])
 names(col.phylo) <- names.phylo
 
 # Colors in order of alphabetical genus names
@@ -120,7 +121,7 @@ mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure1_Static_Evo_Allo.eps")
+postscript("../Data/Results/Figure2_Static_Evo_Allo.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry

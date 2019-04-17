@@ -115,7 +115,7 @@ for (i in 1:length(label.list)) {
 ### Re-label node
 Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species. 
 
-**Renamed node:**
+**Relabeled node:**
 _Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
 
 ```{r}
@@ -144,6 +144,22 @@ mean.shapes.tree <- mean.shapes[, , !is.element(info.means$FullName, to.remove$d
 tree.order <- match(aus.tree$tip.label, info.means.tree$FullName)
 info.means.tree <- info.means.tree[tree.order, ]  # metadata
 mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
+```
+
+## Visualize tree for Figure 1
+Phylogeny with colors coordinated to major clades (see script 03)
+```{r}
+# Colors by species, ordered in same way as tree
+grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
+grp[which(grp == "Mas")] <- "Pse"
+names(col.gen) <- sort(unique(grp))
+col.tree <- col.gen[match(grp, names(col.gen))]
+
+# Make Figure 1
+setEPS()
+postscript("../Data/Results/Figure1_Phylogeny.eps")
+plot.phylo(aus.tree, edge.color = "gray", tip.color = col.tree, no.margin = T)
+dev.off()
 ```
 
 ## Evolutionary Allometry, reported in Table 1
