@@ -131,5 +131,5 @@ names(aus.rates) <- aus.tree$tip.label
 
 plotBranchbyTrait(aus.tree, aus.rates, palette = "gray", tip.color = col.tree, mode = "tips")
 
-plot.phylo(aus.tree, edge.color = gray.branches, tip.color = col.tree, no.margin = T)
+plot.phylo(aus.tree, edge.color = "gray", tip.color = col.tree, no.margin = T)
 ```

@@ -15,7 +15,7 @@ Here we plot the Principal Components Analysis as a phylomorphospace to visualiz
 
 We also plot evolutionary allometry to visualize species which diverge.
 
-This script generates Figure 2. 
+This script generates Figure 3. 
 
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
@@ -27,7 +27,8 @@ library(geomorph)
 library(colorspace)  # needed to darken colors programmatically
 library(plotrix)  # needed to draw ellipses
 source("../Functions/utilities.R")  # custom functions
-source("../Functions/plotGMPhyloMorphoSpace_axisflip.R")  # modified geomorph function
+source("../Functions/plotGMPhyloMorphoSpace_plotmod.R")  # modified geomorph function
+source("../Functions/phytools.branch.colors.R")  # modified phytools function
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
@@ -124,7 +125,7 @@ text(5.3, -0.065, "Hopping Notomys", col = Not.col)
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
 
 # Phylomorphospace
-plotGMPhyloMorphoSpace_axisflip(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.25, main = "b) Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
+plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.25, main = "b) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
 text(0.1, 0.025, "Frugivores", col = "dark grey")
 text(0.047, 0.065, "Folivores", col = "dark grey")
 text(0.04, -0.051, "Carnivores", col = "dark grey")

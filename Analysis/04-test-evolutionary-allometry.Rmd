@@ -158,7 +158,7 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 # Make Figure 1
 setEPS()
 postscript("../Data/Results/Figure1_Phylogeny.eps")
-plot.phylo(aus.tree, edge.color = "gray", tip.color = col.tree, no.margin = T)
+plot.phylo(aus.tree, edge.color = "gray", tip.color = col.gen, no.margin = T)
 dev.off()
 ```
 
