@@ -108,7 +108,7 @@ plot(x = log(info.means.tree$MeanCsize),
      main = "a) Evolutionary Allometry",
      xlab = "Log centroid size", 
      ylab = "Shape (regression score)")
-legend(5.81, 0.052, legend = names.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+legend(5.81, 0.052, legend = genera.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
 
 abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
@@ -125,11 +125,18 @@ text(5.3, -0.065, "Hopping Notomys", col = Not.col)
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
 
 # Phylomorphospace
-plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.25, main = "b) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
+plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.15, main = "b) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
 text(0.1, 0.025, "Frugivores", col = "dark grey")
 text(0.047, 0.065, "Folivores", col = "dark grey")
 text(0.04, -0.051, "Carnivores", col = "dark grey")
 text(-0.06, 0.047, "Notomys", col = Not.col)
+
+# Make gradient legend for molecular rates
+legend_image <- as.raster(matrix(gray.colors(10), ncol = 1))
+#plot(c(400, 420, 500), c(100, 200, 240))
+rasterImage(legend_image, -0.07, -0.05, -0.04, -0.04)
+text(-0.055, -0.035, "Faster rate", col = "dark grey", cex = 0.7)
+text(-0.055, -0.053, "Slower rate", col = "dark grey", cex = 0.7)
 
 dev.off()  # finishes plot export
 ```
