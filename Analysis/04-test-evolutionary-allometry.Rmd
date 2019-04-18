@@ -25,6 +25,7 @@ library(phylotate)  # needed to work with phylogenies
 library(data.table)
 library(vegan)
 source("../Functions/utilities.R")  # loads custom functions
+source("../Functions/phytools.branch.colors.R")  # modified phytools function
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 ```
@@ -147,9 +148,13 @@ mean.shapes.tree <- mean.shapes.tree[, , tree.order]  # shape data
 ```
 
 ## Visualize tree for Figure 1
-Phylogeny with colors coordinated to major clades (see script 03)
+Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03)
 ```{r}
-# Colors by species, ordered in same way as tree
+# Branch colors by centroid size
+cs.tree <- -info.means.tree$MeanCsize  # negative so colors get darker with larger size
+names(cs.tree) <- aus.tree$tip.label
+
+# Tip lable colors by species, ordered in same way as tree
 grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
 grp[which(grp == "Mas")] <- "Pse"
 names(col.gen) <- sort(unique(grp))
@@ -157,9 +162,14 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 
 # Make Figure 1
 setEPS()
-postscript("../Data/Results/Figure1_Phylogeny.eps")
-plot.phylo(aus.tree, edge.color = "gray", tip.color = col.gen, no.margin = T)
+postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
+plotBranchbyTrait(aus.tree, cs.tree, mode = "tips", palette = colorRampPalette(sequential_hcl(5, "BrwnYl")), tip.color = col.tree, legend = F)
 dev.off()
+
+# WORK IN PROGRESS: Make gradient legend
+legend_image <- as.raster(matrix(gray.colors(20), ncol = 1))
+rasterImage(legend_image, 0, 20, 0, 60)
+text(393, 213, "High variation", col = "dark grey", cex = 1.4)
 ```
 
 ## Evolutionary Allometry, reported in Table 1
