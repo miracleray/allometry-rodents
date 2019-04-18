@@ -43,9 +43,11 @@ Pog <- sequential_hcl(5, "Heat 2")  # Pogonomys
 Inv <- sequential_hcl(5, "Light Grays")  # Mus and Rattus
 
 # Colors in order of phylogeny
-names.phylo <- c("Mel", "Uro", "Con", "Mes", "Lep", "Leg", "Zyz", "Not", "Pse", "Hyd", "Xer", "Pog", "Mus", "Rat")
-col.phylo <- c(Uro[2], Uro[1], Con[1], Con[2], Con[3], Pse[3], Pse[4], Pse[1], Pse[2], Hyd[2], Hyd[1], Pog[3], Inv[3], Inv[1])
-names(col.phylo) <- names.phylo
+genera.phylo <- c("Mus", "Rat", "Pog", "Xer", "Hyd", "Not", "Pse", "Zyz", "Leg", "Uro", "Mel", "Lep", "Mes", "Con")
+
+col.phylo <- c(Inv[3], Inv[1], Pog[3], Hyd[1], Hyd[2], Pse[1], Pse[2], Pse[4], Pse[3], Uro[1], Uro[2], Con[3], Con[2], Con[1])
+
+names(col.phylo) <- genera.phylo
 
 # Colors in order of alphabetical genus names
 col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))]
@@ -141,13 +143,13 @@ plot(x = log(spp.results$size),
      bg = sp.col.gen,
      main = "Static and evolutionary allometry",
      xlab = NA,
-     ylab = "Shape (Proj. Reg. Score)")
+     ylab = "Shape (Regression Score)")
 text(min(log(spp.results$size)), max(spp.results$Reg.proj), "a")
 abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
 text(5.7, -0.04, paste("Rsq of log(size) = ", round(spp.results$aov.table$Rsq[1], 2)), cex = 1.1, col = "dark grey")
 
 # Species Legend
-legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
+legend(6.045, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
 
 # Plot of static allometry with evolutionary allometry
 par(mar=c(5, 4, 1.5, 0))
