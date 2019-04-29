@@ -168,5 +168,5 @@ dev.off()
 
 ### Save intermediate data
 ```{r}
-save(col.gen, sp.col.gen, col.phylo, phylo.names, spp.results, file = "../Data/Processed/03-color-data.rda")
+save(col.gen, sp.col.gen, col.phylo, phylo.names, genera.phylo, spp.results, file = "../Data/Processed/03-color-data.rda")
 ```

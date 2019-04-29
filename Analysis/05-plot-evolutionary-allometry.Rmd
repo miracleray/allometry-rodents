@@ -22,16 +22,17 @@ This script generates Figure 3.
 library(stringr)
 library(ape)  # needed to work with phylogenies
 library(geiger)  # needed to work with phylogenies
+library(phytools)  # needed to work with phylogenies
 library(data.table)
 library(geomorph)
 library(colorspace)  # needed to darken colors programmatically
 library(plotrix)  # needed to draw ellipses
-source("../Functions/utilities.R")  # custom functions
-source("../Functions/plotGMPhyloMorphoSpace_plotmod.R")  # modified geomorph function
-source("../Functions/phytools.branch.colors.R")  # modified phytools function
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
+source("../Functions/utilities.R")  # custom functions
+source("../Functions/plotGMPhyloMorphoSpace_plotmod.R")  # modified geomorph function
+source("../Functions/phytools.branch.colors.R")  # modified phytools function
 ```
 
 ## Make multipanel Figure 3: evolutionary allometry and mean shape PCA/phylomorphosapce
@@ -97,7 +98,7 @@ Not.col <- col.gen[which(names(col.gen) == "Not")]
 
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure3_EvoAllo_PhyloPCA.eps")
-layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
+layout(matrix(c(1,1,2,2,3,3), 3, 2, byrow = TRUE))  # 3 rows, 2 columns
 
 # Evolutionary Allometry plot
 plot(x = log(info.means.tree$MeanCsize),
@@ -108,35 +109,56 @@ plot(x = log(info.means.tree$MeanCsize),
      main = "a) Evolutionary Allometry",
      xlab = "Log centroid size", 
      ylab = "Shape (regression score)")
-legend(5.81, 0.052, legend = genera.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 2)
+legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 4)
 
 abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
-text(5.75, 0.11, "Frugivores", col = "dark grey")
+text(5.77, 0.11, "Frugivores", col = "dark grey")
 draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
 
 text(5.35, 0.08, "Folivores", col = "dark grey")
 draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
 
 text(5.8, 0.066, "Carnivore", col = "dark grey")
-text(5.03, 0.015, "Carnivore", col = "dark grey")
+text(5.05, 0.015, "Carnivore", col = "dark grey")
 
-text(5.3, -0.065, "Hopping Notomys", col = Not.col)
+text(5.3, -0.055, "Hopping Notomys", col = Not.col)
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
 
+# PCA
+PCAlims = c(-0.08, 0.12)
+plot(x = -pca.means$pc.scores[, 1],
+     y = pca.means$pc.scores[, 2],
+     xlim = PCAlims,
+     ylim = PCAlims,
+     col = col.means,
+     pch = pch.means,
+     bg = col.means,
+     main = "b) Principal Component Analysis",
+     xlab = PC1.lab, 
+     ylab = PC2.lab)
+text(.105, -0.009, "Frugivores", col = "dark grey")
+draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
+text(.045, 0.065, "Folivores", col = "dark grey")
+draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
+text(.045, -0.053, "Carnivores", col = "dark grey")
+draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
+text(-.067, 0.034, "Notomys", col = Not.col)
+draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
+
 # Phylomorphospace
-plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, l.wd = 0.15, main = "b) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab))
-text(0.1, 0.025, "Frugivores", col = "dark grey")
-text(0.047, 0.065, "Folivores", col = "dark grey")
-text(0.04, -0.051, "Carnivores", col = "dark grey")
-text(-0.06, 0.047, "Notomys", col = Not.col)
+plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "c) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
+#text(0.1, 0.025, "Frugivores", col = "dark grey")
+#text(0.047, 0.065, "Folivores", col = "dark grey")
+#text(0.04, -0.051, "Carnivores", col = "dark grey")
+#text(-0.06, 0.047, "Notomys", col = Not.col)
 
 # Make gradient legend for molecular rates
 legend_image <- as.raster(matrix(gray.colors(10), ncol = 1))
 #plot(c(400, 420, 500), c(100, 200, 240))
-rasterImage(legend_image, -0.07, -0.05, -0.04, -0.04)
+rasterImage(legend_image, -0.07, -0.07, -0.04, -0.044)
 text(-0.055, -0.035, "Faster rate", col = "dark grey", cex = 0.7)
-text(-0.055, -0.053, "Slower rate", col = "dark grey", cex = 0.7)
+text(-0.055, -0.075, "Slower rate", col = "dark grey", cex = 0.7)
 
 dev.off()  # finishes plot export
 ```

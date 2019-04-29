@@ -104,6 +104,7 @@ plotGMPhyloMorphoSpace_plotmod<-function(phy,A,tip.labels=TRUE,tip.text=NULL,nod
         if(is.null(p.p$txt.adj)) p.p$txt.adj=c(-.1,-.1) ; if(is.null(p.p$txt.col)) p.p$txt.col="black"
         if(is.null(p.p$txt.cex)) p.p$txt.cex=1 ; if(is.null(p.p$n.txt.adj)) p.p$n.txt.adj=c(-.1,-.1) 
         if(is.null(p.p$n.txt.col)) p.p$n.txt.col="black" ; if(is.null(p.p$n.txt.cex)) p.p$n.txt.cex=0.6
+        if(is.null(p.p$xlim)) p.p$xlim = limits(pcdata[,xaxis],1.5); if(is.null(p.p$ylim)) p.p$ylim = limits(pcdata[,yaxis],1.5)
         limits = function(x,s){ 
                 r = range(x)
                 rc=scale(r,scale=F)
@@ -111,10 +112,10 @@ plotGMPhyloMorphoSpace_plotmod<-function(phy,A,tip.labels=TRUE,tip.text=NULL,nod
         # regular 2D phylomorphospace
         if(is.null(zaxis)){
                 if(tip.labels==TRUE){
-                        plot(pcdata[,xaxis],pcdata[,yaxis],type="n",xlim=limits(pcdata[,xaxis],1.5),ylim=limits(pcdata[,yaxis],1.5),asp=1,
+                        plot(pcdata[,xaxis],pcdata[,yaxis],type="n",xlim = p.p$xlim, ylim = p.p$ylim, asp=1,
                              xlab = p.p$xlab, ylab = p.p$ylab) }
                 if(tip.labels==FALSE) {
-                        plot(pcdata[,xaxis],pcdata[,yaxis],type="n", main = p.p$main, xlab = p.p$xlab, ylab = p.p$ylab) }
+                        plot(pcdata[,xaxis],pcdata[,yaxis],type="n", main = p.p$main, xlab = p.p$xlab, ylab = p.p$ylab, xlim = p.p$xlim, ylim = p.p$ylim) }
                 for (i in 1:nrow(phy$edge)){
                         lines(pcdata[(phy$edge[i,]),xaxis],pcdata[(phy$edge[i,]),yaxis],type="l",col=p.p$l.col[i],lwd=p.p$lwd)
                 }
@@ -127,64 +128,6 @@ plotGMPhyloMorphoSpace_plotmod<-function(phy,A,tip.labels=TRUE,tip.text=NULL,nod
                 if(node.labels==TRUE){
                         text(pcdata[(N + 1):nrow(pcdata),xaxis],pcdata[(N + 1):nrow(pcdata),yaxis],rownames(pcdata)[(N + 1):nrow(pcdata)],
                              col=p.p$n.txt.col,cex=p.p$n.txt.cex,adj=p.p$n.txt.adj)}
-        }
-        # 3d phylomorphospace in rgl
-        if(is.numeric(zaxis)){
-                plot3d(pcdata[1:N,xaxis], pcdata[1:N,yaxis], pcdata[1:N,zaxis],type="s",xlim=limits(pcdata[,xaxis],1.5),
-                       ylim=limits(pcdata[,yaxis],1.5), zlim=limits(pcdata[,zaxis],1.5), asp=1,
-                       xlab= paste("PC",xaxis), ylab= paste("PC",yaxis), zlab=paste("PC",zaxis),
-                       col= p.p$t.bg, size=p.p$t.cex)
-                if(p.p$n.bg == "white"){ p.p$n.bg <- "grey"}
-                points3d(pcdata[(N + 1):nrow(pcdata),xaxis], pcdata[(N + 1):nrow(pcdata),yaxis], 
-                         pcdata[(N + 1):nrow(pcdata),zaxis], 
-                         col= p.p$n.bg, size=p.p$n.cex*4)
-                for (i in 1:nrow(phy$edge)) {
-                        lines3d(pcdata[(phy$edge[i, ]), xaxis], pcdata[(phy$edge[i, ]), yaxis],pcdata[(phy$edge[i, ]), zaxis], 
-                                col=p.p$l.col, lwd=p.p$lwd)}
-                if(tip.labels==TRUE){
-                        text3d(pcdata[1:N,xaxis],pcdata[1:N,yaxis],pcdata[1:N,zaxis],rownames(pcdata)[1:N],
-                               col=p.p$txt.col,cex=p.p$txt.cex,adj=p.p$txt.adj) }
-                if(node.labels==TRUE){
-                        text3d(pcdata[(N + 1):nrow(pcdata),xaxis],pcdata[(N + 1):nrow(pcdata),yaxis],
-                               pcdata[(N + 1):nrow(pcdata),zaxis],rownames(pcdata)[(N + 1):nrow(pcdata)],
-                               col=p.p$n.txt.col,cex=p.p$n.txt.cex,adj=p.p$n.txt.adj) }
-        }
-        # 3d phylomorphospace in rgl with time on Z-axis
-        if(is.character(zaxis)){
-                zaxis <- node.depth.edgelength(phy)
-                zaxis <- abs(node.depth.edgelength(phy) - max(zaxis))
-                view3d(phi=90, fov=30)
-                plot3d(pcdata[,xaxis],pcdata[,yaxis],zaxis,type="n",xlim=limits(pcdata[,xaxis],1.5),
-                       ylim=limits(pcdata[,yaxis],1.5),
-                       zlim=c(max(zaxis), min(zaxis)),
-                       asp=c(1,1,1),
-                       xlab= paste("PC",xaxis), ylab= paste("PC",yaxis), zlab="Time")
-                points3d(pcdata[1:N,xaxis], pcdata[1:N,yaxis], zaxis[1:N],
-                         col= p.p$t.bg, size=p.p$t.cex*4)
-                if(p.p$n.bg == "white"){ p.p$n.bg <- "grey"}
-                points3d(pcdata[(N + 1):nrow(pcdata),xaxis], pcdata[(N + 1):nrow(pcdata),yaxis], 
-                         zaxis[(N + 1):nrow(pcdata)], 
-                         col= p.p$n.bg, size=p.p$n.cex*4)
-                for (i in 1:nrow(phy$edge)) {
-                        lines3d(pcdata[(phy$edge[i, ]), xaxis], pcdata[(phy$edge[i, ]), yaxis],zaxis[(phy$edge[i, ])], 
-                                col=p.p$l.col, lwd=p.p$lwd)}
-                if(tip.labels==TRUE){
-                        text3d(pcdata[1:N,xaxis],pcdata[1:N,yaxis],zaxis[1:N],rownames(pcdata)[1:N],
-                               col=p.p$txt.col,cex=p.p$txt.cex,adj=p.p$txt.adj) }
-                if(node.labels==TRUE){
-                        text3d(pcdata[(N + 1):nrow(pcdata),xaxis],pcdata[(N + 1):nrow(pcdata),yaxis],
-                               zaxis[(N + 1):nrow(pcdata)],rownames(pcdata)[(N + 1):nrow(pcdata)],
-                               col=p.p$n.txt.col,cex=p.p$n.txt.cex,adj=p.p$n.txt.adj) }
-                if(shadow==TRUE){
-                        #plot shadow version at base
-                        points3d(pcdata[1:N,xaxis], pcdata[1:N,yaxis], max(zaxis),
-                                 col= p.p$t.bg, size=p.p$t.cex*4, alpha = 0.5)
-                        points3d(pcdata[(N + 1):nrow(pcdata),xaxis], pcdata[(N + 1):nrow(pcdata),yaxis], 
-                                 max(zaxis), col= p.p$n.bg, size=p.p$n.cex*4,alpha = 0.5)
-                        for (i in 1:nrow(phy$edge)) {
-                                lines3d(pcdata[(phy$edge[i, ]), xaxis], pcdata[(phy$edge[i, ]), yaxis],max(zaxis), 
-                                        col=p.p$l.col, lwd=p.p$lwd, alpha = 0.5)}
-                }
         }
         if(ancStates==TRUE){ return(anc.states)  }
 }
