@@ -147,6 +147,8 @@ text(-.067, 0.034, "Notomys", col = Not.col)
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
 # Phylomorphospace
+gray.branches.10 <- rep("dark gray", length(gray.branches.10)) # STOP-GAP MEASURE to handle decision to no longer color the branches
+
 plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "c) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
 #text(0.1, 0.025, "Frugivores", col = "dark grey")
 #text(0.047, 0.065, "Folivores", col = "dark grey")
@@ -154,11 +156,10 @@ plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.label
 #text(-0.06, 0.047, "Notomys", col = Not.col)
 
 # Make gradient legend for molecular rates
-legend_image <- as.raster(matrix(gray.colors(10), ncol = 1))
-#plot(c(400, 420, 500), c(100, 200, 240))
-rasterImage(legend_image, -0.07, -0.07, -0.04, -0.044)
-text(-0.055, -0.035, "Faster rate", col = "dark grey", cex = 0.7)
-text(-0.055, -0.075, "Slower rate", col = "dark grey", cex = 0.7)
+#legend_image <- as.raster(matrix(gray.colors(10), ncol = 1))
+#rasterImage(legend_image, -0.07, -0.07, -0.04, -0.044)
+#text(-0.055, -0.035, "Faster rate", col = "dark grey", cex = 0.7)
+#text(-0.055, -0.075, "Slower rate", col = "dark grey", cex = 0.7)
 
 dev.off()  # finishes plot export
 ```
