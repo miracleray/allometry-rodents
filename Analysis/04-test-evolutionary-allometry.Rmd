@@ -162,14 +162,17 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 
 # Make Figure 1
 setEPS()
-postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
-plotBranchbyTrait(aus.tree, cs.tree, mode = "tips", palette = colorRampPalette(sequential_hcl(5, "BrwnYl")), tip.color = col.tree, legend = F)
-dev.off()
+postscript("../Data/Results/FigureS1_Phylogeny_CS.eps")
 
-# WORK IN PROGRESS: Make gradient legend
-legend_image <- as.raster(matrix(gray.colors(20), ncol = 1))
-rasterImage(legend_image, 0, 20, 0, 60)
-text(393, 213, "High variation", col = "dark grey", cex = 1.4)
+plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = F)
+
+# Add centroid size legend
+legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
+rasterImage(legend_image, 0, 2, 4, 5)
+text(2, 6, "Large", col = "dark grey", cex = 1)
+text(2, 1, "Small", col = "dark grey", cex = 1)
+
+dev.off()
 ```
 
 ## Evolutionary Allometry, reported in Table 1
