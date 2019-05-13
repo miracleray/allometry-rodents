@@ -103,7 +103,7 @@ ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRa
 
 # Expected rate, hard coded from hypotheses
 # Order is: frugivores, folivores, carnivores, Notomys
-expected <- c("Faster", "Slower", "Slower", "Slower")
+expected <- c("Slower", "Slower", "Slower", "Slower")
 
 # Rate difference found using custom function FindRateDiff
 found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(carn.test), FindRateDiff(not.test))

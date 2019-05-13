@@ -41,13 +41,13 @@ First, to reduce user error, AEM landmarked 20 specimens to familiarize herself 
 
 Viewbox puts the most recent specimen in the first row of the output .csv file, which is why we take the 20 initial specimens from the last rows of the coordinate dataset. 
 ```{r}
-coords.3D <- read.csv("../Data/Raw/19_01_09_RawData.csv", header = T)
+coords.3D <- read.csv("../Data/Raw/Raw_Coord_Data.csv", header = T)
 coords.3D <- coords.3D[1:(length(coords.3D) - 40)]  # removes first 20 specimens landmarked, with 2 protocols per specimen = 40
 ```
 _Note that the data is loaded in using a relative directory - not a `setwd()` command. This allows others who have cloned this repo of data and code to still use the code out of the box._
 
 ### Convert to 3D array
-Here, we convert the coordinates into a 3D array for _geomorph_. Importantly, we need to remove the 1st column of landmark names. 
+Here, we convert the coordinates into a 3D array for _geomorph_. First, we need to remove the 1st column of landmark names. 
 ```{r}
 data <- coords.3D[, 2:(dim(coords.3D)[2])]  # removes LM names for geomorph
 data <- t(data)
