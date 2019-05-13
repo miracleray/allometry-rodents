@@ -179,23 +179,15 @@ text(414, 168, "Low", col = "dark grey", cex = 1)
 dev.off()
 ```
 
+### Plot phylomorphospace for supplementary materials
+Uses modified `geomorph` function `plotGMPhyloMorphoSpace_plotmod` which can be found in the Functions folder of this repository.
 ```{r}
-# Phylomorphospace for supplementary materials  
-gray.branches.10 <- rep("dark gray", length(gray.branches.10)) # STOP-GAP MEASURE to handle decision to no longer color the branches
+gray.branches.10 <- rep("dark gray", length(gray.branches.10)) # needed handle decision to no longer color the branches
 
 setEPS()
 postscript("../Data/Results/FigureS3_PhyloPCA.eps")
-plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
-#text(0.1, 0.025, "Frugivores", col = "dark grey")
-#text(0.047, 0.065, "Folivores", col = "dark grey")
-#text(0.04, -0.051, "Carnivores", col = "dark grey")
-#text(-0.06, 0.047, "Notomys", col = Not.col)
 
-# Make gradient legend for molecular rates
-#legend_image <- as.raster(matrix(gray.colors(10), ncol = 1))
-#rasterImage(legend_image, -0.07, -0.07, -0.04, -0.044)
-#text(-0.055, -0.035, "Faster rate", col = "dark grey", cex = 0.7)
-#text(-0.055, -0.075, "Slower rate", col = "dark grey", cex = 0.7)
+plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
 
 dev.off()  # finishes plot export
 ```
