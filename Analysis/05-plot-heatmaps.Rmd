@@ -1,5 +1,5 @@
 ---
-title: "06-plot-heatmaps"
+title: "05-plot-heatmaps"
 author: "Ariel Marcy"
 date: "3/11/2019"
 output: html_document
@@ -71,36 +71,10 @@ view3d(phi = 90)
 rgl.snapshot("../Data/Processed/PC1heatmap_lat.png")
 ```
 
-### Prep images for multi-panel figure
+### Prep images for multi-panel figure 3 (created with script 06)
 This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)
 dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
 lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
-```
-
-## Make multipanel Figure 3
-ERROR: memory issues when trying to add legend within setEPS. Works when lines 87-104 are run through the console, plot is "zoomed" from RStudio, and then screenshot from that window
-```{r}
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_Heatmaps.eps")
-layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))  # 2 rows, 2 columns
-par(mar=c(0, 0, 0, 0))
-
-# Plot dorsal view
-plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
-rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
-text(0, dim(dor)[1]-10, "a", cex = 2)
-
-# Plot lateral view with same dimensions as above
-plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
-rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
-text(0, dim(dor)[1]-10, "b", cex = 2)
-
-# Make gradient legend
-legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
-rasterImage(legend_image, 440, 220, 465, 160)
-text(393, 213, "High variation", col = "dark grey", cex = 1.4)
-text(420, 168, "Low", col = "dark grey", cex = 1.4)
-dev.off()
 ```

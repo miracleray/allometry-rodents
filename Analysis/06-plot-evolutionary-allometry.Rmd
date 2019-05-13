@@ -1,5 +1,5 @@
 ---
-title: "05-plot-evolutionary-allometry"
+title: "06-plot-evolutionary-allometry"
 author: "Ariel Marcy"
 date: "2/14/2019"
 output: html_document
@@ -25,8 +25,8 @@ library(geiger)  # needed to work with phylogenies
 library(phytools)  # needed to work with phylogenies
 library(data.table)
 library(geomorph)
-library(colorspace)  # needed to darken colors programmatically
 library(plotrix)  # needed to draw ellipses
+
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")
@@ -91,25 +91,35 @@ gray.branches.10 <- darken(gray.branches, 0.1)  # make white branches visible
 ```
 
 ## Plot and export the multi-panel Figure 3
-Evolutionary allometry plot on top and phylomorphospace on the bottom
+Evolutionary allometry plot on top, PCA in the middle, two heatmaps on the bottom
+
+ERROR: memory issues when trying to add legend within setEPS. Works when lines 107-177 are run through the console, plot is "zoomed" from RStudio, and then screenshot from that window
 ```{r}
 # Find Notomys' color
 Not.col <- col.gen[which(names(col.gen) == "Not")]
 
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_EvoAllo_PhyloPCA.eps")
-layout(matrix(c(1,1,2,2,3,3), 3, 2, byrow = TRUE))  # 3 rows, 2 columns
+# Read in heatmap PNGs created with script 05
+dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
+lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 
-# Evolutionary Allometry plot
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure3_EvoAllo_PCA_Heatmaps.eps")
+mat <- matrix(c(1,1,2,2,3,4), 3, 2, byrow = TRUE)  # 3 rows, 2 columns
+layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))  
+
+# 1) Evolutionary Allometry plot
+par(mar = c(4, 4, 1, 1))  # sets the margins
 plot(x = log(info.means.tree$MeanCsize),
      y = mean.allo$Reg.proj,
      xlim = c(4.75, 6),
      col = col.means, 
      pch = pch.evo.allo,
-     main = "a) Evolutionary Allometry",
      xlab = "Log centroid size", 
-     ylab = "Shape (regression score)")
-legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 1, pt.cex = 1, ncol = 4)
+     ylab = "Shape",
+     bty = "n")
+text(4.75, 0.1, "a", cex = 2)
+
+legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 4, bty = "n")
 
 abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
@@ -125,7 +135,8 @@ text(5.05, 0.015, "Carnivore", col = "dark grey")
 text(5.3, -0.055, "Hopping Notomys", col = Not.col)
 draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
 
-# PCA
+# 2) PCA
+par(mar=c(4, 4, 1, 1))  # sets the margins
 PCAlims = c(-0.08, 0.12)
 plot(x = -pca.means$pc.scores[, 1],
      y = pca.means$pc.scores[, 2],
@@ -134,9 +145,10 @@ plot(x = -pca.means$pc.scores[, 1],
      col = col.means,
      pch = pch.means,
      bg = col.means,
-     main = "b) Principal Component Analysis",
      xlab = PC1.lab, 
-     ylab = PC2.lab)
+     ylab = PC2.lab,
+     bty = "n")
+text(-0.08, 0.1, "b", cex = 2)
 text(.105, -0.009, "Frugivores", col = "dark grey")
 draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
 text(.045, 0.065, "Folivores", col = "dark grey")
@@ -146,10 +158,34 @@ draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
 text(-.067, 0.034, "Notomys", col = Not.col)
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
-# Phylomorphospace
+# 3) Plot dorsal view
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
+rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
+text(0, dim(dor)[1]-10, "c", cex = 2)
+
+# 4) Plot lateral view with same dimensions as above
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
+rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
+text(0, dim(dor)[1]-10, "d", cex = 2)
+
+# Make gradient legend
+legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
+rasterImage(legend_image, 440, 220, 465, 160)
+text(382, 213, "High variation", col = "dark grey", cex = 1)
+text(414, 168, "Low", col = "dark grey", cex = 1)
+
+dev.off()
+```
+
+```{r}
+# Phylomorphospace for supplementary materials  
 gray.branches.10 <- rep("dark gray", length(gray.branches.10)) # STOP-GAP MEASURE to handle decision to no longer color the branches
 
-plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "c) PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
+setEPS()
+postscript("../Data/Results/FigureS3_PhyloPCA.eps")
+plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.labels = F, node.labels = F, plot.param = list(t.bg = col.means, t.pch = pch.means, t.cex = 1.5, n.cex = .75, l.col = gray.branches.10, lwd = 2, main = "PCA Phylomorphospace", xlab = PC1.lab, ylab = PC2.lab, xlim = PCAlims, ylim = PCAlims))
 #text(0.1, 0.025, "Frugivores", col = "dark grey")
 #text(0.047, 0.065, "Folivores", col = "dark grey")
 #text(0.04, -0.051, "Carnivores", col = "dark grey")
