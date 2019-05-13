@@ -11,7 +11,7 @@ As of May 2018, this is still a work in progress.
 ## Data
 **Landmarking data:**
 * 3D surface scanned meshes for all skulls in the study will be available via [MorphoSource](https://www.morphosource.org/)
-* [Raw_Coordinates.csv](Data/Raw/3D_coords.csv) - the shape coordinates from landmarking 3D  skulls in Viewbox 
+* [Raw_Coordinates.csv](Data/Raw/Raw_Coord_Data.csv) - the shape coordinates from landmarking 3D skulls in Viewbox 
 
 **Museum metadata provided by Curators:**
 * [Australian Museum specimens](/Data/Raw/AM_muridae_skulls.csv)
@@ -38,8 +38,8 @@ The analysis workflow is broken down into smaller scripts explained below. Each 
 * **02-calculate-user-error.Rmd** Allows users to view outliers and find major landmarking errors. Takes out replicated specimens from the shape data, finds their duplicates, and calculates user error based on repeatability for both patch datasets.
 * **03-measure-static-allometry.Rmd** Tests correlation of PC1 and PC2 with centroid size. Uses `geomorph`'s `procD.allometry()` and `advanced.procD.lm()` to test for significant differences in allometric slopes and intercepts by species. Plots allometric relationships using Projected Regression Scores. Plots "size-less" residuals of static allometry. **Generates Figure 1 and Table S4**.
 * **04-test-evolutionary-allometry** Finds mean shape and centroid size in preparation for evolutionary allometry and phylogenetic analyses. Organizes the tree, mean shape data, and metadata in preparation for phylogenetic analyses of shape using the 2018 Smissen & Rowe tree plus 6 additional alignments. Runs phylogenetically-informed `procD.pgls()` linear model for evolutionary allometry. **Generates Table 1**.
-* **05-plot-evolutionary-allometry.Rmd**  Plots phylomorphospace (PCA with phylogeny) and evolutionary allometry of mean shape data. **Generates Figure 2**.
-* **06-plot-heatmaps.Rmd** Plot heatmaps showing a statistically rigorous visualization of how landmarks vary from PC1 mininum to PC1 maximum. Ilustrates the allometric changes in Australian rodents. **Generates Figure 3**.
+* **05-plot-heatmaps.Rmd** Plot heatmaps showing a statistically rigorous visualization of how landmarks vary from PC1 mininum to PC1 maximum. Ilustrates the allometric changes in Australian rodents, makes images used in Figure 2.
+* **06-plot-evolutionary-allometry.Rmd**  Plots evolutionary allometry of mean shape data, a PCA of the mean shape data, and two heatmap views of the crania shape changes across PC1. **Generates Figure 2**.
 * **06-find-evolutionary-rates.Rmd** Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table 2**.
 
 * **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the four museums' original metadata. **Generates Table S1**
