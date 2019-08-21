@@ -4,13 +4,13 @@ Code author: Ariel E. Marcy
 To cite the paper and/or code:
 > Coming soonish
 
-As of July 2019, this is still a work in progress.
+As of August 2019, this is still a work in progress.
 
 *All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
 
 ## Data
 **Landmarking data:**
-* 3D surface scanned meshes for all skulls in the study will be available via [MorphoSource](https://www.morphosource.org/)
+* 3D surface scanned meshes for all skulls in the study are [available via MorphoSource](https://www.morphosource.org/MyProjects/Dashboard/dashboard/select_project_id/561)
 * [Raw_Coordinates.csv](Data/Raw/Raw_Coord_Data.csv) - the shape coordinates from landmarking 3D skulls in Viewbox 
 
 **Museum metadata provided by Curators:**
