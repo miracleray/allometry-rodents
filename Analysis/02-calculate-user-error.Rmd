@@ -114,7 +114,7 @@ sp.info <- sp.info[main, ]
 Three specimens had major landmarking errors: landmarks consistently placed in the wrong places. Therefore, we opted to remove these specimens.
 ```{r}
 # Find indices
-mel.out <- which(sp.info$CatNum == "C11381")  # Melomys burtoni
+mel.out <- which(sp.info$CatNum == "J22537")  # Melomys burtoni
 rat.out <- which(sp.info$CatNum == "C11381")  # Rattus norvegicus
 uro.out <- which(sp.info$CatNum == "J17610")  # Uromys caudimaculatus
 
