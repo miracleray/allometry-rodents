@@ -4,7 +4,7 @@ Code authors: Ariel E. Marcy, Thomas Guillerme, Emma Sherratt
 To cite the paper and/or code:
 > Coming soonish
 
-As of October 2019, this is still a work in progress.
+As of October 2019, this is still a work in progress. Uses R (v. 3.5.2) and geomorph (v. 3.0.7).
 
 *All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
 
