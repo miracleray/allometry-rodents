@@ -44,4 +44,5 @@ The analysis workflow is broken down into smaller scripts explained below. Each 
 
 * **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the four museums' original metadata. **Generates Table S1**
 
-**Custom functions:** The analyses call custom functions that are defined in the ..Data/Functions/utilities.R file.
+**Custom functions:** The analyses call custom functions, most of which are defined in the ..Data/Functions/utilities.R file.
+A modified version of `geomorph`'s function `plotGMPhyloMorphoSpace` is defined in the ..Data/Functions/plotGMPhyloMorphoSpace_plotmod.R file.
