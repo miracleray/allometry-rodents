@@ -1,6 +1,6 @@
 ---
 title: "06-plot-evolutionary-allometry"
-author: "Ariel Marcy"
+authors: "Ariel Marcy & Thomas Guillerme"
 date: "2/14/2019"
 output: html_document
 ---
@@ -26,7 +26,7 @@ library(phytools)  # needed to work with phylogenies
 library(data.table)
 library(geomorph)
 library(plotrix)  # needed to draw ellipses
-
+library(landvR)  # needed for rarefaction along the tree; must be v >= 0.4
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda")
 load(file = "../Data/Processed/04-phylo-data.rda")

@@ -17,13 +17,14 @@ This script generates Table 1.
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
+library(data.table)
+library(vegan)
 library(stringr)
 library(geomorph)
 library(ape)  # needed to work with phylogenies
-library(geiger)  # needed to work with phylogenies
-library(phylotate)  # needed to work with phylogenies
-library(data.table)
-library(vegan)
+library(geiger)  
+library(phylotate)  
+library(phytools)  
 source("../Functions/utilities.R")  # loads custom functions
 source("../Functions/phytools.branch.colors.R")  # modified phytools function
 load(file = "../Data/Processed/02-main-data.rda")
@@ -67,6 +68,7 @@ for (i in 1:length(full.names)) {
         shape.for.mean.2D <- shape.phylo[, , is.taxa]
         mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # output cols must = 3 for 3D
 }
+
 mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array with 325 landmarks and 3 for 3D landmarks in this study
 ```
 
@@ -74,7 +76,7 @@ Create metadata and put mean shape and metadata in alphabetical order.
 ```{r}
 # Alphabetical order for mean shape
 dimnames(mean.shapes)[[3]] <- full.names  # Genus_species format
-mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]  # ABC
+mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]  # ABC order
 
 # Alphabetical order for mean shape metadata
 info.means <- info.phylo[!duplicated(info.phylo$Taxa), -c(4:6)]  # make metadata; remove outdated columns: CatNum, Csize, Order
@@ -162,9 +164,9 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 
 # Make Figure 1
 setEPS()
-postscript("../Data/Results/FigureS1_Phylogeny_CS.eps")
+postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
-plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = F)
+plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = FALSE)
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
