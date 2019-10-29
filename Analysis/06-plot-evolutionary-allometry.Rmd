@@ -295,7 +295,7 @@ delta_slopes <- lapply(data_clades, rarefy.stat, stat.fun = my_function, rarefac
 We can also compare them to the slope of the the full dataset:
 ```{r}
 # Getting the rarefied statistics for each clade
-delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = my_function, rarefaction = 5, observed = my_function(rare.table[, c(3, 4)]))
+delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = my_function, rarefaction = 5, observed = my_function(rare.table[, c(2, 4)]))
 ```
 
 ### Summarising the results
@@ -314,10 +314,10 @@ par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
 boxplot(do.call(cbind, delta_slopes),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade")
+        main = "Slope difference for each clade", las = 2)
 abline(h = 0, lty = 3)
 boxplot(do.call(cbind, delta_slopes_overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade (compared to the whole dataset)")
+        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
 abline(h = my_function(rare.table[, c(2, 4)]), lty = 3)
 ```
