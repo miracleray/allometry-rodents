@@ -247,7 +247,7 @@ clades <- prop.part.names(aus.tree.stlbl, singletons = TRUE)
 
 # Make function for getting the dataset for each clade
 get.data.clade <- function(clade, data, species.col.n, data.cols) {
-    return(data[which(data[ ,species.col.n] %in% clade), data.cols])
+    return(data[which(data[, species.col.n] %in% clade), data.cols])
 }
 
 # Use function to get all the datasets per clades
@@ -342,43 +342,46 @@ n.spp.group <- unlist(lapply(clades, length))
 
 fake.clades <- lapply(n.spp.group, function(n.spp.group, names = rare.table$FullName) sample(names, n.spp.group))   # fake clades
 
+# Make function for getting the dataset for each clade
+get.data.clade <- function(clade, data, species.col.n, data.cols) {
+    return(data[which(data[, species.col.n] %in% clade), data.cols])
+}
+
 # Use function to get all the datasets per clades
-data_flakes <- lapply(fake.clades, get.data.clade, data = rare.table,
-                      species.col.n = 1, data.cols = c(2:3))
+data.flakes <- lapply(fake.clades, get.data.clade, data = rare.table, species.col.n = 1, data.cols = c(2:3))
 ```
 
 ### Applying the tests to the "fake clades" (called data.flakes)
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 # Getting the rarefied statistics for each clade
-delta_slopes <- lapply(data_flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+delta.slopes <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
 ```
 
 We can also compare them to the slope of the the full dataset:
 ```{r}
 # Getting the rarefied statistics for each clade
-delta_slopes_overall <- lapply(data_flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
+delta.slopes.overall <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
 ```
 
 ### Summarising the results
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
-
 ```{r}
 # Adding the names to the slopes
-names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
-names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
+names(delta.slopes) <- unlist(lapply(fake.clades, paste, collapse = "+"))
+names(delta.slopes.overall) <- unlist(lapply(fake.clades, paste, collapse = "+"))
 ```
 
 And then transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
-boxplot(do.call(cbind, delta_slopes),
+boxplot(do.call(cbind, delta.slopes),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade", las = 2)
+        main = "Slope difference for each FAKE CLADE", ylim = c(-100, 100), las = 2)
 abline(h = 0, lty = 3)
-boxplot(do.call(cbind, delta_slopes_overall),
+boxplot(do.call(cbind, delta.slopes.overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
+        main = "Slope difference for each FAKE CLADE (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
