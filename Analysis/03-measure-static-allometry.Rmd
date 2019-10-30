@@ -209,21 +209,18 @@ The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://
 ### Getting each clade
 First we need to identify and isolate each element from each partition (clade) using a modified version from the `ape::prop.part` function.
 ```{r}
-# Prep a simple data table with names, centroid sizes, and PC scores
-#-pca.means$pc.scores[, 1], pca.means$pc.scores[, 2]
-
+# Create simple data table with label, centroid size, and RegProj
 short.label <- function(label) paste0(substr(strsplit(label, split = "_")[[1]][1], 1, 1), "_", substr(strsplit(label, split = "_")[[1]][2], 1, 3))
-
 aus.tree.stlbl <- aus.tree
 aus.tree.stlbl$tip.label <- unname(sapply(aus.tree.stlbl$tip.label, short.label))
 
 rare.table <- data.frame(info$Taxa, log(info$Csize), unname(spp.results$Reg.proj))
-colnames(rare.table) <- c("FullName", "Csize", "PredVal")
+colnames(rare.table) <- c("Taxa", "Csize", "RegProj")
 rownames(rare.table) <- NULL
 
 # Modify a function from ape to ID and isolate each element from each clade
 prop.part.names <- function(phy, singletons = FALSE) {
-    ## Sanitizing
+    # Sanitizing
     if(class(phy) != "phylo") {
         stop("phy must be a \"phylo\" object.")
     }
@@ -263,7 +260,7 @@ First we need to define the function that will get us the statistic. In our case
 
 ```{r}
 # Function for getting the slope of a linear model
-my_function <- function(data) {
+GetSlope <- function(data) {
     return(lm(data)$coefficients[[2]])
 }
 ```
@@ -305,13 +302,13 @@ rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed,
 }
 
 # Getting the rarefied statistics for each clade
-delta_slopes <- lapply(data_clades, rarefy.stat, stat.fun = my_function, rarefaction = 5)
+delta_slopes <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
 ```
 
 We can also compare them to the slope of the the full dataset:
 ```{r}
 # Getting the rarefied statistics for each clade
-delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = my_function, rarefaction = 5, observed = my_function(rare.table[, c(2, 3)]))
+delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
 ```
 
 ### Summarising the results
@@ -324,7 +321,55 @@ names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
 ```
 
 And then transform these statistics into tables to simply plot them with `boxplot`:
+```{r, fig.width = 12, fig.height = 12}
+par(mfrow = c(2, 1))
+# Combining the results into tables and plotting them
+boxplot(do.call(cbind, delta_slopes),
+        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
+        main = "Slope difference for each clade", las = 2)
+abline(h = 0, lty = 3)
+boxplot(do.call(cbind, delta_slopes_overall),
+        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
+        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
+abline(h = 0, lty = 3)  # since observered minus expected should be 0
+```
 
+### Checking the validity of the results above by randomizing species into "fake clades"
+```{r}
+# Getting the same number of "groups" per "clades"
+clades <- prop.part.names(aus.tree)
+n.spp.group <- unlist(lapply(clades, length))
+
+fake.clades <- lapply(n.spp.group, function(n.spp.group, names = rare.table$FullName) sample(names, n.spp.group))   # fake clades
+
+# Use function to get all the datasets per clades
+data_flakes <- lapply(fake.clades, get.data.clade, data = rare.table,
+                      species.col.n = 1, data.cols = c(2:3))
+```
+
+### Applying the tests to the "fake clades" (called data.flakes)
+Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
+```{r}
+# Getting the rarefied statistics for each clade
+delta_slopes <- lapply(data_flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+```
+
+We can also compare them to the slope of the the full dataset:
+```{r}
+# Getting the rarefied statistics for each clade
+delta_slopes_overall <- lapply(data_flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
+```
+
+### Summarising the results
+We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
+
+```{r}
+# Adding the names to the slopes
+names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
+names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
+```
+
+And then transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
