@@ -75,7 +75,7 @@ info.HOS <- info[c(-dataset.rm), ]  # Metadata
 shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
 
-Run allometry tests as well as a homogeneity of slopes test. These tests take about 5 min to run. Updated for `geomorph` 3.1.0
+Run allometry tests as well as a homogeneity of slopes test. These tests may take 1-2 min to run. Updated for `geomorph` 3.1.0
 ```{r}
 # ANOVA to test for common static allometries by species
 spp.gdf <- geomorph.data.frame(coords = shape.HOS, size = info.HOS$Csize, spp = info.HOS$Taxa)  # data frame
@@ -87,47 +87,25 @@ anova(fit.common, fit.unique, print.progress = FALSE)
 
 # Homogeneity of Slope pairwise comparisons
 pw.comp <- pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE)
-summary(pw.comp, test.type = "dist", confidence = 0.95)
-
-#### OLD STUFF
-
-# Examine results
-spp.results$aov.table
-spp.results$HOS.test
-summary(spp.results)
-
-########
-
-
-# Find pair-wise p-values for slopes for each taxa
-size <- info.HOS$Csize
-spp <- info.HOS$Taxa
-pwHOS.spp <- advanced.procD.lm(f1 = shape.HOS ~log(size) + spp, 
-                                     f2 = ~log(size) * spp, 
-                                     groups = ~spp,  
-                                     slope = ~log(size),
-                                     iter = 500,
-                                     angle.type = "deg")
+pw.summary.2 <- summary.pairwise(pw.comp, test.type = "dist", angle.type = "deg", confidence = 0.99, show.vectors = TRUE)  # alpha = 0.01
+length(which(pw.summary.2$pairwise.tables$P < 0.05))  # quick count of significant
 
 # Export p-value matrix to Results folder
-write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/TableS4_HOS.csv")
+write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
+```
 
-
-## Null expantcy for significant results
-
-## Shuffle species attributions
+## Randomize specimens to get NULL expantancy for pairwise significant results
+We'll do the randomization procedure 100 times
+```{r}
+# Define function to shuffle species attributions
 null.pairwise <- function() {
-        spp <- sample(info.HOS$Taxa)
+        rand.spp <- sample(info.HOS$Taxa)
+        info.HOS$randTaxa <- rand.spp
         
-        ## Run the test
-        pwHOS.spp <- advanced.procD.lm(f1 = shape.HOS ~log(size) + spp, 
-                                             f2 = ~log(size) * spp, 
-                                             groups = ~spp,  
-                                             slope = ~log(size),
-                                             iter = 500,
-                                             angle.type = "deg")
+        # Run the test
+
         
-        ## Count the number of significants
+        # Count the number of significants
         return(length(which(pwHOS.spp$P.slopes.dist < 0.01)))
 }
 
