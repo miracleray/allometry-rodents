@@ -87,8 +87,8 @@ anova(fit.common, fit.unique, print.progress = FALSE)
 
 # Homogeneity of Slope pairwise comparisons
 pw.comp <- pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE)
-pw.summary.2 <- summary.pairwise(pw.comp, test.type = "dist", angle.type = "deg", confidence = 0.99, show.vectors = TRUE)  # alpha = 0.01
-length(which(pw.summary.2$pairwise.tables$P < 0.05))  # quick count of significant
+pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
+length(which(pw.summary.2$pairwise.tables$P < 0.05))  # quick count of significant pw differences
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
