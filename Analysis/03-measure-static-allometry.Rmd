@@ -13,13 +13,16 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 # Static Allometry
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
 
-This script generates Figure 1 (and data for Table 1a). 
+This script generates Figure 1 and data for Table 1a. 
+
+It also produces supplementary Figures TK 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(stringr)
 library(data.table)
 library(geomorph)
+library(RRPP)  # needed for pairwise comparisons with new `geomorph`
 library(colorspace)  # colors
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
@@ -72,16 +75,29 @@ info.HOS <- info[c(-dataset.rm), ]  # Metadata
 shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
 
-Run allometry tests as well as a homogeneity of slopes test. These tests take about 5 min to run. 
+Run allometry tests as well as a homogeneity of slopes test. These tests take about 5 min to run. Updated for `geomorph` 3.1.0
 ```{r}
-# Run static allometry test
-spp.gdf <- geomorph.data.frame(shape = shape.HOS, spp = info.HOS$Taxa, size = info.HOS$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~spp, iter = 500, data = spp.gdf)
+# ANOVA to test for common static allometries by species
+spp.gdf <- geomorph.data.frame(coords = shape.HOS, size = info.HOS$Csize, spp = info.HOS$Taxa)  # data frame
+
+fit.unique <- procD.lm(coords ~ log(size) * spp, iter = 500, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
+fit.common <- procD.lm(coords ~ log(size) + spp, iter = 500, data = spp.gdf, print.progress = FALSE)  # common allometries across species
+
+anova(fit.common, fit.unique, print.progress = FALSE)
+
+# Homogeneity of Slope pairwise comparisons
+pw.comp <- pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE)
+summary(pw.comp, test.type = "dist", confidence = 0.95)
+
+#### OLD STUFF
 
 # Examine results
 spp.results$aov.table
 spp.results$HOS.test
 summary(spp.results)
+
+########
+
 
 # Find pair-wise p-values for slopes for each taxa
 size <- info.HOS$Csize
@@ -94,7 +110,7 @@ pwHOS.spp <- advanced.procD.lm(f1 = shape.HOS ~log(size) + spp,
                                      angle.type = "deg")
 
 # Export p-value matrix to Results folder
-write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/TableS4_HOS_test.csv")
+write.csv(pwHOS.spp$P.slopes.dist, "../Data/Results/TableS4_HOS.csv")
 
 
 ## Null expantcy for significant results
@@ -198,8 +214,6 @@ dev.off()
 ```{r}
 save(col.gen, sp.col.gen, col.phylo, phylo.names, genera.phylo, spp.results, file = "../Data/Processed/03-color-data.rda")
 ```
-
-
 
 ## Perform rarefaction along the tree
 This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. 
