@@ -191,4 +191,3 @@ plotGMPhyloMorphoSpace_plotmod(aus.tree, mean.shapes.tree, xaxis = -1, tip.label
 
 dev.off()  # finishes plot export
 ```
-
