@@ -26,6 +26,8 @@ library(RRPP)  # needed for pairwise comparisons with new `geomorph`
 library(colorspace)  # colors
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
+load(file = "../Data/Processed/03-color-data.rda") # TEMP
+load(file = "../Data/Processed/04-phylo-data.rda") # TEMP
 ```
 
 ### Set up for analyses
@@ -96,6 +98,8 @@ write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
 
 ## Randomize specimens to get NULL expantancy for pairwise significant results
 We'll do the randomization procedure 100 times
+
+WORK IN PROGRESS
 ```{r}
 # Define function to shuffle species attributions
 null.pairwise <- function() {
@@ -327,27 +331,40 @@ abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
 
 ### Checking the validity of the results above by randomizing species into "fake clades"
+First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}
 # Getting the same number of "groups" per "clades"
 clades <- prop.part.names(aus.tree)
 n.spp.group <- unlist(lapply(clades, length))
 
-fake.clades <- lapply(n.spp.group, function(n.spp.group, names = rare.table$FullName) sample(names, n.spp.group))   # fake clades
-
-# Make function for getting the dataset for each clade
-get.data.clade <- function(clade, data, species.col.n, data.cols) {
-    return(data[which(data[, species.col.n] %in% clade), data.cols])
+# Make function to get rarefied statistics for a fake clade grouping
+RareFlakes <- function(n.spp.group, rare.table) {
+        # Spp names for each fake clade
+        fake.clades <- lapply(n.spp.group, function(n.spp.group, names = rare.table$Taxa) sample(names, n.spp.group))
+        
+        # Use get.data.clade function from above to grab datasets for clades
+        data.flakes <- lapply(fake.clades, get.data.clade, data = rare.table, species.col.n = 1, data.cols = c(2:3))
+        
+        # Get the rarefied statistics for each clade
+        delta.slopes <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+        
+        return(delta.slopes)
 }
-
-# Use function to get all the datasets per clades
-data.flakes <- lapply(fake.clades, get.data.clade, data = rare.table, species.col.n = 1, data.cols = c(2:3))
 ```
 
-### Applying the tests to the "fake clades" (called data.flakes)
+### Applying the tests to the "fake clades" (called data.flakes) x 100
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
-# Getting the rarefied statistics for each clade
-delta.slopes <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+delta.slopes <- NULL
+for(i in 100) {  # Rep 100 times
+        delta.slopes <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
+        return(delta.slopes)
+}
+
+# Do 100 times
+## Make the list of fake slopes into matrix
+fake.slope.matrix <- lapply(RareFlakes, function(x) do.call(cbind, x = 100))
+all.fake.slopes <- do.call(cbind, fake.slope.matrix) # Combining all these matrices
 ```
 
 We can also compare them to the slope of the the full dataset:
@@ -360,7 +377,8 @@ delta.slopes.overall <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, ra
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
 ```{r}
 # Adding the names to the slopes
-names(delta.slopes) <- unlist(lapply(fake.clades, paste, collapse = "+"))
+names(delta.slopes) <- n.spp.group
+
 names(delta.slopes.overall) <- unlist(lapply(fake.clades, paste, collapse = "+"))
 ```
 
@@ -369,11 +387,11 @@ And then transform these statistics into tables to simply plot them with `boxplo
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
 boxplot(do.call(cbind, delta.slopes),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each FAKE CLADE", ylim = c(-100, 100), las = 2)
+        ylab = expression(paste(Delta, "slope")), xlab = "Spp in Clade",
+        main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
 abline(h = 0, lty = 3)
 boxplot(do.call(cbind, delta.slopes.overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each FAKE CLADE (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
+        main = "Slope difference for 100 FAKE CLADES (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
