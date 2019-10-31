@@ -97,7 +97,7 @@ pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa)
 
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
-length(which(pw.summary.2$pairwise.tables$P < 0.05))  # quick count of significant pw differences
+actual.pw <- length(which(pw.summary.2$pairwise.tables$P < 0.05))
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
@@ -106,25 +106,32 @@ write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
 ## Randomize specimens to get NULL expantancy for pairwise significant results
 We'll do the randomization procedure 100 times
 
-WORK IN PROGRESS
+This takes at least 20 minutes to run.
 ```{r}
-# Define function to shuffle species attributions
-null.pairwise <- function() {
-        rand.spp <- sample(info.HOS$Taxa)
-        info.HOS$randTaxa <- rand.spp
+# Define function to shuffle species attributions and run PW comparisons
+null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
+        rand.spp <- sample(info$Taxa)
         
-        # Run the test
-
+        # Run the test with random sample
+        pw.comp <- TestHOS(shape, info$Csize, rand.spp)
+        pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = confidence, show.vectors = TRUE)
         
-        # Count the number of significants
-        return(length(which(pwHOS.spp$P.slopes.dist < 0.01)))
+        # Count number of significant pairwise comparisons of allometric slope
+        alpha <- 1 - confidence
+        return(length(which(pw.summary.2$pairwise.tables$P < alpha)))
 }
 
-null.results <- replicate(100, null.pairwise())
+# Do this 100 times
+count.pw <- 1
+for(i in 1:100){
+        null.pw <- null.pairwise(shape = shape.HOS, info.HOS, iter = 500)
+        count.pw <- c(count.pw, null.pw)
+        print(i)
+}
 
-hist(null_results)
-abline(v = pwHOS.spp$P.slopes.dist, lwd = 3)
-
+# Visualize with histogram
+hist(count.pw[2:length(count.pw)])  # and removes initializing 0
+abline(v = actual.pw, lwd = 3)  # compare random to real result above
 ```
 
 ## 2) Visualize Static Allometry: Predicted Value
