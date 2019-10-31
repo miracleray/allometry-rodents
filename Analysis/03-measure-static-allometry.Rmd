@@ -118,19 +118,18 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
         
         # Count number of significant pairwise comparisons of allometric slope
         alpha <- 1 - confidence
-        return(length(which(pw.summary.2$pairwise.tables$P < alpha)))
+        return(length(which(pw.summary$pairwise.tables$P < alpha)))
 }
 
 # Do this 100 times
 count.pw <- 1
-for(i in 1:100){
+for(i in 1:3){
         null.pw <- null.pairwise(shape = shape.HOS, info.HOS, iter = 500)
         count.pw <- c(count.pw, null.pw)
-        print(i)
 }
 
 # Visualize with histogram
-hist(count.pw[2:length(count.pw)])  # and removes initializing 0
+hist(count.pw[2:length(count.pw)])  # and remove initializing 1
 abline(v = actual.pw, lwd = 3)  # compare random to real result above
 ```
 
@@ -370,10 +369,10 @@ RareFlakes <- function(n.spp.group, rare.table) {
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 delta.slopes <- NULL
-for(i in 100) {  # Rep 100 times
-        delta.slopes <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
-        return(delta.slopes)
+for(i in 1:100) {  # Rep 100 times
+        delta.slopes[[1]] <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
 }
+do.call(cbind, delta.slopes)  # full matrix of slope values
 ```
 
 We can also compare them to the slope of the the full dataset:
