@@ -77,18 +77,25 @@ info.HOS <- info[c(-dataset.rm), ]  # Metadata
 shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
 
-Run allometry tests as well as a homogeneity of slopes test. These tests may take 1-2 min to run. Updated for `geomorph` 3.1.0
+Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
-# ANOVA to test for common static allometries by species
-spp.gdf <- geomorph.data.frame(coords = shape.HOS, size = info.HOS$Csize, spp = info.HOS$Taxa)  # data frame
+# HOS test Defined as a function for conciseness in the next block. Returns pairwise object form RRPP
+TestHOS <- function(shape, size, spp, iter = 500) {
+        # Data frame
+        spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = spp)
+        # Models
+        fit.unique <- procD.lm(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
+        fit.common <- procD.lm(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across species
+        
+        anova(fit.common, fit.unique, print.progress = FALSE)
 
-fit.unique <- procD.lm(coords ~ log(size) * spp, iter = 500, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
-fit.common <- procD.lm(coords ~ log(size) + spp, iter = 500, data = spp.gdf, print.progress = FALSE)  # common allometries across species
+        return(pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE))  # includes Homogeneity of Slope pairwise comparisons
+}
 
-anova(fit.common, fit.unique, print.progress = FALSE)
+# Run with HOS dataset sampled above
+pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa)  
 
-# Homogeneity of Slope pairwise comparisons
-pw.comp <- pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE)
+# Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
 length(which(pw.summary.2$pairwise.tables$P < 0.05))  # quick count of significant pw differences
 
@@ -113,7 +120,7 @@ null.pairwise <- function() {
         return(length(which(pwHOS.spp$P.slopes.dist < 0.01)))
 }
 
-null_results <- replicate(100, null.pairwise())
+null.results <- replicate(100, null.pairwise())
 
 hist(null_results)
 abline(v = pwHOS.spp$P.slopes.dist, lwd = 3)
@@ -335,11 +342,11 @@ First create some fake clade groupings (i.e. non phylogenetic) and connect it to
 ```{r}
 # Getting the same number of "groups" per "clades"
 clades <- prop.part.names(aus.tree)
-n.spp.group <- unlist(lapply(clades, length))
+n.spp.group <- sort(unlist(lapply(clades, length)), decreasing = TRUE)  # sort by big->small for graphing at the end
 
 # Make function to get rarefied statistics for a fake clade grouping
 RareFlakes <- function(n.spp.group, rare.table) {
-        # Spp names for each fake clade
+        # Spp names for each fake clade as per n in each clade
         fake.clades <- lapply(n.spp.group, function(n.spp.group, names = rare.table$Taxa) sample(names, n.spp.group))
         
         # Use get.data.clade function from above to grab datasets for clades
@@ -360,11 +367,6 @@ for(i in 100) {  # Rep 100 times
         delta.slopes <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
         return(delta.slopes)
 }
-
-# Do 100 times
-## Make the list of fake slopes into matrix
-fake.slope.matrix <- lapply(RareFlakes, function(x) do.call(cbind, x = 100))
-all.fake.slopes <- do.call(cbind, fake.slope.matrix) # Combining all these matrices
 ```
 
 We can also compare them to the slope of the the full dataset:
@@ -378,8 +380,7 @@ We can then summarise these results per clade size (that's already done in this 
 ```{r}
 # Adding the names to the slopes
 names(delta.slopes) <- n.spp.group
-
-names(delta.slopes.overall) <- unlist(lapply(fake.clades, paste, collapse = "+"))
+names(delta.slopes.overall) <- n.spp.group
 ```
 
 And then transform these statistics into tables to simply plot them with `boxplot`:
@@ -387,11 +388,11 @@ And then transform these statistics into tables to simply plot them with `boxplo
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
 boxplot(do.call(cbind, delta.slopes),
-        ylab = expression(paste(Delta, "slope")), xlab = "Spp in Clade",
-        main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
+        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
 abline(h = 0, lty = 3)
+
 boxplot(do.call(cbind, delta.slopes.overall),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for 100 FAKE CLADES (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
+        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade",
+        main = "Slope difference for 100 FAKE CLADEs (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
