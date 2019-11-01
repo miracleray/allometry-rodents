@@ -368,7 +368,7 @@ RareFlakes <- function(n.spp.group, rare.table) {
 ### Applying the tests to the "fake clades" (called data.flakes) x 100
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
-delta.slopes <- NULL
+delta.slopes <- list()
 for(i in 1:100) {  # Rep 100 times
         delta.slopes[[1]] <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
 }
