@@ -80,12 +80,12 @@ shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
 # HOS test Defined as a function for conciseness in the next block. Returns pairwise object form RRPP
-TestHOS <- function(shape, size, spp, iter = 500) {
+TestHOS <- function(shape, size, spp, iter = 500, lm.fun) {
         # Data frame
         spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = spp)
         # Models
-        fit.unique <- procD.lm(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
-        fit.common <- procD.lm(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across species
+        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
+        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across species
         
         anova(fit.common, fit.unique, print.progress = FALSE)
 
@@ -93,7 +93,7 @@ TestHOS <- function(shape, size, spp, iter = 500) {
 }
 
 # Run with HOS dataset sampled above
-pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa)  
+pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa, lm.fun = procD.lm)  
 
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
@@ -113,7 +113,7 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
         rand.spp <- sample(info$Taxa)
         
         # Run the test with random sample
-        pw.comp <- TestHOS(shape, info$Csize, rand.spp)
+        pw.comp <- TestHOS(shape, info$Csize, rand.spp, lm.fun = procD.lm)
         pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = confidence, show.vectors = TRUE)
         
         # Count number of significant pairwise comparisons of allometric slope
@@ -123,7 +123,7 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
 
 # Do this 100 times
 count.pw <- 1
-for(i in 1:3){
+for(i in 1:100){
         null.pw <- null.pairwise(shape = shape.HOS, info.HOS, iter = 500)
         count.pw <- c(count.pw, null.pw)
 }
@@ -370,9 +370,10 @@ Again, calculate the delta slope (observed - rarefied slope) by using the lowest
 ```{r}
 delta.slopes <- list()
 for(i in 1:100) {  # Rep 100 times
-        delta.slopes[[1]] <- cbind(delta.slopes, RareFlakes(n.spp.group, rare.table))
+        delta.slopes[[i]] <- do.call(cbind, RareFlakes(n.spp.group, rare.table))
 }
-do.call(cbind, delta.slopes)  # full matrix of slope values
+fake.results.table <- do.call(rbind, delta.slopes)  # full matrix of slope values
+colnames(fake.results.table) <- n.spp.group
 ```
 
 We can also compare them to the slope of the the full dataset:
