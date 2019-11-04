@@ -392,9 +392,21 @@ names(delta.slopes.overall) <- n.spp.group
 
 And then transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
+# An empty plot first
+fake.results.list <- apply(fake.results.table, 2, as.list)
+plot(NULL, xlim = c(0, length(fake.results.list)), ylim = c(-50, 50))
+     
+# Adding the results
+plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(5, 5), cent.tend = median)
+
+
+
+dummy <- replicate(10, rnorm(100), simplify = FALSE)
+
+
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
-boxplot(do.call(cbind, delta.slopes),
+boxplot(fake.results.table,
         ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
 abline(h = 0, lty = 3)
 
