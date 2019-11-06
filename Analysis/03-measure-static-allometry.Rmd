@@ -389,15 +389,15 @@ names(delta.slopes.overall) <- n.spp.group
 And then transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
 # An empty plot first
-fake.results.list <- apply(fake.results.table, 2, as.list)
-plot(NULL, xlim = c(0, length(fake.results.list)), ylim = c(-50, 50))
+fake.results.list <- apply(fake.results.table, 2, list)
+colnames(fake.results.table) <- n.spp.group
+plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)))
+
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)), ylab = "whatever", xlab = "Number of species")
+
      
 # Adding the results
-plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(5, 5), cent.tend = median)
-
-
-
-dummy <- replicate(10, rnorm(100), simplify = FALSE)
+plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
 
 
 par(mfrow = c(2, 1))
