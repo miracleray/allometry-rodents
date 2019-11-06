@@ -180,13 +180,41 @@ dev.off()
 ## Evolutionary Allometry, reported in Table 1
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
-# Procrustes ANOVA with interaction
-evo.allo.clade.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, size = info.means.tree$MeanCsize, Clade = info.means.tree$Clade)
+# Remove clades with only one species (Mus and Pogonomys)
+one.spp <- c(which(info.means.tree$Clade == "Mus"), which(info.means.tree$Clade == "Pogonomys"))  # index for removal
+e.info.means.tree <- info.means.tree[-one.spp, ]  # metadata
+e.mean.shapes.tree <- mean.shapes.tree[, , -one.spp]  # shape data
+e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  # phylo tree
 
-evo.allo.clade <- procD.pgls(Shape ~log(size) * Clade, aus.tree, iter = 500, data = evo.allo.clade.gdf)
+# Procrustes ANOVA with interaction
+evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
+
+evo.allo.clade <- procD.pgls(Shape ~log(size) * Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
 evo.allo.clade$aov.table
+
+evo.allo.clade.2 <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
+evo.allo.clade.2$aov.table
 ```
 
+### Do pairwise comparisons to see which phylo groups are significantly different
+
+```{r}
+fit.null <- procD.pgls(Shape ~log(size) + Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
+
+pairwise.clade <- pairwise(evo.allo.clade, fit.null, groups = evo.allo.clade.gdf$Clade)
+
+summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+
+```
+
+
+```{r}
+
+pairwise.clade.simple <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
+
+summary(pairwise.clade.simple, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+
+```
 
 Here we run Procrustes ANOVAs to compare the relative impact of GENUS, size, and their interaction on shape.
 ```{r}
