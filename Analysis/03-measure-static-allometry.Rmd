@@ -210,6 +210,7 @@ dev.off()
 save(col.gen, sp.col.gen, col.phylo, phylo.names, genera.phylo, spp.results, file = "../Data/Processed/03-color-data.rda")
 ```
 
+
 ## Perform rarefaction along the tree
 This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. 
 
@@ -279,11 +280,8 @@ We can then calculate the delta slope (observed - rarefied slope) by using the l
 # Define function for rarification or bootstrap
 rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed, ...) {
     # Sanitizing
-    #check.class(data, c("matrix", "data.frame"))
     nrow_data <- nrow(data)
-    #check.class(stat.fun, "function")
     if(!is.null(rarefaction)) {
-        #check.class(rarefaction, c("numeric", "integer"))
         # Check if rarefaction is bigger than the # of rows in the data set
         if(rarefaction > nrow_data) {
             warning(paste0("Rarefaction value (", rarefaction, ") is bigger than the number of rows in the data (", nrow_data, ").\nThe statistic will be only bootstrapped."))
@@ -294,11 +292,9 @@ rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed,
         # Set rarefaction as the number of rows in the data (bootstrap)
         rarefaction <- nrow(data)
     }
-    #check.class(replicates, c("numeric", "integer"))
     
     # Check the observed value
     if(!missing(observed)) {
-        #check.class(observed, c("numeric", "integer"))
     } else {
         observed <- stat.fun(data)
     }
@@ -343,7 +339,7 @@ boxplot(do.call(cbind, delta_slopes_overall),
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
 
-### Checking the validity of the results above by randomizing species into "fake clades"
+## Checking the validity of the results above by randomizing species into "fake clades"
 First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}
 # Getting the same number of "groups" per "clades"
@@ -405,6 +401,7 @@ dummy <- replicate(10, rnorm(100), simplify = FALSE)
 
 
 par(mfrow = c(2, 1))
+
 # Combining the results into tables and plotting them
 boxplot(fake.results.table,
         ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
