@@ -108,7 +108,7 @@ We'll do the randomization procedure 100 times
 
 This takes at least 20 minutes to run.
 ```{r}
-# Define function to shuffle species attributions and run PW comparisons
+# Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
         rand.spp <- sample(info$Taxa)
         

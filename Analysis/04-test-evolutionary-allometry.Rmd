@@ -189,40 +189,15 @@ e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  #
 # Procrustes ANOVA with interaction
 evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
 
-evo.allo.clade <- procD.pgls(Shape ~log(size) * Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
-evo.allo.clade$aov.table
-
-evo.allo.clade.2 <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
+evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
 evo.allo.clade.2$aov.table
 ```
 
 ### Do pairwise comparisons to see which phylo groups are significantly different
-
 ```{r}
-fit.null <- procD.pgls(Shape ~log(size) + Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
-
-pairwise.clade <- pairwise(evo.allo.clade, fit.null, groups = evo.allo.clade.gdf$Clade)
+pairwise.clade <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
 
 summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
-
-```
-
-
-```{r}
-
-pairwise.clade.simple <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
-
-summary(pairwise.clade.simple, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
-
-```
-
-Here we run Procrustes ANOVAs to compare the relative impact of GENUS, size, and their interaction on shape.
-```{r}
-# Procrustes ANOVA with interaction
-evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, size = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
-
-evo.allo.gen <- procD.pgls(Shape ~log(size) * Genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
-evo.allo.gen$aov.table
 ```
 
 ### Export Tables 1a,b as CSV files
@@ -242,4 +217,27 @@ write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.n
 ### Save intermediate data
 ```{r}
 save(concord, relabel.tree, mean.shapes.tree, info.means.tree, aus.tree, file = "../Data/Processed/04-phylo-data.rda")
+```
+
+
+## Recycling bin
+phylogenetically-adjusted analyses
+```{r}
+evo.allo.clade <- procD.pgls(Shape ~log(size) * Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
+evo.allo.clade$aov.table
+
+fit.null <- procD.pgls(Shape ~log(size) + Clade, e.aus.tree, iter = 500, data = evo.allo.clade.gdf)
+
+pairwise.clade <- pairwise(evo.allo.clade, fit.null, groups = evo.allo.clade.gdf$Clade)
+
+summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+```
+
+Here we run Procrustes ANOVAs to compare the relative impact of GENUS, size, and their interaction on shape.
+```{r}
+# Procrustes ANOVA with interaction
+evo.allo.gen.gdf <- geomorph.data.frame(Shape = mean.shapes.tree, size = info.means.tree$MeanCsize, Genus = info.means.tree$Genus)
+
+evo.allo.gen <- procD.pgls(Shape ~log(size) * Genus, aus.tree, iter = 500, data = evo.allo.gen.gdf)
+evo.allo.gen$aov.table
 ```
