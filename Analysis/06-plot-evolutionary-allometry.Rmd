@@ -27,13 +27,42 @@ library(data.table)
 library(geomorph)
 library(plotrix)  # needed to draw ellipses
 library(landvR)  # needed for rarefaction along the tree; must be v >= 0.4
-load(file = "../Data/Processed/02-main-data.rda")
-load(file = "../Data/Processed/03-color-data.rda")
-load(file = "../Data/Processed/04-phylo-data.rda")
+load(file = "../Data/Processed/03-main-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
+load(file = "../Data/Processed/03-tree-data.rda")
 source("../Functions/utilities.R")  # custom functions
 source("../Functions/plotGMPhyloMorphoSpace_plotmod.R")  # modified geomorph function
 source("../Functions/phytools.branch.colors.R")  # modified phytools function
 ```
+
+## Visualize tree for Figure 1
+Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03)
+```{r}
+# Branch colors by centroid size
+cs.tree <- -info.means.tree$MeanCsize  # negative so colors get darker with larger size
+names(cs.tree) <- aus.tree$tip.label
+
+# Tip lable colors by species, ordered in same way as tree
+grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
+grp[which(grp == "Mas")] <- "Pse"
+names(col.gen) <- sort(unique(grp))
+col.tree <- col.gen[match(grp, names(col.gen))]
+
+# Make Figure 1
+setEPS()
+postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
+
+plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = FALSE)
+
+# Add centroid size legend
+legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
+rasterImage(legend_image, 0, 2, 4, 5)
+text(2, 6, "Large", col = "dark grey", cex = 1)
+text(2, 1, "Small", col = "dark grey", cex = 1)
+
+dev.off()
+```
+
 
 ## Make multipanel Figure 3: evolutionary allometry and mean shape PCA/phylomorphosapce
 First, set up colors and points by genera and important taxa

@@ -21,7 +21,7 @@ if(!require(devtools)) install.packages("devtools")
 if(!require(dispRity)) install.packages("dispRity")
 if(!require(landvR)) install_github("TGuillerme/landvR")
 source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/02-main-data.rda")
+load(file = "../Data/Processed/03-main-data.rda")
 ```
 
 ### Set up

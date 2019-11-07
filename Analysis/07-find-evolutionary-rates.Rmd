@@ -22,9 +22,9 @@ library(RColorBrewer)
 library(phylotate)
 library(phytools)
 source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/02-main-data.rda")
-load(file = "../Data/Processed/03-color-data.rda")
-load(file = "../Data/Processed/04-phylo-data.rda")
+load(file = "../Data/Processed/03-main-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
+load(file = "../Data/Processed/03-tree-data.rda")
 ```
 
 ## Compare evolutionary rates
@@ -116,20 +116,4 @@ row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys
 
 # Export Table 2
 write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
-```
-
-## Recycling bin
-```{r}
-# Colors by species, ordered in same way as tree
-grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
-grp[which(grp == "Mas")] <- "Pse"
-names(col.gen) <- sort(unique(grp))
-col.tree <- col.gen[match(grp, names(col.gen))]
-
-aus.rates <- as.numeric(aus.rates)
-names(aus.rates) <- aus.tree$tip.label
-
-plotBranchbyTrait(aus.tree, aus.rates, palette = "gray", tip.color = col.tree, mode = "tips")
-
-plot.phylo(aus.tree, edge.color = "gray", tip.color = col.tree, no.margin = T)
 ```

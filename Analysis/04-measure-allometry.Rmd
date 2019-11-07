@@ -1,5 +1,5 @@
 ---
-title: "03-measure-static-allometry"
+title: "04-measure-allometry"
 author: "Ariel Marcy"
 date: "2019-01-11"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Static Allometry
+# Allometry
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
 
 This script generates Figure 1 and data for Table 1a. 
@@ -19,17 +19,15 @@ It also produces supplementary Figures TK
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-library(stringr)
-library(data.table)
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph`
 source("../Functions/utilities.R")  # loads custom functions
-load(file = "../Data/Processed/02-main-data.rda")
-load(file = "../Data/Processed/03-color-data.rda") # TEMP
-load(file = "../Data/Processed/04-phylo-data.rda") # TEMP
+load(file = "../Data/Processed/03-main-data.rda")
+load(file = "../Data/Processed/03-tree-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
 ```
 
-## 1) Measure static allometry: Homogeneity of Slopes Test by species
+## 1a) Measure static allometry: Homogeneity of Slopes Test by species
 Isolate only those species with at least 8 specimens.
 ```{r}
 spec.counts <- as.data.frame(table(info$Taxa))
@@ -50,9 +48,9 @@ shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
 # HOS test Defined as a function for conciseness in the next block. Returns pairwise object form RRPP
-TestHOS <- function(shape, size, spp, iter = 500, lm.fun) {
+TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Data frame
-        spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = spp)
+        spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = group)
         # Models
         fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
         fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across species
@@ -67,13 +65,13 @@ pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa, lm.fun = procD.lm)
 
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
-actual.pw <- length(which(pw.summary.2$pairwise.tables$P < 0.05))
+actual.pw <- length(which(pw.summary$pairwise.tables$P < 0.05))
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
 ```
 
-## Randomize specimens to get NULL expantancy for pairwise significant results
+## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
 We'll do the randomization procedure 100 times. This takes at least 20 minutes to run.
 ```{r}
 # Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
@@ -101,7 +99,7 @@ hist(count.pw[2:length(count.pw)])  # and remove initializing 1
 abline(v = actual.pw, lwd = 3)  # compare random to real result above
 ```
 
-## 2) Visualize Static Allometry: Predicted Value
+## 1c) Visualize Static Allometry: Predicted Value
 In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape.
 ```{r}
 # Run static allometry test with all specimens
@@ -113,7 +111,7 @@ mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
 mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
 ```
 
-### Plot/export static and evolutionary allometry multipanel Figure 1
+### Plot/export static and evolutionary allometry multipanel Figure TK
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
@@ -156,16 +154,50 @@ text(5.6, -0.08, paste("Rsq of log(size):species = ", round(spp.results$aov.tabl
 dev.off()
 ```
 
+## 2) Measure Evolutionary Allometry, reported in Table 1
+Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
+```{r}
+# Remove clades with only one species (Mus and Pogonomys)
+one.spp <- c(which(info.means.tree$Clade == "Mus"), which(info.means.tree$Clade == "Pogonomys"))  # index for removal
+e.info.means.tree <- info.means.tree[-one.spp, ]  # metadata
+e.mean.shapes.tree <- mean.shapes.tree[, , -one.spp]  # shape data
+e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  # phylo tree
+
+# Procrustes ANOVA with interaction
+evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
+
+evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
+evo.allo.clade.2$aov.table
+```
+
+### Do pairwise comparisons to see which phylo groups are significantly different
+```{r}
+pairwise.clade <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
+
+summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+```
+
+### Export Tables 1a,b as CSV files
+```{r}
+# Round all values to 3 decimals and remove NAs from the tables
+table1a <- as.data.frame(round(spp.results$aov.table, 3))
+table1a[is.na(table1a)] <- ""
+
+table1b <- as.data.frame(round(evo.allo.gen$aov.table, 3))
+table1b[is.na(table1b)] <- ""
+
+# Export
+write.table(table1a, "../Data/Results/Table1a_species_ANOVA.csv", sep = ",", col.names = NA)
+write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.names = NA)
+```
+
 ### Save intermediate data
 ```{r}
 save(spp.results, file = "../Data/Processed/04-allometry-data.rda")
 ```
 
-
-## Perform rarefaction along the tree
-This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. 
-
-The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd)
+## 3) Perform rarefaction along the tree
+This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd)
 
 ### Getting each clade
 First we need to identify and isolate each element from each partition (clade) using a modified version from the `ape::prop.part` function.
@@ -218,7 +250,6 @@ data_clades <- lapply(clades, get.data.clade, data = rare.table,
 
 ### Applying the tests
 First we need to define the function that will get us the statistic. In our case we want the slope from a linear model (but any statistic can be used):
-
 ```{r}
 # Function for getting the slope of a linear model
 GetSlope <- function(data) {
@@ -269,7 +300,6 @@ delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, ra
 
 ### Summarising the results
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
-
 ```{r}
 # Adding the names to the slopes
 names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
@@ -346,10 +376,8 @@ plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.r
 
 boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)), ylab = "whatever", xlab = "Number of species")
 
-     
 # Adding the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
-
 
 par(mfrow = c(2, 1))
 
