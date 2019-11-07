@@ -28,7 +28,7 @@ load(file = "../Data/Processed/03-graphing-vectors.rda")
 ```
 
 ## 1a) Measure static allometry: Homogeneity of Slopes Test by species
-Isolate only those species with at least 8 specimens.
+Isolate only those species with at least 8 specimens. This leaves our dataset with 31 species.
 ```{r}
 spec.counts <- as.data.frame(table(info$Taxa))
 to.remove <- spec.counts[which(spec.counts$Freq <= 7), ]
@@ -103,12 +103,17 @@ abline(v = actual.pw, lwd = 3)  # compare random to real result above
 In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape.
 ```{r}
 # Run static allometry test with all specimens
-spp.gdf <- geomorph.data.frame(shape = shape, Species = info$Taxa, size = info$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~Species, iter = 500, data = spp.gdf)
+static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
+fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
+summary(fit.static)
+
+# Save these values for plotting
+static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")
+static.allo.pl <- plotAllometry(fit.static, size = static.gdf$size, method = "PredLine")
 
 # Find the mean point for each static allometry
-mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
-mean.shape <- aggregate(spp.results$Reg.proj, list(Taxa = info$Taxa), mean)
+mean.size <- aggregate(static.allo.rs$size.var, list(Taxa = info$Taxa), mean)
+mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
 ```
 
 ### Plot/export static and evolutionary allometry multipanel Figure TK
@@ -118,10 +123,13 @@ setEPS()  # sets up plot export
 postscript("../Data/Results/Figure2_Static_Evo_Allo.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
+### WAITING ON INFORMATION NOT WORKING IN CODE CHUNK ABOVE
 # Plot of all data points with evolutionary allometry
 par(mar = c(1, 4, 1.5, 0))
-plot(x = log(spp.results$size),
-     y = spp.results$Reg.proj,
+plot(fit.static,
+     type = "regression",
+     reg.type = "RegScore",
+     predictor = log(static.gdf$size),
      xlim = c(4.7, 6.4),
      col = sp.col.gen, 
      pch = pch.spp,
@@ -130,17 +138,19 @@ plot(x = log(spp.results$size),
      xlab = NA,
      ylab = "Shape (Regression Score)",
      bty = "n")
-text(min(log(spp.results$size)), max(spp.results$Reg.proj), "a", cex = 2)
+#text(4.7, 0.05, "a", cex = 2)
 abline(lm(mean.shape$V1 ~ log(mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
-text(5.5, -0.04, paste("Rsq of log(size) = ", round(spp.results$aov.table$Rsq[1], 2)), cex = 1.1, col = "black")
+text(5.5, -0.04, paste("Rsq of log(size) = ", round(fit.static$aov.table$Rsq[1], 2)), cex = 1.1, col = "black")
 
 # Species Legend
 legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
 
 # Plot of static allometry with evolutionary allometry
 par(mar=c(5, 4, 1.5, 0))
-plot(x = log(spp.results$size),
-     y = spp.results$pred.val,
+plot(fit.static,
+     type = "regression",
+     reg.type = "PredLine",
+     predictor = log(static.gdf$size),
      xlim = c(4.7, 6.4),
      col = sp.col.gen, 
      pch = pch.spp,
@@ -148,8 +158,8 @@ plot(x = log(spp.results$size),
      xlab = "Log(centroid size)",
      ylab = "Shape (Predicted Value)",
      bty = "n")
-text(min(log(spp.results$size)), max(spp.results$pred.val), "b", cex = 2)
-text(5.6, -0.08, paste("Rsq of log(size):species = ", round(spp.results$aov.table$Rsq[3], 2)), cex = 1.1, col = "black")
+#text(4.7, 0.05, "b", cex = 2)
+text(5.6, -0.08, paste("Rsq of log(size):species = ", round(fit.static$aov.table$Rsq[3], 2)), cex = 1.1, col = "black")
 
 dev.off()
 ```
@@ -173,10 +183,22 @@ evo.allo.clade.2$aov.table
 ### Do pairwise comparisons to see which phylo groups are significantly different
 ```{r}
 pairwise.clade <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
-
 summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
 ```
 
+## Try evolutionary allometry with individuals instead:
+```{r}
+# Run static allometry test with all specimens
+evo.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, clade = info$Clade)
+fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, print.progress = FALSE)
+summary(fit.evo)
+
+pw.ind.clade <- pairwise(fit.evo, groups = evo.gdf$clade)
+summary(pw.ind.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+```
+
+
+##### NEEDS UPDATING
 ### Export Tables 1a,b as CSV files
 ```{r}
 # Round all values to 3 decimals and remove NAs from the tables
@@ -191,10 +213,11 @@ write.table(table1a, "../Data/Results/Table1a_species_ANOVA.csv", sep = ",", col
 write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.names = NA)
 ```
 
-### Save intermediate data
+### Save intermediate data ADD EVO ALLOMETRY HERE********
 ```{r}
-save(spp.results, file = "../Data/Processed/04-allometry-data.rda")
+save(fit.static, static.allo.pl, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")
 ```
+
 
 ## 3) Perform rarefaction along the tree
 This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd)
@@ -207,7 +230,7 @@ short.label <- function(label) paste0(substr(strsplit(label, split = "_")[[1]][1
 aus.tree.stlbl <- aus.tree
 aus.tree.stlbl$tip.label <- unname(sapply(aus.tree.stlbl$tip.label, short.label))
 
-rare.table <- data.frame(info$Taxa, log(info$Csize), unname(spp.results$Reg.proj))
+rare.table <- data.frame(info$Taxa, log(info$Csize), unname(static.allo.rs$RegScore))
 colnames(rare.table) <- c("Taxa", "Csize", "RegProj")
 rownames(rare.table) <- NULL
 
@@ -221,8 +244,7 @@ prop.part.names <- function(phy, singletons = FALSE) {
         stop("singletons must be logical.")
     }
 
-    # Get the bipartitions
-    clades <- ape::prop.part(phy)
+    clades <- ape::prop.part(phy)  # get the bipartitions
 
     # Get the tips names for each clades
     clades <- lapply(clades, function(clade, labels) labels[clade], labels = attr(clades, "labels"))
@@ -314,9 +336,42 @@ boxplot(do.call(cbind, delta_slopes),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
         main = "Slope difference for each clade", las = 2)
 abline(h = 0, lty = 3)
+
 boxplot(do.call(cbind, delta_slopes_overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
         main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
+abline(h = 0, lty = 3)  # since observered minus expected should be 0
+
+
+# An empty plot first
+delta.slopes.data <- do.call(cbind, delta_slopes)
+plot(NULL, xlim = c(0, dim(delta.slopes.data)[2]), ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE))
+
+boxplot(delta.slopes.data, border = "white", ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade")
+
+plot.CI(delta.slopes.data, type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
+
+
+# An empty plot first
+fake.results.list <- apply(fake.results.table, 2, list)
+colnames(fake.results.table) <- n.spp.group
+plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)))
+
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)), ylab = "whatever", xlab = "Number of species")
+
+# Adding the results
+plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
+
+par(mfrow = c(2, 1))
+
+# Combining the results into tables and plotting them
+boxplot(fake.results.table,
+        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
+abline(h = 0, lty = 3)
+
+boxplot(do.call(cbind, delta.slopes.overall),
+        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade",
+        main = "Slope difference for 100 FAKE CLADEs (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```
 
@@ -372,9 +427,9 @@ And then transform these statistics into tables to simply plot them with `boxplo
 # An empty plot first
 fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
-plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)))
+plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T))
 
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)), ylab = "whatever", xlab = "Number of species")
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T), ylab = "whatever", xlab = "Number of species")
 
 # Adding the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")

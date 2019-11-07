@@ -27,7 +27,7 @@ load(file = "../Data/Processed/02-no-error-data.rda")  # shape data w/o error
 ```{r}
 # Remove unnecessary columns
 drops <- c("Patch", "Rep", "All")
-info <- info[ , !(names(info) %in% drops)]
+info <- info[, !(names(info) %in% drops)]
 
 # Add trait info from Native Mice and Rats (Breed & Ford 2007)
 traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
@@ -79,26 +79,31 @@ names(col.phylo) <- genera.phylo
 col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))] 
 
 # 3) color vector for all data (specimen level)
-sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]  
+sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]
+sp.col.gen[which(info$Species %in% c("nor", "rat"))] <- "black"  # account for invasive Rattus
 ```
 
 ### Create point and color vectors for species legends in phylo order
 ```{r}
-# Set colors for genera and different points for species within each genus
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
-pch.unique.spp[which(sort(unique(info$Taxa)) == "M_fus")] <- 2
-pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual specimen
-
 # Put color and point legends in phylogenetic order
-phylo.names <- c("M_mus", "R_rat", "R_nor", "R_lut", "R_leu", "R_tun", "R_vil", "R_sor", "R_fus", "P_mol", "X_myo", "H_chr", "N_cer", "N_fus", "N_mit", "N_ale", "P_pat", "P_gra", "P_ora", "P_sho", "P_des", "P_apo", "P_aus", "P_hig", "P_her", "P_nov", "P_del", "M_fus", "Z_arg", "L_for", "U_cau", "M_cer", "M_cap", "M_bur", "L_con", "M_gou", "C_pen")
-phylo.order <- na.omit(match(phylo.names, unique.taxa$Taxa))
+phylo.names <- c("Mus_mus", "Rat_rat", "Rat_nor", "Rat_lut", "Rat_leu", "Rat_tun", "Rat_vil", "Rat_sor", "Rat_fus", "Pog_mol", "Xer_myo", "Hyd_chr", "Not_cer", "Not_fus", "Not_mit", "Not_ale", "Pse_pat", "Pse_gra", "Pse_ora", "Pse_sho", "Pse_des", "Pse_apo", "Pse_aus", "Pse_hig", "Pse_her", "Pse_nov", "Pse_del", "Mas_fus", "Zyz_arg", "Zyz_ped", "Leg_for", "Uro_cau", "Mel_cer", "Mel_cap", "Mel_bur", "Lep_con", "Mes_gou", "Con_pen")
+info$Name <- paste(info$Genus, info$Species, sep = "_")
+alpha.taxa <- sort(unique(info$Name))
+phylo.order <- match(phylo.names, alpha.taxa)   # ordering vector
 
-# Make color and pch vectors for legends by species
-unique.taxa <- info[match(unique(info$FullName), info$FullName), ]
-col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
-names(col.unique.spp) <- NULL
-col.unique.spp <- col.unique.spp[phylo.order]  # colors for legends
-pch.unique.spp <- pch.unique.spp[phylo.order]  # points for legends
+# Handle points
+pch.uni.spp.alpha <- PointOutDiffSpp(info)  # points by unique species in a genus
+#pch.unique.spp[which(sort(unique(info$Genus)) == "Mas")] <- 2
+pch.unique.spp <- pch.uni.spp.alpha[phylo.order]
+pch.spp <- PlotByGroup(info, "Name", pch.unique.spp)  # pch coded for each individual specimen
+
+# Make color vector for legends by species
+alpha.taxa <- str_sub(alpha.taxa, 1, 3)
+col.taxa <- match(alpha.taxa, names(col.gen))
+col.taxa[is.na(col.taxa)] <- 10  # Handle Mastacomys
+col.uni.spp.alpha <- col.gen[col.taxa]
+col.uni.spp.alpha[which(sort(unique(info$FullName)) %in% c("Rattus_norvegicus", "Rattus_rattus"))] <- "black"  # account for invasive Rattus
+col.unique.spp <- col.uni.spp.alpha[phylo.order]
 ```
 
 # Prepare data for phylogenetic analyses
@@ -200,7 +205,7 @@ mean.shapes <- mean.shapes.tree[, , tree.order]  # shape data
 save(info, shape, file = "../Data/Processed/03-main-data.rda")
 
 # Graphing vectors
-save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, file = "../Data/Processed/03-graphing-vectors.rda")
+save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, col.uni.spp.alpha, pch.uni.spp.alpha, file = "../Data/Processed/03-graphing-vectors.rda")
 
 # Data for phylogenetic analyses, including the tree as well as metadata and shape coordinates for mean specimens
 save(info.means, mean.shapes, aus.tree, file = "../Data/Processed/03-tree-data.rda")  # add concord, relabel.tree?
