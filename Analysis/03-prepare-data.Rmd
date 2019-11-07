@@ -1,0 +1,107 @@
+---
+title: "03-prepare-data"
+author: "Ariel Marcy"
+date: "11/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
+```
+
+## Prepare metadata, graphing vectors, and the phylogenetic tree
+These data will be needed for all subsequent analyses, tables, and figures. The rda file created at the end will be needed for all future scripts. 
+
+### Load packages, functions, and data
+```{r message = FALSE}
+library(stringr)
+library(data.table)
+library(geomorph)
+library(colorspace)  # colors
+source("../Functions/utilities.R")  # loads custom functions
+load(file = "../Data/Processed/02-main-data.rda")  # shape data w/o error
+```
+
+## Attach all needed information to the metadata
+```{r}
+# Remove unnecessary information re: Patch, Rep, and All
+drops <- c("Patch", "Rep", "All")
+info <- info[ , !(names(info) %in% drops)]
+
+# Add trait info from Native Mice and Rats (Breed & Ford 2007)
+traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
+traits$Taxa <- paste(str_sub(traits$Genus, 1, 1), str_sub(traits$Species, 1, 3), sep = "_")  # make matching Taxa column
+info <- merge(info, traits, by = "Taxa", sort = TRUE)  # merge
+
+info <- info[order(info$Order), ]  # original order / same as shape
+
+# Rename Genus & Species columns so they have their original short column name, long form Genus and Species columns keep Genus.y and Species.y
+names(info)[names(info) == "Genus.x"] <- "Genus"
+names(info)[names(info) == "Species.x"] <- "Species"
+
+# Add long form names ("Genus_species")
+info$FullName <- paste(info$Genus.y, info$Species.y, sep = "_")
+```
+
+## Prepare shape dataset dimnames for phylogenetic analyses
+Rename shape dataset dimnames to only "Genus_species". This is so we can re-order the shape data to match the tree later on. (We can still reference the CatNum in the metadata.)
+```{r}
+dimnames(shape)[[3]] <- as.list(paste(info$FullName))
+```
+
+### Handle *Mastacomys*
+Since *Mastacomys* is technically within the genus *Pseudomys* (Smissen & Rowe 2018), we'll make an "Effective Genus" column in the metadata where this genus is classified under *Pseudomys* for analyses that use genera.
+```{r}
+info$EGenus <- info$Genus  # make Effective Genus column
+info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
+```
+
+## Create colors based on phylogenetic clades in Aplin (2014)
+Colors for subsequent figures are set up according to column "EGenus". Colors correspond to phylogenetics - i.e. when different ancestors arrived in Australia. Each genus gets its own color. 
+
+We need three different vectors of color:
+1) color in order of the phylogeny
+2) color by alphabetical genus name
+3) color in order of every specimen in the shape file
+```{r}
+# Make gradients for the genera in each clade
+Uro <- sequential_hcl(5, "Greens 3")  # Uromys clade
+Mes <- sequential_hcl(5, "Purples 3")  # Mesembriomys clade
+Pse <- sequential_hcl(5, "Blues 3")  # Pseudomys clade
+Hyd <- sequential_hcl(5, "Reds 3")  # Hydromys clade
+Pog <- sequential_hcl(5, "Heat 2")  # Pogonomys clade
+Inv <- sequential_hcl(5, "Light Grays")  # Mus and Rattus clades
+
+# Colors in order of phylogeny
+genera.phylo <- c("Mus", "Rat", "Pog", "Xer", "Hyd", "Not", "Pse", "Zyz", "Leg", "Uro", "Mel", "Lep", "Mes", "Mes")
+
+col.phylo <- c(Inv[3], Inv[1], Pog[3], Hyd[1], Hyd[2], Pse[1], Pse[2], Pse[4], Pse[3], Uro[1], Uro[2], Mes[3], Mes[2], Mes[1])
+
+# 1) Color for phylogeny
+names(col.phylo) <- genera.phylo  
+# 2) color by alphabetical genus
+col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))] 
+# 3) color vector for all data
+sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]  
+```
+
+### Create point and legend vectors for graphing data and legends
+```{r}
+# Set colors for genera and different points for species within each genus
+pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
+pch.unique.spp[which(sort(unique(info$Taxa)) == "M_fus")] <- 2
+pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
+
+# Make color vector for legend
+unique.taxa <- as.data.frame(unique(info[, c(6, 10)]))
+unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
+col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
+
+# Put color and point legends in phylogenetic order
+phylo.names <- c("M_mus", "R_rat", "R_nor", "R_lut", "R_leu", "R_tun", "R_vil", "R_sor", "R_fus", "P_mol", "X_myo", "H_chr", "N_cer", "N_fus", "N_mit", "N_ale", "P_pat", "P_gra", "P_ora", "P_sho", "P_des", "P_apo", "P_aus", "P_hig", "P_her", "P_nov", "P_del", "M_fus", "Z_arg", "L_for", "U_cau", "M_cer", "M_cap", "M_bur", "L_con", "M_gou", "C_pen")
+phylo.order <- na.omit(match(phylo.names, unique.taxa$Taxa))
+names(col.unique.spp) <- NULL
+col.unique.spp <- col.unique.spp[phylo.order]
+pch.unique.spp <- pch.unique.spp[phylo.order]
+```
