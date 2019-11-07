@@ -25,7 +25,7 @@ load(file = "../Data/Processed/02-main-data.rda")  # shape data w/o error
 
 ## Attach all needed information to the metadata
 ```{r}
-# Remove unnecessary information re: Patch, Rep, and All
+# Remove unnecessary columns
 drops <- c("Patch", "Rep", "All")
 info <- info[ , !(names(info) %in% drops)]
 
@@ -60,10 +60,7 @@ info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
 ## Create colors based on phylogenetic clades in Aplin (2014)
 Colors for subsequent figures are set up according to column "EGenus". Colors correspond to phylogenetics - i.e. when different ancestors arrived in Australia. Each genus gets its own color. 
 
-We need three different vectors of color:
-1) color in order of the phylogeny
-2) color by alphabetical genus name
-3) color in order of every specimen in the shape file
+We make three different vectors of color:
 ```{r}
 # Make gradients for the genera in each clade
 Uro <- sequential_hcl(5, "Greens 3")  # Uromys clade
@@ -73,35 +70,138 @@ Hyd <- sequential_hcl(5, "Reds 3")  # Hydromys clade
 Pog <- sequential_hcl(5, "Heat 2")  # Pogonomys clade
 Inv <- sequential_hcl(5, "Light Grays")  # Mus and Rattus clades
 
-# Colors in order of phylogeny
-genera.phylo <- c("Mus", "Rat", "Pog", "Xer", "Hyd", "Not", "Pse", "Zyz", "Leg", "Uro", "Mel", "Lep", "Mes", "Mes")
-
+# 1) genus color by phylogeny
+genera.phylo <- c("Mus", "Rat", "Pog", "Xer", "Hyd", "Not", "Pse", "Zyz", "Leg", "Uro", "Mel", "Lep", "Mes", "Con")
 col.phylo <- c(Inv[3], Inv[1], Pog[3], Hyd[1], Hyd[2], Pse[1], Pse[2], Pse[4], Pse[3], Uro[1], Uro[2], Mes[3], Mes[2], Mes[1])
+names(col.phylo) <- genera.phylo 
 
-# 1) Color for phylogeny
-names(col.phylo) <- genera.phylo  
-# 2) color by alphabetical genus
+# 2) color by alphabetical genus name
 col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))] 
-# 3) color vector for all data
+
+# 3) color vector for all data (specimen level)
 sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]  
 ```
 
-### Create point and legend vectors for graphing data and legends
+### Create point and color vectors for species legends in phylo order
 ```{r}
 # Set colors for genera and different points for species within each genus
 pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus
 pch.unique.spp[which(sort(unique(info$Taxa)) == "M_fus")] <- 2
-pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
-
-# Make color vector for legend
-unique.taxa <- as.data.frame(unique(info[, c(6, 10)]))
-unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
-col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
+pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual specimen
 
 # Put color and point legends in phylogenetic order
 phylo.names <- c("M_mus", "R_rat", "R_nor", "R_lut", "R_leu", "R_tun", "R_vil", "R_sor", "R_fus", "P_mol", "X_myo", "H_chr", "N_cer", "N_fus", "N_mit", "N_ale", "P_pat", "P_gra", "P_ora", "P_sho", "P_des", "P_apo", "P_aus", "P_hig", "P_her", "P_nov", "P_del", "M_fus", "Z_arg", "L_for", "U_cau", "M_cer", "M_cap", "M_bur", "L_con", "M_gou", "C_pen")
 phylo.order <- na.omit(match(phylo.names, unique.taxa$Taxa))
+
+# Make color and pch vectors for legends by species
+unique.taxa <- info[match(unique(info$FullName), info$FullName), ]
+col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
 names(col.unique.spp) <- NULL
-col.unique.spp <- col.unique.spp[phylo.order]
-pch.unique.spp <- pch.unique.spp[phylo.order]
+col.unique.spp <- col.unique.spp[phylo.order]  # colors for legends
+pch.unique.spp <- pch.unique.spp[phylo.order]  # points for legends
+```
+
+# Prepare data for phylogenetic analyses
+First, the shape data have to be averaged by species. This step has to be done before plotting evolutionary allometry and working with the phylogeny. Second, the phylogeny has to be trimmed to the species in the shape data as the commands in `geomorph` require the tree and datasets to have exactly the same set of species.
+
+## 1) Calculate mean shape and centroid size for each species
+The mean shape function, `mshape()` outputs a 2D array. Therefore, the `for` loop below stores mean shapes in a 2D array format recognized by `geomorph`: (n x [p x k]), where n is number of specimens, p is number of landmark points, and k is number of dimensions. Finally, we convert to a 3D array with format (p x k x n) since a 3D array is required by most `geomorph` functions. 
+```{r}
+# For loop to subset shape data by species and calculate mean shape
+mean.shapes.2D <- NULL  # initiate blank data frame
+full.names <- unique(info$FullName)  # list of species
+
+for (i in 1:length(full.names)) {  
+        is.taxa <- which(info$FullName == full.names[i])
+        shape.for.mean.2D <- shape[, , is.taxa]
+        mean.shapes.2D <- rbind(mean.shapes.2D, mshape(shape.for.mean.2D))  # output cols must = 3 for 3D
+}
+
+mean.shapes <- arrayspecs(mean.shapes.2D, 325, 3)  # convert to 3D array with 325 landmarks and 3 for 3D landmarks in this study
+```
+
+Create metadata and put mean shape and metadata in alphabetical order.
+```{r}
+# Alphabetical order for mean shape
+dimnames(mean.shapes)[[3]] <- full.names  # Genus_species format
+mean.shapes <- mean.shapes[, , sort(dimnames(mean.shapes)[[3]])]  # ABC order
+
+# Alphabetical order for mean shape metadata
+info.means <- info[!duplicated(info$Taxa), ]  # make metadata
+drops <- c("CatNum", "Csize", "Order")  # remove outdated columns
+info.means <- info.means[, !(names(info.means) %in% drops)]
+info.means <- info.means[order(info.means$FullName), ]  # ABC order
+```
+
+### Calculate mean centroid size
+We need to update the centoid size column for info.means to contain the *mean* centroid size by taxa. Centroid size for all 317 specimens is stored in the info.phylo metadata table.
+```{r}
+# Calculate mean centroid size from original Csize data and store in info.means
+cs.means <- aggregate(info[, which(colnames(info) == "Csize")], list(Taxa = info$FullName), mean)  # aggregate also alphabetizes it
+info.means$MeanCsize <- cs.means[, 2]  # store in dataframe
+```
+
+## 2) Prepare phylogenetic tree
+The most recent tree for Australian rodents is from Smissen & Rowe 2018. The tree is a fossil calibrated ultrametric tree from BEAST2 for Hydromyini, which includes all the Australo-Papuan old endemics in Murinae. This tree adds 6 more species from Australia to the Smissen & Rowe (2018) phylogeny. 
+```{r}
+raw.tree <- read_annotated("../Data/Processed/Marcy-BEAST01.con.tre")
+```
+
+### Extract only Genus and Species names from the tree
+The tree file has uneven amounts of information for each entry, some entries have catalog numbers and others do not. Therefore we needed a `for` loop to grab the first two elements from a list, which always corresponded to Genus and Species.
+
+We reassign only Genus and Species names (in the form "Genus_species") to the tree so that it is easier to compare to the shape data. 
+```{r}
+no.cat.tree <- raw.tree  # initiate new, modified tree with no CatNums
+label.list <- strsplit(raw.tree$tip.label, "_")  # separate info into list
+
+# For loop finds Genus & Species and makes tip name "Genus_species"
+for (i in 1:length(label.list)) {
+        label <- unlist(label.list[i])
+        no.cat.tree$tip.label[i] <- paste(label[1], label[2], sep = "_")
+}
+```
+
+### Re-label node
+Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species. 
+
+**Relabeled node:**
+_Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
+```{r}
+relabel.tree <- no.cat.tree
+P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
+relabel.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
+```
+
+### Prune the tree and shape datasets to match each other
+Now that the names in the Smissen & Rowe tree can be compared to our info.phylo metadata, we can prune both datasets to have the same species.
+```{r}
+# First, prune the tree of species not in the shape data
+concord <- name.check(relabel.tree, relabel.tree$tip.label, dimnames(mean.shapes)[[3]])  # check concordance
+aus.tree <- drop.tip(relabel.tree, concord$tree_not_data)  # prune tree to Aus sample
+```
+
+Next, subset and re-order the metadata and shape datasets to match the order of species found in the tree. 
+```{r}
+# Subsetting
+to.remove <- name.check(aus.tree, aus.tree$tip.label, dimnames(mean.shapes)[[3]])
+info.means.tree <- info.means[!is.element(info.means$FullName, to.remove$data_not_tree), ]  # metadata
+mean.shapes.tree <- mean.shapes[, , !is.element(info.means$FullName, to.remove$data_not_tree)]  # shape data
+
+# Re-order to match tree tip order
+tree.order <- match(aus.tree$tip.label, info.means.tree$FullName)
+info.means <- info.means.tree[tree.order, ]  # metadata
+mean.shapes <- mean.shapes.tree[, , tree.order]  # shape data
+```
+
+### Save intermediate data
+```{r}
+# Metadata and shape coordinates for all specimens
+save(info, shape, file = "../Data/Processed/03-main-data.rda")
+
+# Graphing vectors
+save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, file = "../Data/Processed/03-graphing-vectors.rda")
+
+# Data for phylogenetic analyses, including the tree as well as metadata and shape coordinates for mean specimens
+save(info.means, mean.shapes, aus.tree, file = "../Data/Processed/03-tree-data.rda")
 ```

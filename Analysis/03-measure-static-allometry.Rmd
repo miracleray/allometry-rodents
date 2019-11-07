@@ -23,40 +23,10 @@ library(stringr)
 library(data.table)
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph`
-library(colorspace)  # colors
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 load(file = "../Data/Processed/03-color-data.rda") # TEMP
 load(file = "../Data/Processed/04-phylo-data.rda") # TEMP
-```
-
-### Set up for analyses
-Since *Mastacomys* is technically within the genus *Pseudomys* (Smissen & Rowe 2018), we'll make an "Effective Genus" column where this genus is classified under *Pseudomys*.
-```{r}
-info$EGenus <- info$Genus  # make Effective Genus column
-info$EGenus[which(info$Genus == "Mas")] <- "Pse"  # Mas becomes Pseudomys
-```
-
-Colors for subsequent figures are set up according to column "EGenus". Colors roughtly correspond to phylogenetics such that similar color hues indicate closer evolutionary relationships.
-```{r}
-# Make gradients for each clade
-Uro <- sequential_hcl(5, "Greens 3")  # Uromyini clade
-Con <- sequential_hcl(5, "Purples 3")  # Conilurus clade
-Pse <- sequential_hcl(5, "Blues 3")  # Pseudomys clade
-Hyd <- sequential_hcl(5, "Reds 3")  # Hydromini clade
-Pog <- sequential_hcl(5, "Heat 2")  # Pogonomys
-Inv <- sequential_hcl(5, "Light Grays")  # Mus and Rattus
-
-# Colors in order of phylogeny
-genera.phylo <- c("Mus", "Rat", "Pog", "Xer", "Hyd", "Not", "Pse", "Zyz", "Leg", "Uro", "Mel", "Lep", "Mes", "Con")
-
-col.phylo <- c(Inv[3], Inv[1], Pog[3], Hyd[1], Hyd[2], Pse[1], Pse[2], Pse[4], Pse[3], Uro[1], Uro[2], Con[3], Con[2], Con[1])
-
-names(col.phylo) <- genera.phylo
-
-# Colors in order of alphabetical genus names
-col.gen <- col.phylo[match(sort(unique(info$EGenus)), names(col.phylo))]
-sp.col.gen <- col.phylo[match(as.factor(info$EGenus), names(col.phylo))]  # color vector for all data
 ```
 
 ## 1) Measure static allometry: Homogeneity of Slopes Test by species
@@ -104,9 +74,7 @@ write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
 ```
 
 ## Randomize specimens to get NULL expantancy for pairwise significant results
-We'll do the randomization procedure 100 times
-
-This takes at least 20 minutes to run.
+We'll do the randomization procedure 100 times. This takes at least 20 minutes to run.
 ```{r}
 # Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.95) {
@@ -138,24 +106,7 @@ In _geomorph_, static allometry can be visualized with log(centroid size) plotte
 ```{r}
 # Run static allometry test with all specimens
 spp.gdf <- geomorph.data.frame(shape = shape, Species = info$Taxa, size = info$Csize)
-spp.results <- procD.allometry(shape ~ log(size), f2 = ~Species, iter = 499, data = spp.gdf)
-
-# Set colors for genera and different points for species within each genus
-pch.unique.spp <- PointOutDiffSpp(info)  # points by unique species in a genus for legend
-pch.unique.spp[which(sort(unique(info$Taxa)) == "M_fus")] <- 2
-pch.spp <- PlotByGroup(info, "Taxa", pch.unique.spp)  # pch coded for each individual
-
-# Make color vector for legend
-unique.taxa <- as.data.frame(unique(info[, c(6,10)]))
-unique.taxa <- na.omit(unique.taxa[order(unique.taxa), ])
-col.unique.spp <- PlotByGroup(unique.taxa, "EGenus", col.gen)
-
-# Put color and point legends in phylogenetic order
-phylo.names <- c("M_mus", "R_rat", "R_nor", "R_lut", "R_leu", "R_tun", "R_vil", "R_sor", "R_fus", "P_mol", "X_myo", "H_chr", "N_cer", "N_fus", "N_mit", "N_ale", "P_pat", "P_gra", "P_ora", "P_sho", "P_des", "P_apo", "P_aus", "P_hig", "P_her", "P_nov", "P_del", "M_fus", "Z_arg", "L_for", "U_cau", "M_cer", "M_cap", "M_bur", "L_con", "M_gou", "C_pen")
-phylo.order <- na.omit(match(phylo.names, unique.taxa$Taxa))
-names(col.unique.spp) <- NULL
-col.unique.spp <- col.unique.spp[phylo.order]
-pch.unique.spp <- pch.unique.spp[phylo.order]
+spp.results <- procD.allometry(shape ~ log(size), f2 = ~Species, iter = 500, data = spp.gdf)
 
 # Find the mean point for each static allometry
 mean.size <- aggregate(spp.results$size, list(Taxa = info$Taxa), mean)
@@ -207,7 +158,7 @@ dev.off()
 
 ### Save intermediate data
 ```{r}
-save(col.gen, sp.col.gen, col.phylo, phylo.names, genera.phylo, spp.results, file = "../Data/Processed/03-color-data.rda")
+save(spp.results, file = "../Data/Processed/04-allometry-data.rda")
 ```
 
 
