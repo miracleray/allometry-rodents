@@ -17,8 +17,9 @@ These data will be needed for all subsequent analyses, tables, and figures. The 
 ```{r message = FALSE}
 library(stringr)
 library(data.table)
-library(geomorph)
 library(colorspace)  # colors
+library(phylotate)  # phylogeny
+library(geiger)  # phylogeny
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/02-no-error-data.rda")  # shape data w/o error
 ```
@@ -86,24 +87,24 @@ sp.col.gen[which(info$Species %in% c("nor", "rat"))] <- "black"  # account for i
 ### Create point and color vectors for species legends in phylo order
 ```{r}
 # Put color and point legends in phylogenetic order
-phylo.names <- c("Mus_mus", "Rat_rat", "Rat_nor", "Rat_lut", "Rat_leu", "Rat_tun", "Rat_vil", "Rat_sor", "Rat_fus", "Pog_mol", "Xer_myo", "Hyd_chr", "Not_cer", "Not_fus", "Not_mit", "Not_ale", "Pse_pat", "Pse_gra", "Pse_ora", "Pse_sho", "Pse_des", "Pse_apo", "Pse_aus", "Pse_hig", "Pse_her", "Pse_nov", "Pse_del", "Mas_fus", "Zyz_arg", "Zyz_ped", "Leg_for", "Uro_cau", "Mel_cer", "Mel_cap", "Mel_bur", "Lep_con", "Mes_gou", "Con_pen")
-info$Name <- paste(info$Genus, info$Species, sep = "_")
-alpha.taxa <- sort(unique(info$Name))
-phylo.order <- match(phylo.names, alpha.taxa)   # ordering vector
+phylo.names <- c("Mus_mus", "Rat_rat", "Rat_nor", "Rat_lut", "Rat_leu", "Rat_tun", "Rat_vil", "Rat_sor", "Rat_fus", "Pog_mol", "Xer_myo", "Hyd_chr", "Not_cer", "Not_fus", "Not_mit", "Not_ale", "Pse_pat", "Pse_gra", "Pse_ora", "Pse_sho", "Pse_des", "Pse_apo", "Pse_aus", "Pse_hig", "Pse_her", "Pse_nov", "Pse_del", "Pse_fus", "Zyz_arg", "Zyz_ped", "Leg_for", "Uro_cau", "Mel_cer", "Mel_cap", "Mel_bur", "Lep_con", "Mes_gou", "Con_pen")
 
-# Handle points
-pch.uni.spp.alpha <- PointOutDiffSpp(info)  # points by unique species in a genus
-#pch.unique.spp[which(sort(unique(info$Genus)) == "Mas")] <- 2
-pch.unique.spp <- pch.uni.spp.alpha[phylo.order]
-pch.spp <- PlotByGroup(info, "Name", pch.unique.spp)  # pch coded for each individual specimen
+# Points for legend
+pch.unique.spp <- PointOutDiffSpp(phylo.names)  # pch by unique spp in a genus
+#pch.unique.spp[which(phylo.names)) == "Mas_fus")] <- 2  # handle Mastacomys
+
+# Points coded for each individual specimen
+info$Name <- paste(info$EGenus, info$Species, sep = "_")
+pch.spp <- PlotByGroup(info, "Name", pch.unique.spp[sort(phylo.names)])  
 
 # Make color vector for legends by species
-alpha.taxa <- str_sub(alpha.taxa, 1, 3)
-col.taxa <- match(alpha.taxa, names(col.gen))
-col.taxa[is.na(col.taxa)] <- 10  # Handle Mastacomys
-col.uni.spp.alpha <- col.gen[col.taxa]
-col.uni.spp.alpha[which(sort(unique(info$FullName)) %in% c("Rattus_norvegicus", "Rattus_rattus"))] <- "black"  # account for invasive Rattus
-col.unique.spp <- col.uni.spp.alpha[phylo.order]
+col.taxa <- match(str_sub(phylo.names, 1, 3), names(col.gen))
+col.unique.spp <- col.gen[col.taxa]
+col.unique.spp[which(phylo.names %in% c("Rat_nor", "Rat_rat"))] <- "black"  # account for invasive Rattus
+
+# Give short names back to phylo.names
+phylo.names <- paste(str_sub(phylo.names, 1, 1), str_sub(phylo.names, 5, 7))
+phylo.names[which(phylo.names == "P fus")] <- "M fus"  # handle Mastacomys
 ```
 
 # Prepare data for phylogenetic analyses
@@ -205,7 +206,7 @@ mean.shapes <- mean.shapes.tree[, , tree.order]  # shape data
 save(info, shape, file = "../Data/Processed/03-main-data.rda")
 
 # Graphing vectors
-save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, col.uni.spp.alpha, pch.uni.spp.alpha, file = "../Data/Processed/03-graphing-vectors.rda")
+save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, file = "../Data/Processed/03-graphing-vectors.rda")
 
 # Data for phylogenetic analyses, including the tree as well as metadata and shape coordinates for mean specimens
 save(info.means, mean.shapes, aus.tree, file = "../Data/Processed/03-tree-data.rda")  # add concord, relabel.tree?

@@ -120,10 +120,9 @@ mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_Static_Evo_Allo.eps")
+postscript("../Data/Results/Figure2_Static_Evo_Allo1.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
-### WAITING ON INFORMATION NOT WORKING IN CODE CHUNK ABOVE
 # Plot of all data points with evolutionary allometry
 par(mar = c(1, 4, 1.5, 0))
 plot(fit.static,
@@ -146,7 +145,7 @@ text(5.5, -0.04, paste("Rsq of log(size) = ", round(fit.static$aov.table$Rsq[1],
 legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
 
 # Plot of static allometry with evolutionary allometry
-par(mar=c(5, 4, 1.5, 0))
+par(mar = c(5, 4, 1.5, 0))
 plot(fit.static,
      type = "regression",
      reg.type = "PredLine",
