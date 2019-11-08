@@ -47,7 +47,7 @@ shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
-# HOS test Defined as a function for conciseness in the next block. Returns pairwise object form RRPP
+# HOS test defined as a function for conciseness in the next block. Returns pairwise object from RRPP
 TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Data frame
         spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = group)
@@ -92,6 +92,7 @@ count.pw <- 1
 for(i in 1:100){
         null.pw <- null.pairwise(shape = shape.HOS, info.HOS, iter = 500)
         count.pw <- c(count.pw, null.pw)
+        print(i)
 }
 
 # Visualize with histogram
@@ -120,7 +121,7 @@ mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_Static_Evo_Allo1.eps")
+postscript("../Data/Results/Figure2_Static_Evo_Allo.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry
@@ -176,7 +177,7 @@ e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  #
 evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
 
 evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
-evo.allo.clade.2$aov.table
+evo.allo.clade$aov.table
 ```
 
 ### Do pairwise comparisons to see which phylo groups are significantly different
@@ -195,7 +196,6 @@ summary(fit.evo)
 pw.ind.clade <- pairwise(fit.evo, groups = evo.gdf$clade)
 summary(pw.ind.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
 ```
-
 
 ##### NEEDS UPDATING
 ### Export Tables 1a,b as CSV files
@@ -327,51 +327,12 @@ names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
 names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
 ```
 
-And then transform these statistics into tables to simply plot them with `boxplot`:
-```{r, fig.width = 12, fig.height = 12}
-par(mfrow = c(2, 1))
-# Combining the results into tables and plotting them
-boxplot(do.call(cbind, delta_slopes),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade", las = 2)
-abline(h = 0, lty = 3)
-
-boxplot(do.call(cbind, delta_slopes_overall),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
-abline(h = 0, lty = 3)  # since observered minus expected should be 0
-
-
+### Plot CI format
+```{r}
 # An empty plot first
-delta.slopes.data <- do.call(cbind, delta_slopes)
-plot(NULL, xlim = c(0, dim(delta.slopes.data)[2]), ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE))
-
 boxplot(delta.slopes.data, border = "white", ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade")
 
-plot.CI(delta.slopes.data, type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
-
-
-# An empty plot first
-fake.results.list <- apply(fake.results.table, 2, list)
-colnames(fake.results.table) <- n.spp.group
-plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)))
-
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99)), ylab = "whatever", xlab = "Number of species")
-
-# Adding the results
-plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
-
-par(mfrow = c(2, 1))
-
-# Combining the results into tables and plotting them
-boxplot(fake.results.table,
-        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
-abline(h = 0, lty = 3)
-
-boxplot(do.call(cbind, delta.slopes.overall),
-        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade",
-        main = "Slope difference for 100 FAKE CLADEs (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
-abline(h = 0, lty = 3)  # since observered minus expected should be 0
+plot.CI(delta.slopes, type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
 ```
 
 ## Checking the validity of the results above by randomizing species into "fake clades"
@@ -428,20 +389,26 @@ fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
 plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T))
 
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T), ylab = "whatever", xlab = "Number of species")
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T), ylab = "Delta slope", xlab = "Number of species")
 
 # Adding the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
+```
 
+
+##### Recycling bin
+### Old boxplot format for real clade data
+And then transform these statistics into tables to simply plot them with `boxplot`:
+```{r, fig.width = 12, fig.height = 12}
 par(mfrow = c(2, 1))
-
 # Combining the results into tables and plotting them
-boxplot(fake.results.table,
-        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade", main = "Slope difference for 100 FAKE CLADEs", ylim = c(-100, 100), las = 2)
+boxplot(do.call(cbind, delta_slopes),
+        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
+        main = "Slope difference for each clade", las = 2)
 abline(h = 0, lty = 3)
 
-boxplot(do.call(cbind, delta.slopes.overall),
-        ylab = expression(paste(Delta, "slope")), xlab = "Number of species in fake clade",
-        main = "Slope difference for 100 FAKE CLADEs (compared to the whole dataset)", ylim = c(-350, 125), las = 2)
+boxplot(do.call(cbind, delta_slopes_overall),
+        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
+        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
 ```

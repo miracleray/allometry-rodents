@@ -91,11 +91,12 @@ phylo.names <- c("Mus_mus", "Rat_rat", "Rat_nor", "Rat_lut", "Rat_leu", "Rat_tun
 
 # Points for legend
 pch.unique.spp <- PointOutDiffSpp(phylo.names)  # pch by unique spp in a genus
-#pch.unique.spp[which(phylo.names)) == "Mas_fus")] <- 2  # handle Mastacomys
+pch.unique.spp[which(phylo.names == "Pse_fus")] <- 2  # handle Mastacomys
 
 # Points coded for each individual specimen
 info$Name <- paste(info$EGenus, info$Species, sep = "_")
-pch.spp <- PlotByGroup(info, "Name", pch.unique.spp[sort(phylo.names)])  
+phylo.order <- match(sort(unique(info$Name)), phylo.names)
+pch.spp <- PlotByGroup(info, "Name", pch.unique.spp[phylo.order])  
 
 # Make color vector for legends by species
 col.taxa <- match(str_sub(phylo.names, 1, 3), names(col.gen))
