@@ -325,12 +325,27 @@ We can then summarise these results per clade size (that's already done in this 
 # Adding the names to the slopes
 names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
 names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
+
+# Clean up axis labels for plotting
+new.names <- names(delta_slopes)
+for(i in 1:length(names(delta_slopes)))
+    if(nchar(new.names[i]) > 5) {  # detect bins of greater than 1 spp
+        new.names[i] <- ((nchar(names(delta_slopes[i])) + 1) / 6)  # gets number of spp
+    }
+
+# Some vanity names for plotting
+new.names[1] <- "All (36)"
+new.names[2] <- "No Mus"
+new.names[3] <- "AOE (27)"
+new.names[which(new.names == 11)] <- "Pse. (11)"
+new.names[which(new.names == 8)] <- "Rat. (8)"
+new.names[25] <- "Not. (4)"
 ```
 
 ### Plot CI format
 ```{r}
 # An empty plot first
-boxplot(delta.slopes.data, border = "white", ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade")
+boxplot(delta.slopes.data, border = "white", ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
 
 plot.CI(delta.slopes, type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
 ```
