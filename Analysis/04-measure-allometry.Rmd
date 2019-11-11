@@ -106,7 +106,10 @@ In _geomorph_, static allometry can be visualized with log(centroid size) plotte
 # Run static allometry test with all specimens
 static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
 fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
-summary(fit.static)
+
+# See ANOVA
+fit.static$call
+fit.static$aov.table
 
 # Save these values for plotting
 static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")
@@ -177,6 +180,7 @@ e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  #
 evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
 
 evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
+evo.allo.clade$call
 evo.allo.clade$aov.table
 ```
 
@@ -191,7 +195,10 @@ summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")
 # Run static allometry test with all specimens
 evo.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, clade = info$Clade)
 fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, print.progress = FALSE)
-summary(fit.evo)
+
+# See ANOVA
+fit.evo$call
+fit.evo$aov.table
 
 pw.ind.clade <- pairwise(fit.evo, groups = evo.gdf$clade)
 summary(pw.ind.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
@@ -334,12 +341,12 @@ for(i in 1:length(names(delta_slopes)))
     }
 
 # Some vanity names for plotting
-new.names[1] <- "All (36)"
-new.names[2] <- "No Mus"
-new.names[3] <- "AOE (27)"
-new.names[which(new.names == 11)] <- "Pse. (11)"
-new.names[which(new.names == 8)] <- "Rat. (8)"
-new.names[25] <- "Not. (4)"
+new.names[1] <- "All 36"
+new.names[2] <- "No Mus 35"
+new.names[3] <- "AOE 27"
+new.names[which(new.names == 11)] <- "Pse. 11"
+new.names[which(new.names == 8)] <- "Rat. 8"
+new.names[25] <- "Not. 4"
 ```
 
 ### Plot CI format
