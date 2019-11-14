@@ -18,7 +18,7 @@ Evolutionary studies must take into account the phylogenetic tree because relate
 library(geomorph)
 library(geiger)
 library(stringr)
-library(RColorBrewer)
+#library(RColorBrewer)
 library(phylotate)
 library(phytools)
 source("../Functions/utilities.R")  # loads custom functions
@@ -33,12 +33,77 @@ Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expe
 First, we need to make sure the data meets the Brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
 # Plot disparity through time
-mean.shapes.tree.2D <- two.d.array(mean.shapes.tree)
-aus.dtt <- dtt(aus.tree, mean.shapes.tree.2D, nsim = 499, plot = TRUE)
+mean.shapes.2D <- two.d.array(mean.shapes)
+aus.dtt <- dtt(aus.tree, mean.shapes.2D, nsim = 500, plot = TRUE)
 ```
 
 Next, we can compare evolutionary rates:
 
+
+## Rates calculated all together
+```{r}
+# Define groups; 1 = those on allometric line / average body size 
+groups <- rep(1, dim(info.means.tree)[1])
+
+is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou"))
+groups[is.frug] <- 2  # Define frugivores as 2
+
+is.fol <- c(which(info.means$Taxa == "P_ora"), which(info.means$Taxa == "M_fus"), which(info.means$Taxa == "L_con"))
+groups[is.fol] <- 3 # Define folivores as 3
+
+is.carn <- c(which(info.means$Taxa == "H_chr", info.means$Taxa == "X_myo"))
+groups[is.carn] <- 4 # Define carnivores as 4
+
+groups[which(info.means.tree$Genus == "Not")] <- 5  # Define Notomys as 5
+
+# Run analysis
+names(groups) <- info.means$FullName
+specialist.test <- compare.evol.rates(mean.shapes, aus.tree, groups, iter = 500, method = "simulation")
+p.table <- specialist.test$pairwise.pvalue
+specialist.test$sigma.d.gp.ratio
+```
+
+### Adjust p-values for multiple comparisons
+```{r}
+p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "bonferroni"), 3)
+```
+
+## Create and export Table 2
+```{r}
+# Evolutionary rate ratio to 1 decimal place
+FindRateRatio <- function(rate.test) {
+        round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
+}
+ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(carn.test), FindRateRatio(not.test)), sep = "")
+
+# Expected rate, hard coded from hypotheses
+# Order is: frugivores, folivores, carnivores, Notomys
+expected <- c("Slower", "Slower", "Slower", "Slower")
+
+# Rate difference found using custom function FindRateDiff
+found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(carn.test), FindRateDiff(not.test))
+found[which(p.values.bon > 0.05)] <- "No difference"
+
+# Combine and name rows and columns
+table2 <- cbind(ratio, p.values.bon, expected, found)
+colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
+row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys")
+
+# Export Table 2
+write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
+```
+
+
+
+
+
+
+
+
+
+
+
+### RECYCLE BIN
 **Large frugivores vs others**
 ```{r}
 # Only large frugivores U. caudimaculatus and M. gouldii
