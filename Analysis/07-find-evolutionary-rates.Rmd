@@ -59,7 +59,7 @@ groups[which(info.means.tree$Genus == "Not")] <- 5  # Define Notomys as 5
 # Run analysis
 names(groups) <- info.means$FullName
 specialist.test <- compare.evol.rates(mean.shapes, aus.tree, groups, iter = 500, method = "simulation")
-p.table <- specialist.test$pairwise.pvalue
+specialist.test$pairwise.pvalue
 specialist.test$sigma.d.gp.ratio
 ```
 

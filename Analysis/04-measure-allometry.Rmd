@@ -19,6 +19,9 @@ It also produces supplementary Figures TK
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
+# Install latest `geomorph`
+library("devtools")
+devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE) 
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph`
 source("../Functions/utilities.R")  # loads custom functions
