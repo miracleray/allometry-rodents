@@ -55,9 +55,8 @@ TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Data frame
         spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = group)
         # Models
-        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by species
-        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across species
-        
+        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by spp
+        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across spp
         anova(fit.common, fit.unique, print.progress = FALSE)
 
         return(pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE))  # includes Homogeneity of Slope pairwise comparisons
@@ -72,6 +71,20 @@ actual.pw <- length(which(pw.summary$pairwise.tables$P < 0.05))
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
+```
+
+## Do same analysis but using RRPP's function lm.rrpp
+```{r}
+spp.rdf <- rrpp.data.frame(coords = two.d.array(shape.HOS), size = info.HOS$Csize, spp = info.HOS$Taxa)
+# Models
+fit.unique.2 <- lm.rrpp(coords ~ log(size) * spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # unique allometries by spp
+fit.common.2 <- lm.rrpp(coords ~ log(size) + spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # common allometries across spp
+
+pw.comp.2 <- pairwise(fit.common.2, fit.unique.2, groups = spp.rdf$spp, print.progress = FALSE)
+
+pw.summary.2 <- summary.pairwise(pw.comp.2, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
+actual.pw.2 <- length(which(pw.summary.2$pairwise.tables$P < 0.05))
+
 ```
 
 ## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
