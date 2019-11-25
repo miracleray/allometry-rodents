@@ -55,8 +55,8 @@ TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Data frame
         spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = group)
         # Models
-        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # unique allometries by spp
-        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, print.progress = FALSE)  # common allometries across spp
+        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # unique allometries by spp
+        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # common allometries across spp
         anova(fit.common, fit.unique, print.progress = FALSE)
 
         return(pairwise(fit.common, fit.unique, groups = spp.gdf$spp, print.progress = FALSE))  # includes Homogeneity of Slope pairwise comparisons
@@ -68,6 +68,7 @@ pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa, lm.fun = procD.lm)
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
 actual.pw <- length(which(pw.summary$pairwise.tables$P < 0.05))
+
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
@@ -86,6 +87,7 @@ pw.summary.2 <- summary.pairwise(pw.comp.2, test.type = "VC", angle.type = "deg"
 actual.pw.2 <- length(which(pw.summary.2$pairwise.tables$P < 0.05))
 
 ```
+
 
 ## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
 We'll do the randomization procedure 100 times. This takes at least 20 minutes to run.
