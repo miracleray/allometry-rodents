@@ -4,6 +4,7 @@
 *.eps
 *.png
 *.xlsx
+*.numbers
 
 ## R ignore
 *.Rhistory
