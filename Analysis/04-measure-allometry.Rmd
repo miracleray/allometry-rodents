@@ -65,10 +65,11 @@ TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
 # Run with HOS dataset sampled above
 pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa, lm.fun = procD.lm)  
 
+#pw.comp <- TestHOS(shape, info$Csize, info$Taxa, lm.fun = procD.lm) 
+
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
 actual.pw <- length(which(pw.summary$pairwise.tables$P < 0.05))
-
 
 # Export p-value matrix to Results folder
 write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
@@ -77,6 +78,9 @@ write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
 ## Do same analysis but using RRPP's function lm.rrpp
 ```{r}
 spp.rdf <- rrpp.data.frame(coords = two.d.array(shape.HOS), size = info.HOS$Csize, spp = info.HOS$Taxa)
+
+#spp.rdf <- rrpp.data.frame(coords = two.d.array(shape), size = info$Csize, spp = info$Taxa)
+
 # Models
 fit.unique.2 <- lm.rrpp(coords ~ log(size) * spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # unique allometries by spp
 fit.common.2 <- lm.rrpp(coords ~ log(size) + spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # common allometries across spp
