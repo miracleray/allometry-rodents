@@ -22,6 +22,7 @@ It also produces supplementary Figures TK
 # Install latest `geomorph`
 library("devtools")
 devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE) 
+
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph`
 source("../Functions/utilities.R")  # loads custom functions
@@ -262,30 +263,7 @@ rare.table <- data.frame(info$Taxa, log(info$Csize), unname(static.allo.rs$RegSc
 colnames(rare.table) <- c("Taxa", "Csize", "RegProj")
 rownames(rare.table) <- NULL
 
-# Modify a function from ape to ID and isolate each element from each clade
-prop.part.names <- function(phy, singletons = TRUE) {
-    # Sanitizing
-    if(class(phy) != "phylo") {
-        stop("phy must be a \"phylo\" object.")
-    }
-    if(class(singletons) != "logical") {
-        stop("singletons must be logical.")
-    }
-
-    clades <- ape::prop.part(phy)  # get the bipartitions
-
-    # Get the tips names for each clades
-    clades <- lapply(clades, function(clade, labels) labels[clade], labels = attr(clades, "labels"))
-
-    # Add the tip names
-    if(singletons) {
-        clades <- c(clades, as.list(phy$tip.label))
-    }
-
-    return(clades)
-}
-
-# Getting the tree partitions (with singletons)
+# Getting the tree partitions (with singletons) with function defined in landvR and modified from ape
 clades <- prop.part.names(aus.tree.stlbl, singletons = TRUE)
 
 # Make function for getting the dataset for each clade
@@ -299,47 +277,15 @@ data.clades <- lapply(clades, get.data.clade, data = rare.table,
 ```
 
 ### Applying the tests
-First we need to define the function that will get us the statistic. In our case we want the slope from a linear model (but any statistic can be used):
+We can then calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
-# Function for getting the slope of a linear model
+# First define function for getting the slope of a linear model
 GetSlope <- function(data) {
     return(lm(data)$coefficients[[2]])  # gives m, slope from y = mx + error
 }
-```
 
-We can then calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
-```{r}
-# Define function for rarification or bootstrap
-rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed, ...) {
-    # Sanitizing
-    nrow.data <- nrow(data)
-    if(!is.null(rarefaction)) {
-        # Check if rarefaction is bigger than the # of rows in the data set
-        if(rarefaction > nrow.data) {
-            warning(paste0("Rarefaction value (", rarefaction, ") is bigger than the number of rows in the data (", nrow.data, ").\nThe statistic will be only bootstrapped."))
-            # Set rarefaction as the number of rows in the data (bootstrap)
-            rarefaction <- nrow.data    
-        }
-    } else {
-        # Set rarefaction as the number of rows in the data (bootstrap)
-        rarefaction <- nrow(data)
-    }
-    
-    # Check the observed value
-    if(!missing(observed)) {
-    } else {
-        observed <- stat.fun(data)
-    }
-
-    # Rarefaction function
-    results <- replicate(replicates, stat.fun(data[sample(1:nrow.data, rarefaction, replace = TRUE), ]))
-
-    # Getting the differences
-    return(results - observed)
-}
-
-# Getting the rarefied statistics for each clade
-delta.slopes <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+# Get the rarefied statistics for each clade with rarefy.stat, another new function in landvR
+delta.slopes <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)  # 5 = the lowest n of specimens for a species in our dataset
 ```
 
 ### Summarising the results
@@ -372,7 +318,7 @@ plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, poin
 ## Test for "significant" delta slopes
 ```{r}
 test.delta.slope <- function(slope, significance) {
-    angle <- abs(atan(slope) * 180/pi)
+    angle <- abs(atan(slope) * 180/pi)  # converts slope change into degrees
     if(!missing(significance)) {
         return(ifelse(angle < significance, TRUE, FALSE))
     } else {
