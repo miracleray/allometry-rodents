@@ -193,13 +193,13 @@ dev.off()
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
 # Remove clades with only one species (Mus and Pogonomys)
-one.spp <- c(which(info.means.tree$Clade == "Mus"), which(info.means.tree$Clade == "Pogonomys"))  # index for removal
-e.info.means.tree <- info.means.tree[-one.spp, ]  # metadata
-e.mean.shapes.tree <- mean.shapes.tree[, , -one.spp]  # shape data
+one.spp <- c(which(info.means$Clade == "Mus"), which(info.means$Clade == "Pogonomys"))  # index for removal
+e.info.means <- info.means[-one.spp, ]  # metadata
+e.mean.shapes <- mean.shapes[, , -one.spp]  # shape data
 e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  # phylo tree
 
 # Procrustes ANOVA with interaction
-evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes.tree, size = e.info.means.tree$MeanCsize, Clade = factor(e.info.means.tree$Clade))
+evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes, size = e.info.means$MeanCsize, Clade = factor(e.info.means$Clade))
 
 evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
 evo.allo.clade$call
@@ -310,6 +310,7 @@ GetSlope <- function(data) {
 We can then calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 # Define function for rarification or bootstrap
+set.seed(42)
 rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed, ...) {
     # Sanitizing
     nrow_data <- nrow(data)
@@ -339,27 +340,27 @@ rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed,
 }
 
 # Getting the rarefied statistics for each clade
-delta_slopes <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
+delta.slopes <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
 ```
 
 We can also compare them to the slope of the the full dataset:
 ```{r}
 # Getting the rarefied statistics for each clade
-delta_slopes_overall <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
+delta.slopes.overall <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
 ```
 
 ### Summarising the results
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
 ```{r}
 # Adding the names to the slopes
-names(delta_slopes) <- unlist(lapply(clades, paste, collapse = "+"))
-names(delta_slopes_overall) <- unlist(lapply(clades, paste, collapse = "+"))
+names(delta.slopes) <- unlist(lapply(clades, paste, collapse = "+"))
+#names(delta.slopes.overall) <- unlist(lapply(clades, paste, collapse = "+"))
 
 # Clean up axis labels for plotting
-new.names <- names(delta_slopes)
-for(i in 1:length(names(delta_slopes)))
+new.names <- names(delta.slopes)
+for(i in 1:length(names(delta.slopes)))
     if(nchar(new.names[i]) > 5) {  # detect bins of greater than 1 spp
-        new.names[i] <- ((nchar(names(delta_slopes[i])) + 1) / 6)  # gets number of spp
+        new.names[i] <- ((nchar(names(delta.slopes[i])) + 1) / 6)  # gets number of spp
     }
 
 # Some vanity names for plotting
@@ -374,16 +375,41 @@ new.names[25] <- "Not. 4"
 ### Plot CI format
 ```{r}
 # An empty plot first
-boxplot(delta.slopes.data, border = "white", ylim = quantile(unlist(delta.slopes.data), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
+boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
 
 plot.CI(delta.slopes, type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
 ```
+
+## Test for "significant" delta slopes
+```{r}
+test.delta.slope <- function(slope, significance) {
+    angle <- abs(atan(slope) * 180/pi)
+    if(!missing(significance)) {
+        return(ifelse(angle < significance, TRUE, FALSE))
+    } else {
+        return(angle)
+    }
+}
+
+med.delta.slopes <- unlist(lapply(delta.slopes, median))
+med.delta.slopes[which(is.na(med.delta.slopes))] <- 0  # account for NAs
+is.parallel <- test.delta.slope(med.delta.slopes, significance = 15)
+sum(is.parallel)
+
+plot(med.delta.slopes * 180/pi, c(1:length(med.delta.slopes)))
+
+# run on median values of real clade data delta slopes
+# FALSE = failed the signifance / delta slope is above 5 degree difference
+# 4.5 ideal cut-off because 90*0.5 = 4.5, therefore has 5% chance of being off so good null; 9 degrees is not horrible (10 degrees)
+
+```
+
 
 ## Checking the validity of the results above by randomizing species into "fake clades"
 First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}
 # Getting the same number of "groups" per "clades"
-clades <- prop.part.names(aus.tree)
+clades <- prop.part.names(aus.tree, singletons = FALSE)
 n.spp.group <- sort(unlist(lapply(clades, length)), decreasing = TRUE)  # sort by big->small for graphing at the end
 
 # Make function to get rarefied statistics for a fake clade grouping
@@ -446,12 +472,12 @@ And then transform these statistics into tables to simply plot them with `boxplo
 ```{r, fig.width = 12, fig.height = 12}
 par(mfrow = c(2, 1))
 # Combining the results into tables and plotting them
-boxplot(do.call(cbind, delta_slopes),
+boxplot(do.call(cbind, delta.slopes),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
         main = "Slope difference for each clade", las = 2)
 abline(h = 0, lty = 3)
 
-boxplot(do.call(cbind, delta_slopes_overall),
+boxplot(do.call(cbind, delta.slopes.overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
         main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0

@@ -39,7 +39,7 @@ source("../Functions/phytools.branch.colors.R")  # modified phytools function
 Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03)
 ```{r}
 # Branch colors by centroid size
-cs.tree <- -info.means$MeanCsize  # negative so colors get darker with larger size
+cs.tree <- -info.means$MeanCsize  # (-) so colors get darker with larger size
 names(cs.tree) <- aus.tree$tip.label
 
 # Tip lable colors by species, ordered in same way as tree
