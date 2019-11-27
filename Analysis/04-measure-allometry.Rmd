@@ -294,8 +294,8 @@ get.data.clade <- function(clade, data, species.col.n, data.cols) {
 }
 
 # Use function to get all the datasets per clades
-data_clades <- lapply(clades, get.data.clade, data = rare.table,
-                      species.col.n = 1, data.cols = c(2:3))
+data.clades <- lapply(clades, get.data.clade, data = rare.table,
+                      species.col.n = 1, data.cols = c(2:3))  # 2:3 corresponds to Csize and RegProj in rare.table
 ```
 
 ### Applying the tests
@@ -303,23 +303,22 @@ First we need to define the function that will get us the statistic. In our case
 ```{r}
 # Function for getting the slope of a linear model
 GetSlope <- function(data) {
-    return(lm(data)$coefficients[[2]])
+    return(lm(data)$coefficients[[2]])  # gives m, slope from y = mx + error
 }
 ```
 
 We can then calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 # Define function for rarification or bootstrap
-set.seed(42)
 rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed, ...) {
     # Sanitizing
-    nrow_data <- nrow(data)
+    nrow.data <- nrow(data)
     if(!is.null(rarefaction)) {
         # Check if rarefaction is bigger than the # of rows in the data set
-        if(rarefaction > nrow_data) {
-            warning(paste0("Rarefaction value (", rarefaction, ") is bigger than the number of rows in the data (", nrow_data, ").\nThe statistic will be only bootstrapped."))
+        if(rarefaction > nrow.data) {
+            warning(paste0("Rarefaction value (", rarefaction, ") is bigger than the number of rows in the data (", nrow.data, ").\nThe statistic will be only bootstrapped."))
             # Set rarefaction as the number of rows in the data (bootstrap)
-            rarefaction <- nrow_data    
+            rarefaction <- nrow.data    
         }
     } else {
         # Set rarefaction as the number of rows in the data (bootstrap)
@@ -333,34 +332,24 @@ rarefy.stat <- function(data, stat.fun, rarefaction, replicates = 100, observed,
     }
 
     # Rarefaction function
-    results <- replicate(replicates, stat.fun(data[sample(1:nrow_data, rarefaction, replace = TRUE), ]))
+    results <- replicate(replicates, stat.fun(data[sample(1:nrow.data, rarefaction, replace = TRUE), ]))
 
     # Getting the differences
     return(results - observed)
 }
 
 # Getting the rarefied statistics for each clade
-delta.slopes <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
-```
-
-We can also compare them to the slope of the the full dataset:
-```{r}
-# Getting the rarefied statistics for each clade
-delta.slopes.overall <- lapply(data_clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
+delta.slopes <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)
 ```
 
 ### Summarising the results
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
 ```{r}
-# Adding the names to the slopes
-names(delta.slopes) <- unlist(lapply(clades, paste, collapse = "+"))
-#names(delta.slopes.overall) <- unlist(lapply(clades, paste, collapse = "+"))
-
 # Clean up axis labels for plotting
-new.names <- names(delta.slopes)
-for(i in 1:length(names(delta.slopes)))
+new.names <- unlist(lapply(clades, paste, collapse = "+"))
+for(i in 1:length(new.names))
     if(nchar(new.names[i]) > 5) {  # detect bins of greater than 1 spp
-        new.names[i] <- ((nchar(names(delta.slopes[i])) + 1) / 6)  # gets number of spp
+        new.names[i] <- ((nchar(new.names[i]) + 1) / 6)  # gets number of spp
     }
 
 # Some vanity names for plotting
@@ -393,10 +382,10 @@ test.delta.slope <- function(slope, significance) {
 
 med.delta.slopes <- unlist(lapply(delta.slopes, median))
 med.delta.slopes[which(is.na(med.delta.slopes))] <- 0  # account for NAs
-is.parallel <- test.delta.slope(med.delta.slopes, significance = 15)
+is.parallel <- test.delta.slope(med.delta.slopes, significance = 45)
 sum(is.parallel)
 
-plot(med.delta.slopes * 180/pi, c(1:length(med.delta.slopes)))
+plot(c(1:length(med.delta.slopes)), abs(atan(med.delta.slopes)) * 180/pi, xlab = "Clade", ylab = "Delta slope angle (deg)", pch = 16)
 
 # run on median values of real clade data delta slopes
 # FALSE = failed the signifance / delta slope is above 5 degree difference
@@ -481,4 +470,12 @@ boxplot(do.call(cbind, delta.slopes.overall),
         ylab = expression(paste(Delta, "slope")), xlab = "Clade",
         main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
 abline(h = 0, lty = 3)  # since observered minus expected should be 0
+```
+
+### We can also compare them to the slope of the the full dataset:
+```{r}
+# Getting the rarefied statistics for each clade
+delta.slopes.overall <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
+
+names(delta.slopes.overall) <- unlist(lapply(clades, paste, collapse = "+"))
 ```
