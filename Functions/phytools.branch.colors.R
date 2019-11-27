@@ -1,6 +1,6 @@
 # Function modified from phytools's plotTraitbyBranch assuming tip.traits is a vector = the number of tips.
 
-tip.traits <- info.means.tree$MeanCsize
+tip.traits <- info.means$MeanCsize
 tree <- aus.tree
 
 phytools.branch.colors <- function(tree, tip.traits, col.fun) {

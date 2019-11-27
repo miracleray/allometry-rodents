@@ -39,7 +39,7 @@ source("../Functions/phytools.branch.colors.R")  # modified phytools function
 Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03)
 ```{r}
 # Branch colors by centroid size
-cs.tree <- -info.means.tree$MeanCsize  # negative so colors get darker with larger size
+cs.tree <- -info.means$MeanCsize  # negative so colors get darker with larger size
 names(cs.tree) <- aus.tree$tip.label
 
 # Tip lable colors by species, ordered in same way as tree
@@ -47,6 +47,9 @@ grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
 grp[which(grp == "Mas")] <- "Pse"
 names(col.gen) <- sort(unique(grp))
 col.tree <- col.gen[match(grp, names(col.gen))]
+# Account for invasive Rattus
+col.tree[which(aus.tree$tip.label == "Rattus_norvegicus")] <- "black"
+col.tree[which(aus.tree$tip.label == "Rattus_rattus")] <- "black"
 
 # Make Figure 1
 setEPS()
@@ -68,18 +71,18 @@ dev.off()
 First, set up colors and points by genera and important taxa
 ```{r}
 # Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
-info.means.tree$EGenus <- info.means.tree$Genus
-info.means.tree$EGenus[which(info.means.tree$Genus == "Mas")] <- "Pse"
+info.means$EGenus <- info.means$Genus
+info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
 
 # Colors for genera and different points by species within each genus; used for PCA
-col.means <- PlotByGroup(info.means.tree, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
-pch.means <- PointOutDiffSpp(info.means.tree)  # pts by unique species in a genus
-pch.means[which(info.means.tree$Taxa == "M_fus")] <- 2  # open triangle
+col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
+pch.means <- PointOutDiffSpp(info.means)  # pts by unique species in a genus
+pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 # Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
 pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
-pch.evo.allo[which(info.means.tree$Taxa == "P_ora")] <- 11  # star
-pch.evo.allo[which(info.means.tree$Taxa == "M_fus")] <- 2  # open triangle
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11  # star
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 ```
 
 ### Run PCA
@@ -97,7 +100,7 @@ PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 ### Generate data for Evolutionary Allometry plot
 ```{r}
 # Run allometry on all 34 species
-evo.procD <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means.tree$MeanCsize, genus = info.means.tree$Genus)
+evo.procD <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means$MeanCsize, genus = info.means$Genus)
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
 ```
 
@@ -138,7 +141,7 @@ layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))
 
 # 1) Evolutionary Allometry plot
 par(mar = c(4, 4, 1, 1))  # sets the margins
-plot(x = log(info.means.tree$MeanCsize),
+plot(x = log(info.means$MeanCsize),
      y = mean.allo$Reg.proj,
      xlim = c(4.75, 6),
      col = col.means, 
@@ -150,7 +153,7 @@ text(4.75, 0.1, "a", cex = 2)
 
 legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 4, bty = "n")
 
-abline(lm(mean.allo$Reg.proj ~ log(info.means.tree$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
+abline(lm(mean.allo$Reg.proj ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
 text(5.77, 0.11, "Frugivores", col = "dark grey")
 draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
