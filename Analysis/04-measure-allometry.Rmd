@@ -320,7 +320,7 @@ plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, poin
 test.delta.slope <- function(slope, significance) {
     angle <- abs(atan(slope) * 180/pi)  # converts slope change into degrees
     if(!missing(significance)) {
-        return(ifelse(angle < significance, TRUE, FALSE))
+        return(ifelse(angle < significance, TRUE, FALSE))  # FALSE = failed the signifance level
     } else {
         return(angle)
     }
@@ -329,14 +329,12 @@ test.delta.slope <- function(slope, significance) {
 med.delta.slopes <- unlist(lapply(delta.slopes, median))
 med.delta.slopes[which(is.na(med.delta.slopes))] <- 0  # account for NAs
 
-is.parallel <- test.delta.slope(med.delta.slopes, significance = 45)
+is.parallel <- test.delta.slope(med.delta.slopes, significance = 9) # 4.5 ideal cut-off because 90*0.5 = 4.5, therefore has 5% chance of being off so good null; 9 degrees is not horrible (10% chance)
 sum(is.parallel)
 
-plot(c(1:length(med.delta.slopes)), abs(atan(med.delta.slopes)) * 180/pi, xlab = "Clade", ylab = "Delta slope angle (deg)", pch = 16)
+angle.changes <- abs(atan(med.delta.slopes) * 180/pi)
 
-# run on median values of real clade data delta slopes
-# FALSE = failed the signifance / delta slope is above 5 degree difference
-# 4.5 ideal cut-off because 90*0.5 = 4.5, therefore has 5% chance of being off so good null; 9 degrees is not horrible (10 degrees)
+plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade", ylab = "Delta slope angle (deg)", pch = 16)
 ```
 
 ## Checking the validity of the results above by randomizing species into "fake clades"
