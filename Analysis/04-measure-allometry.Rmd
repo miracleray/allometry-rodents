@@ -353,6 +353,13 @@ abline(h = 4.5, col = "coral4")  # significance level
 text(1, 7, "4.5 degree signifcance level", adj = c(0,0), col = "coral4")
 ```
 
+```{r}
+boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
+
+plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
+
+```
+
 ## Checking the validity of the results above by randomizing species into "fake clades"
 First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}

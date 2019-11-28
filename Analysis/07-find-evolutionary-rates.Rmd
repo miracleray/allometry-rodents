@@ -43,7 +43,7 @@ Next, we can compare evolutionary rates:
 ## Rates calculated all together
 ```{r}
 # Define groups; 1 = those on allometric line / average body size 
-groups <- rep(1, dim(info.means.tree)[1])
+groups <- rep(1, dim(info.means)[1])
 
 is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou"))
 groups[is.frug] <- 2  # Define frugivores as 2
@@ -54,13 +54,15 @@ groups[is.fol] <- 3 # Define folivores as 3
 is.carn <- c(which(info.means$Taxa == "H_chr", info.means$Taxa == "X_myo"))
 groups[is.carn] <- 4 # Define carnivores as 4
 
-groups[which(info.means.tree$Genus == "Not")] <- 5  # Define Notomys as 5
+groups[which(info.means$Genus == "Not")] <- 5  # Define Notomys as 5
 
 # Run analysis
 names(groups) <- info.means$FullName
 specialist.test <- compare.evol.rates(mean.shapes, aus.tree, groups, iter = 500, method = "simulation")
 specialist.test$pairwise.pvalue
 specialist.test$sigma.d.gp.ratio
+
+p.adjust(specialist.test$pairwise.pvalue, method = "bonferroni")
 ```
 
 ### Adjust p-values for multiple comparisons
