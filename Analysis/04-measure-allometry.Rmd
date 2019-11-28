@@ -348,7 +348,9 @@ sum(is.parallel)
 denom <- (1 + obs.slopes * (obs.slopes + med.delta.slopes))
 angle.changes <- abs(atan(med.delta.slopes/denom) * 180/pi)  # angles in deg
 
-plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade", ylab = "Median delta slope (deg)", pch = 16)
+plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade", ylab = "Median delta slope (deg)", pch = 16, ylim = c(0,90))
+abline(h = 4.5, col = "coral4")  # significance level
+text(1, 7, "4.5 degree signifcance level", adj = c(0,0), col = "coral4")
 ```
 
 ## Checking the validity of the results above by randomizing species into "fake clades"
