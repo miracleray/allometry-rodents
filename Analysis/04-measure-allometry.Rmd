@@ -32,23 +32,6 @@ load(file = "../Data/Processed/03-graphing-vectors.rda")
 ```
 
 ## 1a) Measure static allometry: Homogeneity of Slopes Test by species
-Isolate only those species with at least 8 specimens. This leaves our dataset with 31 species.
-```{r}
-spec.counts <- as.data.frame(table(info$Taxa))
-to.remove <- spec.counts[which(spec.counts$Freq <= 7), ]
-species.rm <- as.vector(to.remove$Var1)
-
-# For loop to take out these specimens
-dataset.rm <- NULL  # initiate blank data frame
-for(n in 1:dim(to.remove)[1]) {
-        dataset.rm <- c(dataset.rm, which(info$Taxa == species.rm[n]))
-}
-
-# Remove species from:
-info.HOS <- info[c(-dataset.rm), ]  # Metadata
-shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
-```
-
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
 # HOS test defined as a function for conciseness in the next block. Returns pairwise object from RRPP
@@ -58,22 +41,20 @@ TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Models
         fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # unique allometries by spp
         fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # common allometries across spp (NULL HYPOTHESIS)
-        anova(fit.unique, fit.common, print.progress = TRUE)
+        #anova(fit.unique, fit.common, print.progress = TRUE)
 
         return(pairwise(fit.unique, fit.common, groups = spp.gdf$spp, print.progress = FALSE))  # includes Homogeneity of Slope pairwise comparisons
 }
 
 # Run with HOS dataset sampled above
-pw.comp <- TestHOS(shape.HOS, info.HOS$Csize, info.HOS$Taxa, lm.fun = procD.lm)  
-
-#pw.comp <- TestHOS(shape, info$Csize, info$Taxa, lm.fun = procD.lm) 
+pw.comp <- TestHOS(shape, info$Csize, info$Taxa, lm.fun = procD.lm) 
 
 # Count number of significant pairwise comparisons of alloemtric slope
-pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
-actual.pw <- length(which(pw.summary$pairwise.tables$P < 0.01))
+pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.99, show.vectors = FALSE)  
+actual.pw <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
 
 # Export p-value matrix to Results folder
-write.csv(pw.summary$pairwise.tables$P, "../Data/Results/TableS4_HOS.csv")
+write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS_all2.csv")
 ```
 
 ## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
@@ -85,7 +66,7 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
         
         # Run the test with random sample
         pw.comp <- TestHOS(shape, info$Csize, rand.spp, lm.fun = procD.lm)
-        pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = confidence, show.vectors = TRUE)
+        pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = confidence, show.vectors = FALSE)
         
         # Count number of significant pairwise comparisons of allometric slope
         alpha <- 1 - confidence
@@ -94,14 +75,14 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
 
 # Do this randomization and testing 100 times
 count.pw <- NULL
-for(i in 1:100){
-        null.pw <- null.pairwise(shape = shape.HOS, info.HOS, iter = 500)
+for(i in 1:10){  # 100 iterations takes ~2.5 hours
+        null.pw <- null.pairwise(shape = shape, info)
         count.pw <- c(count.pw, null.pw)
         print(i)
 }
 
 # Visualize with histogram
-hist(count.pw[2:length(count.pw)])  # and remove initializing 1
+hist(count.pw[1:length(count.pw)])
 abline(v = actual.pw, lwd = 3)  # compare random to real result above
 ```
 
@@ -446,4 +427,21 @@ pw.comp.2 <- pairwise(fit.unique.2, fit.common.2, groups = spp.rdf$spp, print.pr
 pw.summary.2 <- summary.pairwise(pw.comp.2, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
 actual.pw.2 <- length(which(pw.summary.2$pairwise.tables$P < 0.01))
 
+```
+
+Isolate only those species with at least 8 specimens. This leaves our dataset with 31 species.
+```{r}
+spec.counts <- as.data.frame(table(info$Taxa))
+to.remove <- spec.counts[which(spec.counts$Freq <= 7), ]
+species.rm <- as.vector(to.remove$Var1)
+
+# For loop to take out these specimens
+dataset.rm <- NULL  # initiate blank data frame
+for(n in 1:dim(to.remove)[1]) {
+        dataset.rm <- c(dataset.rm, which(info$Taxa == species.rm[n]))
+}
+
+# Remove species from:
+info.HOS <- info[c(-dataset.rm), ]  # Metadata
+shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
