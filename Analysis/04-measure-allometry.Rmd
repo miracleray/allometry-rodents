@@ -54,11 +54,11 @@ pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", co
 actual.pw <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
 
 # Export p-value matrix to Results folder
-write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS_all2.csv")
+write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS_all.csv")
 ```
 
 ## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
-We'll do the randomization procedure 100 times. This takes at least 20 minutes to run.
+We'll do the randomization procedure 100 times. This takes at least 2.5 hours to run.
 ```{r}
 # Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
@@ -70,20 +70,21 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
         
         # Count number of significant pairwise comparisons of allometric slope
         alpha <- 1 - confidence
-        return(length(which(pw.summary$pairwise.tables$P < alpha)))
+        return(length(which(round(pw.summary$pairwise.tables$P, 3) < alpha)))
 }
 
 # Do this randomization and testing 100 times
+set.seed(42)
 count.pw <- NULL
-for(i in 1:10){  # 100 iterations takes ~2.5 hours
+for(i in 1:100){   # 100 iterations takes ~2.5 hours
         null.pw <- null.pairwise(shape = shape, info)
         count.pw <- c(count.pw, null.pw)
-        print(i)
+        print(i)  # meter to mullify impatience
 }
 
 # Visualize with histogram
-hist(count.pw[1:length(count.pw)])
-abline(v = actual.pw, lwd = 3)  # compare random to real result above
+hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
+abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
 ```
 
 ## 1c) Visualize Static Allometry: Predicted Value
