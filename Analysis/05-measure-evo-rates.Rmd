@@ -11,7 +11,7 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Evolutionary rates
-Generates Table S5: Morphological rates of evolution. 
+Generates Table S6: Morphological rates of evolution. 
 
 Studies of morphological rates of evolution must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
@@ -55,7 +55,7 @@ names(groups) <- info.means$FullName
 specialist.test <- compare.evol.rates(mean.shapes, aus.tree, groups, iter = 500, method = "simulation")
 ```
 
-## Create and export Table S
+## Create and export Table S6
 ```{r}
 # Evolutionary rates to 3 sig figs
 rate.table <- as.matrix(round(specialist.test$sigma.d.gp.ratio, 2))
@@ -79,6 +79,6 @@ rate.table[5, 4] <- p.adjusted[10]
 # Remove zeros
 for(i in 1:dim(rate.table)[1]) rate.table[i, i] <- "-"
 
-# Export Table S5
-write.table(rate.table, "../Data/Results/TableS5_EvoRates.csv", sep = ",", col.names = NA)
+# Export Table S6
+write.table(rate.table, "../Data/Results/TableS6_EvoRates.csv", sep = ",", col.names = NA)
 ```

@@ -27,6 +27,7 @@ devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes =
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
+library(stringr)
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
@@ -137,22 +138,18 @@ table1b_n35[is.na(table1b_n35)] <- ""
 write.table(table1b_n35, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
 ```
 
-### Save intermediate data ADD EVO ALLOMETRY HERE********
-```{r}
-save(fit.static, static.allo.pl, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")
-```
-
-
-## 3) Perform rarefaction along the tree
+## 3) Measure allometric slope change using phylogenetic rarefaction
 This addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our results showing parallel slopes across almost all species. The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd)
 
-### Getting each clade
+### Get each clade from the phylogeny
 First we need to identify and isolate each element from each partition (clade) using a modified version from the `ape::prop.part` function.
 ```{r}
-# Create simple data table with label, centroid size, and RegProj
+# Create simple data table with label, centroid size, and Reg Score
 short.label <- function(label) paste0(substr(strsplit(label, split = "_")[[1]][1], 1, 1), "_", substr(strsplit(label, split = "_")[[1]][2], 1, 3))
 aus.tree.stlbl <- aus.tree
 aus.tree.stlbl$tip.label <- unname(sapply(aus.tree.stlbl$tip.label, short.label))
+
+static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")
 
 rare.table <- data.frame(info$Taxa, log(info$Csize), unname(static.allo.rs$RegScore))
 colnames(rare.table) <- c("Taxa", "Csize", "RegProj")
@@ -171,7 +168,7 @@ data.clades <- lapply(clades, get.data.clade, data = rare.table,
                       species.col.n = 1, data.cols = c(2:3))  # 2:3 corresponds to Csize and RegProj in rare.table
 ```
 
-### Applying the tests
+### Apply the test to each clade
 We can then calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 # First define function for getting the slope of a linear model
@@ -186,7 +183,7 @@ obs.slopes <- unlist(lapply(data.clades, GetSlope))
 delta.slopes <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefaction = 5)  # 5 = the lowest n of specimens for a species in our dataset
 ```
 
-### Summarising the results
+### Summarize the results
 We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
 ```{r}
 # Clean up axis labels for plotting
@@ -197,24 +194,19 @@ for(i in 1:length(new.names))
     }
 
 # Some vanity names for plotting
-new.names[1] <- "All 36"
-new.names[2] <- "No Mus 35"
-new.names[3] <- "AOE 27"
-new.names[which(new.names == 11)] <- "Pse. 11"
-new.names[which(new.names == 8)] <- "Rat. 8"
-new.names[25] <- "Not. 4"
+new.names[1] <- "All 37"
+new.names[2] <- "No Mus 36"
+new.names[3] <- "AOE 28"
+new.names[which(new.names == 11)] <- "Pse 11"
+new.names[which(new.names == 8)] <- "Rat 8"
+new.names[25] <- "Not 4"
+new.names <- str_replace(new.names, "_", " ")
 ```
 
-### Plot CI format
+### Test for "significant" delta slopes
+4.5 degrees is an ideal cut-off because absolute value of angle change can only vary from 0-90 therefore a 5% variation from 90 is 90*0.5 = 4.5 degrees.
 ```{r}
-# An empty plot first
-boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
-
-plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
-```
-
-## Test for "significant" delta slopes
-```{r}
+# Define function to test for significant delta slopes
 test.delta.slope <- function(obs.slope, delta.slope, significance) {
     denom <- (1 + obs.slope * (obs.slope + delta.slope))
     angle <- abs(atan(delta.slope/denom) * 180/pi)  # converts angle into deg
@@ -225,28 +217,43 @@ test.delta.slope <- function(obs.slope, delta.slope, significance) {
     }
 }
 
+# Test our dataset
 med.delta.slopes <- unlist(lapply(delta.slopes, median))
 med.delta.slopes[which(is.na(med.delta.slopes))] <- 0  # account for NAs
+is.parallel <- test.delta.slope(obs.slopes, med.delta.slopes, significance = 4.5)
+sum(is.parallel)  # number of clades with less than 4.5 deg angle change
 
-is.parallel <- test.delta.slope(obs.slopes, med.delta.slopes, significance = 4.5) # 4.5 ideal cut-off because 90*0.5 = 4.5, therefore has 5% chance of being off so good null; 9 degrees is not horrible (10% chance)
-sum(is.parallel)
-
-# Plot angle changes in degrees
+# Get angle change values for plotting 
 denom <- (1 + obs.slopes * (obs.slopes + med.delta.slopes))
 angle.changes <- abs(atan(med.delta.slopes/denom) * 180/pi)  # angles in deg
-
-plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade", ylab = "Median delta slope (deg)", pch = 16, ylim = c(0,90))
-abline(h = 4.5, col = "coral4")  # significance level
-text(1, 7, "4.5 degree signifcance level", adj = c(0,0), col = "coral4")
 ```
 
+### Plot the results: Delta slope in CI boxplot and Delta angle as a histogram -- reported as Figure 3
 ```{r}
-boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Clade", names = new.names, las = 2)
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure3_Phylo_Rare.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+
+# 3a) Delta slope as a bloxplot
+par(mar = c(1, 4, 1.5, 1))
+boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = NULL, names = rep("", 73))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
+text(0.5, 15, "a", cex = 2)
+abline(h = 0, col = 'coral4')
+
+# 3b) Delta angle (in degrees) as a histogram
+par(mar = c(5, 4, 0, 1))
+plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade (n species in clade and/or species name)", ylab = "Median delta angle (\u00B0)", pch = 16, ylim = c(0,90), xaxt = 'n')
+axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.8)
+text(0.5, 85, "b", cex = 2)
+abline(h = 4.5, col = "coral4")  # significance level
+text(1, 7, "4.5 degree signifcance level", adj = c(0,0), col = "coral4")
+
+dev.off()
 ```
 
-## Checking the validity of the results above by randomizing species into "fake clades"
+## Check the validity of the results above by randomizing species into "fake clades"
 First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}
 # Getting the same number of "groups" per "clades"
@@ -268,7 +275,7 @@ RareFlakes <- function(n.spp.group, rare.table) {
 }
 ```
 
-### Applying the tests to the "fake clades" (called data.flakes) x 100
+### Apply the tests to the "fake clades" x 100
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
 delta.slopes <- list()
@@ -292,10 +299,15 @@ And then transform these statistics into tables to simply plot them with `boxplo
 # An empty plot first
 fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
-plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T))
+plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE))
 
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = T), ylab = "Delta slope", xlab = "Number of species")
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Number of species")
 
 # Adding the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
+```
+
+### Save intermediate data ADD EVO ALLOMETRY HERE********
+```{r}
+save(fit.static, static.allo.pl, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")
 ```
