@@ -28,7 +28,6 @@ library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
-source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 ```
@@ -129,7 +128,6 @@ e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  #
 pgls.gdf <- geomorph.data.frame(coords = e.mean.shapes, size = e.info.means$MeanCsize, clade = e.info.means$Clade)
 
 fit.pgls <- procD.pgls(coords ~ log(size) * clade, e.aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
-anova(fit.pgls)
 
 # Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
 table1b_n35 <- as.data.frame(round(evo.allo.clade$aov.table, 3))
@@ -236,7 +234,7 @@ layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
 par(mar = c(1, 4, 1.5, 1))
-boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = NULL, names = rep("", 73))  # an empty plot needed first
+boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
 text(0.5, 15, "a", cex = 2)
@@ -278,36 +276,36 @@ RareFlakes <- function(n.spp.group, rare.table) {
 ### Apply the tests to the "fake clades" x 100
 Again, calculate the delta slope (observed - rarefied slope) by using the lowest potential number of specimens in our dataset (5 - see above).
 ```{r}
-delta.slopes <- list()
+f.delta.slopes <- list()
+set.seed(802)  # Go Lake Monsters! 
 for(i in 1:100) {  # Rep 100 times
-        delta.slopes[[i]] <- do.call(cbind, RareFlakes(n.spp.group, rare.table))
+        f.delta.slopes[[i]] <- do.call(cbind, RareFlakes(n.spp.group, rare.table))
 }
-fake.results.table <- do.call(rbind, delta.slopes)  # full matrix of slope values
-colnames(fake.results.table) <- n.spp.group
-```
+fake.results.table <- do.call(rbind, f.delta.slopes)  # full matrix of slope values
+colnames(fake.results.table) <- n.spp.group  # summarize results by clade size
+``` 
 
-### Summarising the results
-We can then summarise these results per clade size (that's already done in this example) and adding the clade names (if they exist):
-```{r}
-# Adding the names to the slopes
-names(delta.slopes) <- n.spp.group
-names(delta.slopes.overall) <- n.spp.group
-```
-
-And then transform these statistics into tables to simply plot them with `boxplot`:
+### Summarize the results -- Supplementary Figure 2
+Transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
+setEPS()
+postscript("../Data/Results/FigureS2_FakeClades.eps")
+
 # An empty plot first
 fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
-plot(NULL, xlim = c(0, length(fake.results.list)), ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE))
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Number of species in fake clade", names = new.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
 
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Number of species")
-
-# Adding the results
+# Add the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
+abline(h = 0, col = "coral4")
+
+dev.off()
 ```
 
-### Save intermediate data ADD EVO ALLOMETRY HERE********
+## Save intermediate data and data that takes a long time to generate
 ```{r}
-save(fit.static, static.allo.pl, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")
+save(fit.static, fit.evo, fit.pgls, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 07
+
+save(count.pw, delta.slopes, angle.changes, f.delta.slopes, fake.results.list, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons, the phylogenetic rarefaction, and the 100 "fake" clades rarefaction
 ```
