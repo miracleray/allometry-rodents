@@ -132,13 +132,9 @@ dev.off()
 ## Figure 4: multi-panel evolutionary allometry and mean shape PCA
 First, set up colors and points by genera and important taxa
 ```{r}
-# Make an Effective Genus column to categorize Mastacomys phylogenetically within Pseudomys
-info.means$EGenus <- info.means$Genus
-info.means$EGenus[which(info.means$Genus == "Mas")] <- "Pse"
-
 # Colors for genera and different points by species within each genus; used for PCA
 col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
-pch.means <- PointOutDiffSpp(info.means)  # pts by unique species in a genus
+pch.means <- PointOutDiffSpp(info.means$EGenus)  # pts by unique species in a genus
 pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 # Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
@@ -149,7 +145,7 @@ pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 ### Run PCA
 ```{r}
-pca.means <- plotTangentSpace(mean.shapes.tree)  # PCA of mean shapes
+pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
 
 # Write x and y labels with proportion of variance for PC1 and PC2
 PCs <- pca.means$pc.summary$importance
@@ -161,27 +157,9 @@ PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 
 ### Generate data for Evolutionary Allometry plot
 ```{r}
-# Run allometry on all 34 species
-evo.procD <- geomorph.data.frame(shape = mean.shapes.tree, size = info.means$MeanCsize, genus = info.means$Genus)
+# Run allometry on all 37 species
+evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
 mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
-```
-
-### Isolate molecular rates used for phylogeny in paper and color-code branches by rates
-```{r}
-annotations <- aus.tree$node.comment
-
-# Use function to strip rates from annotated NEXUS file
-StripAnnotation <- function(input, annotation) {
-        strsplit(strsplit(input, split = annotation)[[1]][2], split = ",")[[1]][1]
-}
-rates <- as.character(lapply(as.list(annotations), StripAnnotation, annotation = ",rate="))
-
-aus.rates <- as.numeric(rates[which(!is.element(relabel.tree$tip.label, concord$tree_not_data))])
-names(aus.rates) <- aus.tree$tip.label
-
-# Plot molecular rate of evolution, light branch = slower; dark =faster
-gray.branches <- phytools.branch.colors(aus.tree, aus.rates, gray)
-gray.branches.10 <- darken(gray.branches, 0.1)  # make white branches visible
 ```
 
 ### Plot and export the multi-panel Figure 3
@@ -192,7 +170,7 @@ ERROR: memory issues when trying to add legend within setEPS. Works when lines 1
 # Find Notomys' color
 Not.col <- col.gen[which(names(col.gen) == "Not")]
 
-# Read in heatmap PNGs created with script 05
+# Read in heatmap PNGs created with script 06
 dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
 lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 

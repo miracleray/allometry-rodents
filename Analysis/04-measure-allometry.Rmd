@@ -1,6 +1,6 @@
 ---
 title: "04-measure-allometry"
-author: "Ariel Marcy"
+author: "Ariel Marcy & Thomas Guillerme"
 date: "2019-01-11"
 output: html_document
 ---
@@ -11,26 +11,42 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Allometry
+This script generates Table 1, Figure 3, supplementary Table S5 and supplementary Figure S2.
+
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
 
-This script generates Figure 3 and Table 1. It also produces supplementary Figure S2. 
+Our analyses here investigate allometry at three levels:
+1) Static (within-species)
+2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors)
+3) Across all possible clades defined by our phylogenetic tree; this analysis was done mostly to ensure that our dataset was large enough to support our conclusions
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-# Install latest `geomorph`
 library("devtools")
-devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE) 
+devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE)  # Install latest `geomorph`
 library(geomorph)
-library(RRPP)  # needed for pairwise comparisons with new `geomorph`
+library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
-load(file = "../Data/Processed/03-graphing-vectors.rda")
 ```
 
-## 1a) Measure static allometry: Homogeneity of Slopes Test by species
-Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
+## 1a) Measure static allometry with an ANCOVA (Procrustes ANOVA) -- reported in Table 1a
+```{r}
+# Run static allometry test with all specimens
+static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
+fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
+
+# Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
+table1a <- as.data.frame(round(fit.static$aov.table, 3))
+table1a[is.na(table1a)] <- ""
+
+write.table(table1a, "../Data/Results/Table1a_ANOVA_spp.csv", sep = ",", col.names = NA)
+```
+
+### 1b) Measure static allometry: Homogeneity of Slopes Test by species
+Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` v3.1.0. 
 ```{r}
 # HOS test defined as a function for conciseness in the next block. Returns pairwise object from RRPP for Homogeneity of Slope comparisons
 TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
@@ -48,14 +64,14 @@ pw.comp <- TestHOS(shape, info$Csize, info$Taxa, lm.fun = procD.lm)
 
 # Count number of significant pairwise comparisons of alloemtric slope
 pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.99)  
-actual.pw.T <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
+actual.pw <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
 
 # Export p-value matrix to Results folder
-write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS_all.csv")
+write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS.csv")
 ```
 
-## 1b) Randomize specimens to get NULL expantancy for pairwise significant results
-We'll do the randomization procedure 100 times. This takes at least 2.5 hours to run.
+### 1c) Randomize specimens to get NULL expantancy for pairwise significant results
+We'll do the randomization procedure 500 times. This takes at least 12 hours to run, so the results are saved in the gdf file in this script.
 ```{r}
 # Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
@@ -73,7 +89,7 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
 # Do this randomization and testing 100 times
 set.seed(42)
 count.pw <- NULL
-for(i in 1:100){   # 100 iterations takes ~2.5 hours
+for(i in 1:500){   # 100 iterations takes ~2.5 hours
         null.pw <- null.pairwise(shape = shape, info)
         count.pw <- c(count.pw, null.pw)
         print(i)  # meter to mullify impatience
@@ -85,7 +101,21 @@ hist((count.pw.1[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwi
 abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
 ```
 
-## 2) Measure Evolutionary Allometry, reported in Table 1
+## 2a) Run evolutionary allometry ANCOVA -- reported in Table 1b (n = 317, clades = 7)
+This analysis is directly comparable to static ANCOVA above since only the grouping variable is changed.
+```{r}
+# Run static allometry test with all specimens
+evo.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, clade = info$Clade)
+fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, print.progress = FALSE)
+
+# Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
+table1b_n317 <- as.data.frame(round(fit.evo$aov.table, 3))
+table1b_n317[is.na(table1b_n317)] <- ""
+
+write.table(table1b_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", col.names = NA)
+```
+
+### 2b) Measure Evolutionary Allometry using only clades that have 2 or more spp -- Supplementary Table S5 (n = 35 species mean shapes, 5 clades)
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
 # Remove clades with only one species (Mus and Pogonomys)
@@ -95,54 +125,16 @@ e.mean.shapes <- mean.shapes[, , -one.spp]  # shape data
 e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  # phylo tree
 
 # Procrustes ANOVA with interaction
-evo.allo.clade.gdf <- geomorph.data.frame(Shape = e.mean.shapes, size = e.info.means$MeanCsize, Clade = factor(e.info.means$Clade))
+pgls.gdf <- geomorph.data.frame(coords = e.mean.shapes, size = e.info.means$MeanCsize, clade = e.info.means$Clade)
 
-evo.allo.clade <- procD.lm(Shape ~log(size) * Clade, iter = 500, data = evo.allo.clade.gdf)
-evo.allo.clade$call
-evo.allo.clade$aov.table
-```
-
-### Do pairwise comparisons to see which phylo groups are significantly different
-```{r}
-pairwise.clade <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
-summary(pairwise.clade, confidence = 0.99, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
-```
-
-## Try evolutionary allometry with individuals instead:
-```{r}
-# Run static allometry test with all specimens
-evo.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, clade = info$Clade)
-fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, print.progress = FALSE)
-
-# See ANOVA
-fit.evo$call
-fit.evo$aov.table
-
-pw.ind.clade <- pairwise(fit.evo, groups = evo.gdf$clade)
-summary(pw.ind.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
-```
-
-### Compare to phylogenetic ANOVA
-```{r}
-pgls.gdf <- geomorph.data.frame(coords = mean.shapes, size = info.means$MeanCsize, clade = info.means$Clade)
-fit.pgls <- procD.pgls(coords ~ log(size) * clade, aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
+fit.pgls <- procD.pgls(coords ~ log(size) * clade, e.aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
 anova(fit.pgls)
-```
 
+# Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
+table1b_n35 <- as.data.frame(round(evo.allo.clade$aov.table, 3))
+table1b_n35[is.na(table1b_n35)] <- ""
 
-##### NEEDS UPDATING
-### Export Tables 1a,b as CSV files
-```{r}
-# Round all values to 3 decimals and remove NAs from the tables
-table1a <- as.data.frame(round(spp.results$aov.table, 3))
-table1a[is.na(table1a)] <- ""
-
-table1b <- as.data.frame(round(evo.allo.gen$aov.table, 3))
-table1b[is.na(table1b)] <- ""
-
-# Export
-write.table(table1a, "../Data/Results/Table1a_species_ANOVA.csv", sep = ",", col.names = NA)
-write.table(table1b, "../Data/Results/Table1b_genus_ANOVA.csv", sep = ",", col.names = NA)
+write.table(table1b_n35, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
 ```
 
 ### Save intermediate data ADD EVO ALLOMETRY HERE********
@@ -306,74 +298,4 @@ boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.result
 
 # Adding the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
-```
-
-
-##### Recycling bin
-### Old boxplot format for real clade data
-And then transform these statistics into tables to simply plot them with `boxplot`:
-```{r, fig.width = 12, fig.height = 12}
-boxplot(do.call(cbind, delta.slopes),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade", las = 2)
-abline(h = 0, lty = 3)
-```
-
-### We can also compare them to the slope of the the full dataset:
-```{r}
-# Getting the rarefied statistics for each clade
-delta.slopes.overall <- lapply(data.flakes, rarefy.stat, stat.fun = GetSlope, rarefaction = 5, observed = GetSlope(rare.table[, c(2, 3)]))
-
-names(delta.slopes.overall) <- unlist(lapply(clades, paste, collapse = "+"))
-
-boxplot(do.call(cbind, delta.slopes.overall),
-        ylab = expression(paste(Delta, "slope")), xlab = "Clade",
-        main = "Slope difference for each clade (compared to the whole dataset)", las = 2)
-abline(h = 0, lty = 3)  # since observered minus expected should be 0
-```
-
-
-```{r}
-test.delta.slope <- function(slope, significance) {
-    angle <- abs(atan(slope) * 180/pi)  # converts angle into degrees
-    if(!missing(significance)) {
-        return(ifelse(angle < significance, TRUE, FALSE))  # FALSE = failed the signifance level
-    } else {
-        return(angle)
-    }
-}
-```
-
-## Do same analysis but using RRPP's function lm.rrpp
-```{r}
-spp.rdf <- rrpp.data.frame(coords = two.d.array(shape.HOS), size = info.HOS$Csize, spp = info.HOS$Taxa)
-
-#spp.rdf <- rrpp.data.frame(coords = two.d.array(shape), size = info$Csize, spp = info$Taxa)
-
-# Models
-fit.unique.2 <- lm.rrpp(coords ~ log(size) * spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # unique allometries by spp
-fit.common.2 <- lm.rrpp(coords ~ log(size) + spp, iter = 500, data = spp.rdf, RRPP = TRUE, print.progress = FALSE)  # common allometries across spp
-
-pw.comp.2 <- pairwise(fit.unique.2, fit.common.2, groups = spp.rdf$spp, print.progress = FALSE)
-
-pw.summary.2 <- summary.pairwise(pw.comp.2, test.type = "VC", angle.type = "deg", confidence = 0.95, show.vectors = TRUE)  
-actual.pw.2 <- length(which(pw.summary.2$pairwise.tables$P < 0.01))
-
-```
-
-Isolate only those species with at least 8 specimens. This leaves our dataset with 31 species.
-```{r}
-spec.counts <- as.data.frame(table(info$Taxa))
-to.remove <- spec.counts[which(spec.counts$Freq <= 7), ]
-species.rm <- as.vector(to.remove$Var1)
-
-# For loop to take out these specimens
-dataset.rm <- NULL  # initiate blank data frame
-for(n in 1:dim(to.remove)[1]) {
-        dataset.rm <- c(dataset.rm, which(info$Taxa == species.rm[n]))
-}
-
-# Remove species from:
-info.HOS <- info[c(-dataset.rm), ]  # Metadata
-shape.HOS <- shape[, , c(-sort(dataset.rm))]  # Shape dataset
 ```
