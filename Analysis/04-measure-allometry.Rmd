@@ -13,18 +13,16 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 # Allometry
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
 
-This script generates Figure 1 and data for Table 1a. 
-
-It also produces supplementary Figures TK 
+This script generates Figure 3 and Table 1. It also produces supplementary Figure S2. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
 # Install latest `geomorph`
 library("devtools")
 devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE) 
-library(landvR)
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph`
+library(landvR)  # must be version 0.4 or greater for rarefaction functions
 source("../Functions/utilities.R")  # loads custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
@@ -85,73 +83,6 @@ for(i in 1:100){   # 100 iterations takes ~2.5 hours
 # Counts are divided by 2 because pairwise table repeats each comparison
 hist((count.pw.1[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
 abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
-```
-
-## 1c) Visualize Static Allometry: Predicted Value
-In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape.
-```{r}
-# Run static allometry test with all specimens
-static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
-fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
-
-# See ANOVA
-fit.static$call
-fit.static$aov.table
-
-# Save these values for plotting
-static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")
-static.allo.pl <- plotAllometry(fit.static, size = static.gdf$size, method = "PredLine")
-
-# Find the mean point for each static allometry
-sa.mean.size <- aggregate(static.allo.rs$size.var, list(Taxa = info$Taxa), mean)
-sa.mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
-```
-
-### Plot/export static and evolutionary allometry multipanel Figure TK
-Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression lines for each species to compare with the evolutionary allometry of the entire group. 
-```{r}
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure2_Static_Evo_Allo.eps")
-layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
-
-# Plot of all data points with evolutionary allometry
-par(mar = c(1, 4, 1.5, 0))
-plot(fit.static,
-     type = "regression",
-     reg.type = "RegScore",
-     predictor = log(static.gdf$size),
-     xlim = c(4.7, 6.4),
-     col = sp.col.gen, 
-     pch = pch.spp,
-     bg = sp.col.gen,
-     main = "Static and evolutionary allometry",
-     xlab = NA,
-     ylab = "Shape (Regression Score)",
-     bty = "n")
-#text(4.7, 0.05, "a", cex = 2)
-abline(lm(sa.mean.shape$V1 ~ log(sa.mean.size$x)), col = "dark grey", lwd = 2)  # plots evolutionary allometry
-text(5.5, -0.04, paste("Rsq of log(size) = ", round(fit.static$aov.table$Rsq[1], 2)), cex = 1.1, col = "black")
-
-# Species Legend
-legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
-
-# Plot of static allometry with evolutionary allometry
-par(mar = c(5, 4, 1.5, 0))
-plot(fit.static,
-     type = "regression",
-     reg.type = "PredLine",
-     predictor = log(static.gdf$size),
-     xlim = c(4.7, 6.4),
-     col = sp.col.gen, 
-     pch = pch.spp,
-     bg = sp.col.gen,
-     xlab = "Log(centroid size)",
-     ylab = "Shape (Predicted Value)",
-     bty = "n")
-#text(4.7, 0.05, "b", cex = 2)
-text(5.6, -0.08, paste("Rsq of log(size):species = ", round(fit.static$aov.table$Rsq[3], 2)), cex = 1.1, col = "black")
-
-dev.off()
 ```
 
 ## 2) Measure Evolutionary Allometry, reported in Table 1
