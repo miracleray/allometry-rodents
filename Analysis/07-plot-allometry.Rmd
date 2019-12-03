@@ -11,28 +11,22 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Visualize allometry
-This script generates Figure 1, the phylogeny colored by clade and centroid size; Figure 2, the static and common allometry plots; and Figure 4, 
+This script generates Figure 1, the phylogeny colored by clade and centroid size; Figure 2, the static and common allometry plots; and Figure 4, which shows how allometry is associated with a CREA* pattern using a PCA and landmark heatplots. 
 
-
-PC1 is highly correlated allometric shape. 
-
+*CREA = Craniofacial Evolutionary Allometry (Cardini & Polly 2013): larger individuals have a longer snout and smaller relative braincase.
 
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
-library(stringr)
-#library(ape)  # needed to work with phylogenies
-library(geiger)  # needed to work with phylogenies
-#library(phytools)  # needed to work with phylogenies
-#library(data.table)
+library(geiger)  # needed to work with phylogeny
 library(geomorph)
 library(plotrix)  # needed to draw ellipses
-#library(landvR)  # needed for rarefaction along the tree; must be v >= 0.4
+library(png)
+library(stringr)
 load(file = "../Data/Processed/03-main-data.rda")
-load(file = "../Data/Processed/03-graphing-vectors.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
+load(file = "../Data/Processed/04-allometry-data.rda")
 source("../Functions/utilities.R")  # custom functions
-#source("../Functions/plotGMPhyloMorphoSpace_plotmod.R")  # modified geomorph function
-#source("../Functions/phytools.branch.colors.R")  # modified phytools function
 ```
 
 ## Figure 1: Phylogeny with centroid size
@@ -67,17 +61,8 @@ dev.off()
 ```
 
 ## Figure 2: Static and common allometric slopes
-In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape.
+In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape. All static alloemtries can be compared to a common evolutionary allometry using the mean point for each static allometry:
 ```{r}
-# Run static allometry
-static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
-fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
-
-# Save these values for plotting
-static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")
-static.allo.pl <- plotAllometry(fit.static, size = static.gdf$size, method = "PredLine")
-
-# Find the mean point for each static allometry
 sa.mean.size <- aggregate(static.allo.rs$size.var, list(Taxa = info$Taxa), mean)
 sa.mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
 ```
@@ -94,7 +79,7 @@ par(mar = c(1, 4, 1.5, 0))
 plot(fit.static,
      type = "regression",
      reg.type = "RegScore",
-     predictor = log(static.gdf$size),
+     predictor = log(info$Csize),
      xlim = c(4.7, 6.4),
      col = sp.col.gen, 
      pch = pch.spp,
@@ -115,7 +100,7 @@ par(mar = c(5, 4, 1.5, 0))
 plot(fit.static,
      type = "regression",
      reg.type = "PredLine",
-     predictor = log(static.gdf$size),
+     predictor = log(info$Csize),
      xlim = c(4.7, 6.4),
      col = sp.col.gen, 
      pch = pch.spp,
@@ -139,7 +124,7 @@ pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 # Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
 pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
-pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 11  # star
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 10  # quartered circle
 pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 ```
 
@@ -155,57 +140,51 @@ PC2.per <- round(PCs[2, 2] * 100, digits = 1)
 PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 ```
 
-### Generate data for Evolutionary Allometry plot
-```{r}
-# Run allometry on all 37 species
-evo.procD <- geomorph.data.frame(shape = mean.shapes, size = info.means$MeanCsize, genus = info.means$Genus)
-mean.allo <- procD.allometry(shape ~ log(size), data = evo.procD)
-```
-
-### Plot and export the multi-panel Figure 3
+## Plot and export the multi-panel Figure 4
 Evolutionary allometry plot on top, PCA in the middle, two heatmaps on the bottom
 
-ERROR: memory issues when trying to add legend within setEPS. Works when lines 107-177 are run through the console, plot is "zoomed" from RStudio, and then screenshot from that window
+ERROR: memory issues when trying to add legend within setEPS. Works when lines inbetween `postscript()` and `dev.off()` are run through the console, plot is "zoomed" from RStudio, and then screenshot from that window
 ```{r}
-# Find Notomys' color
-Not.col <- col.gen[which(names(col.gen) == "Not")]
-
 # Read in heatmap PNGs created with script 06
 dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
 lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_EvoAllo_PCA_Heatmaps.eps")
+setEPS() 
+postscript("../Data/Results/Figure4_Allo_Shape.eps")
 mat <- matrix(c(1,1,2,2,3,4), 3, 2, byrow = TRUE)  # 3 rows, 2 columns
 layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))  
 
 # 1) Evolutionary Allometry plot
 par(mar = c(4, 4, 1, 1))  # sets the margins
 plot(x = log(info.means$MeanCsize),
-     y = mean.allo$Reg.proj,
+     y = evo.allo.rs$RegScore,
      xlim = c(4.75, 6),
      col = col.means, 
      pch = pch.evo.allo,
      xlab = "Log centroid size", 
      ylab = "Shape",
      bty = "n")
-text(4.75, 0.1, "a", cex = 2)
+text(4.75, 0.08, "a", cex = 2)
 
-legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 4, bty = "n")
+legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 3, bty = "n")
 
-abline(lm(mean.allo$Reg.proj ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
+abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
-text(5.77, 0.11, "Frugivores", col = "dark grey")
-draw.ellipse(5.92, .115, .08, .005, angle = 1, border = "dark grey")
+# Frugivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_gou")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")], pos = 2, "Frugivores     ", col = "dark grey")
+draw.ellipse(5.913, .065, .06, .005, angle = -2, border = "dark grey")
 
-text(5.35, 0.08, "Folivores", col = "dark grey")
-draw.ellipse(5.41, .047, .11, .02, angle = 5, border = "dark grey")
+# Folivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "P_ora")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")], "Folivores    ", pos = 2, col = "dark grey")
+draw.ellipse(5.4, .028, 0.09, .02, angle = 1, border = "dark grey")
 
-text(5.8, 0.066, "Carnivore", col = "dark grey")
-text(5.05, 0.015, "Carnivore", col = "dark grey")
+# Carnivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
 
-text(5.3, -0.055, "Hopping Notomys", col = Not.col)
-draw.ellipse(5.12, -0.055, .075, .012, angle = 8, border = "dark grey")
+# Hopping Notomys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "       Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
+draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
 
 # 2) PCA
 par(mar=c(4, 4, 1, 1))  # sets the margins
@@ -227,7 +206,7 @@ text(.045, 0.065, "Folivores", col = "dark grey")
 draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
 text(.045, -0.053, "Carnivores", col = "dark grey")
 draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
-text(-.067, 0.034, "Notomys", col = Not.col)
+text(-.067, 0.027, "Notomys", col = Not.col)
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
 # 3) Plot dorsal view

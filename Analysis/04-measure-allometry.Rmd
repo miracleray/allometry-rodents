@@ -10,10 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
-# Allometry
+# Quantifying differences in allometry
 This script generates Table 1, Figure 3, supplementary Table S5 and supplementary Figure S2.
 
-Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample.
+Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample, relative to phylogenetic association.
 
 Our analyses here investigate allometry at three levels:
 1) Static (within-species)
@@ -30,6 +30,8 @@ library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
+
+load(file = "../Data/Processed/04-allometry-data.rda")
 ```
 
 ## 1a) Measure static allometry with an ANCOVA (Procrustes ANOVA) -- reported in Table 1a
@@ -118,22 +120,19 @@ write.table(table1b_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", 
 ### 2b) Measure Evolutionary Allometry using only clades that have 2 or more spp -- Supplementary Table S5 (n = 35 species mean shapes, 5 clades)
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
-# Remove clades with only one species (Mus and Pogonomys)
-one.spp <- c(which(info.means$Clade == "Mus"), which(info.means$Clade == "Pogonomys"))  # index for removal
-e.info.means <- info.means[-one.spp, ]  # metadata
-e.mean.shapes <- mean.shapes[, , -one.spp]  # shape data
-e.aus.tree <- drop.tip(aus.tree, c("Mus_musculus", "Pogonomys_mollipilosis"))  # phylo tree
-
 # Procrustes ANOVA with interaction
-pgls.gdf <- geomorph.data.frame(coords = e.mean.shapes, size = e.info.means$MeanCsize, clade = e.info.means$Clade)
+pgls.gdf <- geomorph.data.frame(coords = mean.shapes, size = info.means$MeanCsize, clade = info.means$Clade)
 
-fit.pgls <- procD.pgls(coords ~ log(size) * clade, e.aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
+fit.pgls <- procD.pgls(coords ~ log(size) * clade, aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
 
 # Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
-table1b_n35 <- as.data.frame(round(evo.allo.clade$aov.table, 3))
-table1b_n35[is.na(table1b_n35)] <- ""
+table1b_n37 <- as.data.frame(round(fit.pgls$aov.table, 3))
+table1b_n37[is.na(table1b_n37)] <- ""
 
-write.table(table1b_n35, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
+write.table(table1b_n37, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
+
+# Find Reg Score values for plotting purposes later on (script 07)
+evo.allo.rs <- plotAllometry(fit.pgls, size = info.means$MeanCsize, method = "RegScore")
 ```
 
 ## 3) Measure allometric slope change using phylogenetic rarefaction
@@ -305,7 +304,7 @@ dev.off()
 
 ## Save intermediate data and data that takes a long time to generate
 ```{r}
-save(fit.static, fit.evo, fit.pgls, static.allo.rs, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 07
+save(fit.static, fit.evo, fit.pgls, static.allo.rs, evo.allo.rs, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 07
 
 save(count.pw, delta.slopes, angle.changes, f.delta.slopes, fake.results.list, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons, the phylogenetic rarefaction, and the 100 "fake" clades rarefaction
 ```
