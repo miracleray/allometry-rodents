@@ -1,5 +1,5 @@
 ---
-title: "07-find-evolutionary-rates"
+title: "05-measure-evo-rates"
 author: "Ariel Marcy"
 date: "2/4/2019"
 output: html_document
@@ -38,7 +38,6 @@ aus.dtt <- dtt(aus.tree, mean.shapes.2D, nsim = 500, plot = TRUE)
 ```
 
 Next, we can compare evolutionary rates:
-
 
 ## Rates calculated all together
 ```{r}

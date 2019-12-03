@@ -210,5 +210,5 @@ save(info, shape, file = "../Data/Processed/03-main-data.rda")
 save(genera.phylo, col.phylo, col.gen, col.unique.spp, sp.col.gen, phylo.names, pch.spp, col.unique.spp, pch.unique.spp, file = "../Data/Processed/03-graphing-vectors.rda")
 
 # Data for phylogenetic analyses, including the tree as well as metadata and shape coordinates for mean specimens
-save(info.means, mean.shapes, aus.tree, file = "../Data/Processed/03-tree-data.rda")  # add concord, relabel.tree?
+save(info.means, mean.shapes, aus.tree, file = "../Data/Processed/03-tree-data.rda")
 ```

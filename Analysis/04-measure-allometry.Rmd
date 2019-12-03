@@ -34,24 +34,23 @@ load(file = "../Data/Processed/03-graphing-vectors.rda")
 ## 1a) Measure static allometry: Homogeneity of Slopes Test by species
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` 3.1.0. 
 ```{r}
-# HOS test defined as a function for conciseness in the next block. Returns pairwise object from RRPP
+# HOS test defined as a function for conciseness in the next block. Returns pairwise object from RRPP for Homogeneity of Slope comparisons
 TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         # Data frame
         spp.gdf <- geomorph.data.frame(coords = shape, size = size, spp = group)
         # Models
-        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # unique allometries by spp
-        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, RRPP = FALSE, print.progress = FALSE)  # common allometries across spp (NULL HYPOTHESIS)
-        #anova(fit.unique, fit.common, print.progress = TRUE)
+        fit.unique <- lm.fun(coords ~ log(size) * spp, iter = iter, data = spp.gdf, RRPP = FALSE)  # unique allometries by spp
+        fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, RRPP = FALSE)  # common allometries across spp (NULL HYPOTHESIS)
 
-        return(pairwise(fit.unique, fit.common, groups = spp.gdf$spp, print.progress = FALSE))  # includes Homogeneity of Slope pairwise comparisons
+        return(pairwise(fit.unique, fit.common, groups = spp.gdf$spp))
 }
 
 # Run with HOS dataset sampled above
 pw.comp <- TestHOS(shape, info$Csize, info$Taxa, lm.fun = procD.lm) 
 
 # Count number of significant pairwise comparisons of alloemtric slope
-pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.99, show.vectors = FALSE)  
-actual.pw <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
+pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", confidence = 0.99)  
+actual.pw.T <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
 
 # Export p-value matrix to Results folder
 write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS_all.csv")
@@ -83,7 +82,8 @@ for(i in 1:100){   # 100 iterations takes ~2.5 hours
 }
 
 # Visualize with histogram
-hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
+# Counts are divided by 2 because pairwise table repeats each comparison
+hist((count.pw.1[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
 abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
 ```
 
@@ -174,7 +174,7 @@ evo.allo.clade$aov.table
 ### Do pairwise comparisons to see which phylo groups are significantly different
 ```{r}
 pairwise.clade <- pairwise(evo.allo.clade, groups = evo.allo.clade.gdf$Clade)
-summary(pairwise.clade, confidence = 0.95, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
+summary(pairwise.clade, confidence = 0.99, test.type = "VC", angle.type = "deg")  # correlation between mean vectors (angles in degrees)
 ```
 
 ## Try evolutionary allometry with individuals instead:
