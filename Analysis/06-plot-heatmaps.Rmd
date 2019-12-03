@@ -1,6 +1,6 @@
 ---
-title: "05-plot-heatmaps"
-author: "Ariel Marcy"
+title: "06-plot-heatmaps"
+author: "Thomas Guillerme & Ariel Marcy"
 date: "3/11/2019"
 output: html_document
 ---
@@ -11,7 +11,9 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Plot PC1 Min/Max
-To make the landmark variation heatmaps, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along PC1. 
+Generates the heatmap images used to visualize allometric shape variation in Figure 4c,d (code to create this Figure in script 07-plot-allometry.Rmd).
+
+To make the landmark variation heatmaps, we use Dr Thomas Guillerme's new package, `landvR` to see how specific landmarks vary along PC1.
 
 ```{r message = FALSE}
 library(png)  # needed to work with screenshots
@@ -56,22 +58,21 @@ hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 
 ## Plot the range of variation along PC1 using a heat color scheme
 `3d` commands allow precise control of 3D visualization to get dorsal and lateral views
-
 ```{r}
 # Dorsal view
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
 view3d(phi = 0)  # flip cranium
 rgl.snapshot("../Data/Processed/PC1heatmap_dor.png")  # save screenshot for multipanel plot
 
 # Lateral view
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = F)
+PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
 view3d(phi = 90)
 rgl.snapshot("../Data/Processed/PC1heatmap_lat.png")
 ```
 
-### Prep images for multi-panel figure 3 (created with script 06)
+### Prep images for multi-panel Figure 4 (created with script 07)
 This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)

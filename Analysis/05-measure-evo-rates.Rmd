@@ -11,9 +11,9 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Evolutionary rates
-Evolutionary studies must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
+Generates Table S5: Morphological rates of evolution. 
 
-Generates Table S5: Morphological rates of evolution 
+Studies of morphological rates of evolution must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
