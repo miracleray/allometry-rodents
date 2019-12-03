@@ -13,36 +13,31 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 # Evolutionary rates
 Evolutionary studies must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
+Generates Table S5: Morphological rates of evolution 
+
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(geomorph)
-library(geiger)
-library(stringr)
-#library(RColorBrewer)
-library(phylotate)
-library(phytools)
-source("../Functions/utilities.R")  # loads custom functions
+library(geiger)  # for dtt test
 load(file = "../Data/Processed/03-main-data.rda")
-load(file = "../Data/Processed/03-graphing-vectors.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 ```
 
 ## Compare evolutionary rates
 Given the New World monkey papers (Chervaud & Marriog 2005, 2009), we would expect specialists like carnivores to have the slowest rates of evolution and rodents that evolve along the allometric line to have the greatest rates of evolution. 
 
-First, we need to make sure the data meets the Brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
+First, we need to see how well the data meets the Brownian motion assumption required by the Kmult method, based on Blomberg's K (Blomberg et al. 2003), 
 ```{r} 
 # Plot disparity through time
 mean.shapes.2D <- two.d.array(mean.shapes)
 aus.dtt <- dtt(aus.tree, mean.shapes.2D, nsim = 500, plot = TRUE)
 ```
 
-Next, we can compare evolutionary rates:
-
-## Rates calculated all together
+## Morphological rates calculated and compared to each other
+Groups are defined as non-specialists (1) and distinct specialists in diet and/or locomotion (2-5)
 ```{r}
 # Define groups; 1 = those on allometric line / average body size 
-groups <- rep(1, dim(info.means)[1])
+groups <- rep(1, dim(info.means)[1])  # 1 is default
 
 is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou"))
 groups[is.frug] <- 2  # Define frugivores as 2
@@ -53,133 +48,37 @@ groups[is.fol] <- 3 # Define folivores as 3
 is.carn <- c(which(info.means$Taxa == "H_chr", info.means$Taxa == "X_myo"))
 groups[is.carn] <- 4 # Define carnivores as 4
 
-groups[which(info.means$Genus == "Not")] <- 5  # Define Notomys as 5
+groups[which(info.means$Genus == "Not")] <- 5  # Define hopping Notomys as 5
 
 # Run analysis
 names(groups) <- info.means$FullName
 specialist.test <- compare.evol.rates(mean.shapes, aus.tree, groups, iter = 500, method = "simulation")
-specialist.test$pairwise.pvalue
-specialist.test$sigma.d.gp.ratio
-
-p.adjust(specialist.test$pairwise.pvalue, method = "bonferroni")
 ```
 
-### Adjust p-values for multiple comparisons
+## Create and export Table S
 ```{r}
-p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "bonferroni"), 3)
-```
+# Evolutionary rates to 3 sig figs
+rate.table <- as.matrix(round(specialist.test$sigma.d.gp.ratio, 2))
+names <- c("Non-specialist", "Frugivore", "Folivore", "Carnivore", "Hopping")
+colnames(rate.table) <- names
+row.names(rate.table) <- names
 
-## Create and export Table 2
-```{r}
-# Evolutionary rate ratio to 1 decimal place
-FindRateRatio <- function(rate.test) {
-        round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
-}
-ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(carn.test), FindRateRatio(not.test)), sep = "")
+# Put p values in lower triangle
+p.adjusted <- round(p.adjust(specialist.test$pairwise.pvalue, method = "bonferroni"), 3)
+rate.table[2, 1] <- p.adjusted[1]
+rate.table[3, 1] <- p.adjusted[2]
+rate.table[4, 1] <- p.adjusted[3]
+rate.table[5, 1] <- p.adjusted[4]
+rate.table[3, 2] <- p.adjusted[5]
+rate.table[4, 2] <- p.adjusted[6]
+rate.table[5, 2] <- p.adjusted[7]
+rate.table[4, 3] <- p.adjusted[8]
+rate.table[5, 3] <- p.adjusted[9]
+rate.table[5, 4] <- p.adjusted[10]
 
-# Expected rate, hard coded from hypotheses
-# Order is: frugivores, folivores, carnivores, Notomys
-expected <- c("Slower", "Slower", "Slower", "Slower")
+# Remove zeros
+for(i in 1:dim(rate.table)[1]) rate.table[i, i] <- "-"
 
-# Rate difference found using custom function FindRateDiff
-found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(carn.test), FindRateDiff(not.test))
-found[which(p.values.bon > 0.05)] <- "No difference"
-
-# Combine and name rows and columns
-table2 <- cbind(ratio, p.values.bon, expected, found)
-colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
-row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys")
-
-# Export Table 2
-write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
-```
-
-
-
-
-
-
-
-
-
-
-
-### RECYCLE BIN
-**Large frugivores vs others**
-```{r}
-# Only large frugivores U. caudimaculatus and M. gouldii
-U.cau <- which(info.means.tree$Taxa == "U_cau")
-M.gou <- which(info.means.tree$Taxa == "M_gou")
-is.frug <- c(U.cau, M.gou)
-frug.grps <- rep(2, dim(info.means.tree)[1])
-frug.grps[is.frug] <- 1
-
-names(frug.grps) <- info.means.tree$FullName
-frug.test <- compare.evol.rates(mean.shapes.tree, aus.tree, frug.grps, iter = 999, method = "permutation")
-summary(frug.test)
-```
-
-**Folivores vs other species**
-```{r}
-# Only specialized folivores P. oralis, M. fuscus, and L. conditor 
-P.ora <- which(info.means.tree$Taxa == "P_ora")
-M.fus <- which(info.means.tree$Taxa == "M_fus")
-L.con <- which(info.means.tree$Taxa == "L_con")
-is.sp.fol <- c(P.ora, M.fus, L.con)
-fol.grps <- rep(2, dim(info.means.tree)[1])
-fol.grps[is.sp.fol] <- 1  # species of interest is always 1
-
-names(fol.grps) <- info.means.tree$FullName
-fol.test <- compare.evol.rates(mean.shapes.tree, aus.tree, fol.grps, iter = 999, method = "permutation")
-summary(fol.test)
-```
-
-**Carnivores vs non-carnivores**
-```{r}
-is.carnivore <- as.numeric(info.means.tree$Feeding != "Carnivorous") + 1  # carnivores are 1 and all other species are 2
-names(is.carnivore) <- info.means.tree$FullName
-carn.test <- compare.evol.rates(mean.shapes.tree, aus.tree, is.carnivore, iter = 999, method = "permutation")
-summary(carn.test)
-```
-
-**_Notomys_ versus other species**
-```{r}
-# Set up grouping factor
-gp.notomys <- rep(2, dim(info.means.tree)[1])  # set "other" as 2
-gp.notomys[which(info.means.tree$Genus == "Not")] <- 1  # set Notomys
-names(gp.notomys) <- info.means.tree$FullName  # required to run analysis
-
-# Run analysis
-not.test <- compare.evol.rates(mean.shapes.tree, aus.tree, gp.notomys, iter = 999, method = "permutation")
-summary(not.test)
-```
-
-### Adjust p-values for multiple comparisons
-```{r}
-p.values.bon <- round(p.adjust(c(frug.test$P.value, fol.test$P.value, carn.test$P.value, not.test$P.value), method = "bonferroni"), 3)
-```
-
-## Create and export Table 2
-```{r}
-# Evolutionary rate ratio to 1 decimal place
-FindRateRatio <- function(rate.test) {
-        round(rate.test$sigma.d.gp[1]/rate.test$sigma.d.gp[2], 1)
-}
-ratio <- paste("1:", c(FindRateRatio(frug.test), FindRateRatio(fol.test), FindRateRatio(carn.test), FindRateRatio(not.test)), sep = "")
-
-# Expected rate, hard coded from hypotheses
-# Order is: frugivores, folivores, carnivores, Notomys
-expected <- c("Slower", "Slower", "Slower", "Slower")
-
-# Rate difference found using custom function FindRateDiff
-found <- c(FindRateDiff(frug.test), FindRateDiff(fol.test), FindRateDiff(carn.test), FindRateDiff(not.test))
-found[which(p.values.bon > 0.05)] <- "No difference"
-
-# Combine and name rows and columns
-table2 <- cbind(ratio, p.values.bon, expected, found)
-colnames(table2) <- c("Ratio", "P Value", "Expected Rate", "Rate Found")
-row.names(table2) <- c("Frugivores", "Folivores", "Carnivores", "Hopping Notomys")
-
-# Export Table 2
-write.table(table2, "../Data/Results/Table2_EvoRates.csv", sep = ",", col.names = NA)
+# Export Table S5
+write.table(rate.table, "../Data/Results/TableS5_EvoRates.csv", sep = ",", col.names = NA)
 ```
