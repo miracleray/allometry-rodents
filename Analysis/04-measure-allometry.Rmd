@@ -28,6 +28,7 @@ library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
+library(ape)  # phylogeny
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 
@@ -136,6 +137,45 @@ write.table(table1b_n37, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", co
 
 # Find Reg Score values for plotting purposes later on (script 07)
 evo.allo.rs <- plotAllometry(fit.pgls, size = info.means$MeanCsize, method = "RegScore")
+```
+
+### 2c) Test for power issue with species rich Pseudomys division
+Rarefaction test in which 5 species from the Pseudomys division were randomly selected and the procD.pgls analysis re-run 100 times. 
+```{r}
+Pse.div <- info.means$FullName[which(info.means$Clade == "Pseudomys")]
+count.R2 <- NULL
+count.R2.p <- NULL
+
+for (i in 1:100) {
+    # Rarefy Pseudomys clade & cut down datsets accordingly
+    not.in.sample <- sample(Pse.div, length(Pse.div) - 10)  # rarefy to 10 spp
+    not.index <- match(not.in.sample, info.means$FullName)
+    rare.info.means <- info.means[-not.index, ]  # metadata
+    rare.mean.shapes <- mean.shapes[, , -not.index]  # shape data
+    rare.tree <- drop.tip(aus.tree, not.in.sample)  # phylogeny
+    
+    # Run pgls 
+    pgls.gdf.r <- geomorph.data.frame(coords = rare.mean.shapes, size = rare.info.means$MeanCsize, clade = rare.info.means$Clade)
+    
+    fit.pgls.r <- procD.pgls(coords ~ log(size) * clade, rare.tree, iter = 500, data = pgls.gdf.r, print.progress = FALSE)
+    
+    # Save R2 of interaction factor (3rd value)
+    count.R2 <- c(count.R2, fit.pgls.r$aov.table$Rsq[3])
+    count.R2.p <- c(count.R2.p, fit.pgls.r$aov.table$`Pr(>F)`[3])
+    print(paste(i, fit.pgls.r$aov.table$Rsq[3], fit.pgls.r$aov.table$`Pr(>F)`[3]))  # meter to mullify impatience
+}
+```
+
+### Visualized with a histogram 
+Histogram of R2 result for the interaction factor (the most interesting result and only comparable statistic to other Procrustes ANOVAs). 
+```{r}
+# Rsq value
+hist(count.R2[1:length(count.R2)], xlim = c(fit.pgls$aov.table$Rsq[3], range(count.R2)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade Rsq value")
+abline(v = fit.pgls$aov.table$Rsq[3], lwd = 3, col = "red")  # compare rarified results to actual result above
+
+# P value
+hist(count.R2.p[1:length(count.R2.p)], xlim = c(fit.pgls$aov.table$`Pr(>F)`[3], range(count.R2.p)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade p value")
+abline(v = fit.pgls$aov.table$`Pr(>F)`[3], lwd = 3, col = "red")  # compare rarified results to actual result above
 ```
 
 ## 3) Measure allometric slope change using phylogenetic rarefaction
