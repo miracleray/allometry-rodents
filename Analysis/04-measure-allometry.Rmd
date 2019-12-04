@@ -31,7 +31,8 @@ library(stringr)
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 
-load(file = "../Data/Processed/04-allometry-data.rda")
+# optional once long analyses have been run
+load(file = "../Data/Processed/04-randomization-results.rda")  
 ```
 
 ## 1a) Measure static allometry with an ANCOVA (Procrustes ANOVA) -- reported in Table 1a
@@ -96,10 +97,12 @@ for(i in 1:500){   # 100 iterations takes ~2.5 hours
         count.pw <- c(count.pw, null.pw)
         print(i)  # meter to mullify impatience
 }
+```
 
-# Visualize with histogram
+### Visualize with histogram
+```{r}
 # Counts are divided by 2 because pairwise table repeats each comparison
-hist((count.pw.1[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
+hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
 abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
 ```
 
@@ -117,7 +120,7 @@ table1b_n317[is.na(table1b_n317)] <- ""
 write.table(table1b_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", col.names = NA)
 ```
 
-### 2b) Measure Evolutionary Allometry using only clades that have 2 or more spp -- Supplementary Table S5 (n = 35 species mean shapes, 5 clades)
+### 2b) Measure Evolutionary Allometry using clades and phylogeny -- Supplementary Table S5 (n = 37 species mean shapes, 7 clades)
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
 # Procrustes ANOVA with interaction
