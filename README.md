@@ -41,7 +41,7 @@ The first three scripts prepare the data for analysis and plotting, the intermed
 The next two scripts produce the main results:
 
 * **04-measure-allometry.Rmd** Tests static and evolutionary allometry with `geomorph`'s `procD.lm`'s ANOVA function. `RRPP`'s `pairwise` functiond. This includes Procrustes ANOVAs and pairwise homogeneity of slopes (HOS) tests. Tests whether the HOS result is distinct from null expectancy with a randomization procedure. Uses phylogenetic rarefaction to tests for impact of species-level sample sizes with rarifaction across the phylogeny using `landvR`.  **Generates Table 1, Figure 3, Table S4, and Figure S2**.
-* **05-measure-evo-rates.Rmd** Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table S5**.
+* **05-measure-evo-rates.Rmd** Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table S6**.
 
 The next two scripts produce the main multi-panel figures: 
 
