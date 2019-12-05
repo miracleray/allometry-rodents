@@ -29,10 +29,12 @@ library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
 library(ape)  # phylogeny
+source("../Functions/utilities.R")  # custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 
-# optional once long analyses have been run
+# Optional once long analyses have been run
+load(file = "../Data/Processed/04-allometry-data.rda")
 load(file = "../Data/Processed/04-randomization-results.rda")  
 ```
 
@@ -296,7 +298,7 @@ plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade (n species in c
 axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.8)
 text(0.5, 85, "b", cex = 2)
 abline(h = 4.5, col = "coral4")  # significance level
-text(1, 7, "4.5 degree signifcance level", adj = c(0,0), col = "coral4")
+text(1, 7, "4.5 degree significance level", adj = c(0,0), col = "coral4")
 
 dev.off()
 ```
