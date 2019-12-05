@@ -281,7 +281,7 @@ angle.changes <- abs(atan(med.delta.slopes/denom) * 180/pi)  # angles in deg
 ### Plot the results: Delta slope in CI boxplot and Delta angle as a histogram -- reported as Figure 3
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_Phylo_Rare_pink.eps")
+postscript("../Data/Results/Figure3_Phylo_Rare.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
@@ -289,14 +289,14 @@ par(mar = c(1, 4, 1.5, 1))
 boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
-text(0.5, 15, "a", cex = 2)
+text(0.5, 15, "A", cex = 2)
 abline(h = 0, col = 'deeppink4')
 
 # 3b) Delta angle (in degrees) as a histogram
 par(mar = c(5, 4, 0, 1))
 plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade (n species in clade and/or species name)", ylab = "Median delta angle (\u00B0)", pch = 16, ylim = c(0,90), xaxt = 'n')
 axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.8)
-text(0.5, 85, "b", cex = 2)
+text(0.5, 85, "B", cex = 2)
 abline(h = 4.5, col = "deeppink4")  # significance level
 text(1, 7, "4.5 degree significance level", adj = c(0,0), col = "deeppink4")
 
@@ -341,7 +341,7 @@ colnames(fake.results.table) <- n.spp.group  # summarize results by clade size
 Transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
 setEPS()
-postscript("../Data/Results/FigureS2_FakeClades.eps")
+postscript("../Data/Results/FigureA2_FakeClades.eps")
 
 # An empty plot first
 fake.results.list <- apply(fake.results.table, 2, list)
