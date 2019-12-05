@@ -106,7 +106,7 @@ for(i in 1:500){   # 100 iterations takes ~2.5 hours
 ```{r}
 # Counts are divided by 2 because pairwise table repeats each comparison
 hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
-abline(v = actual.pw/2, lwd = 3, col = "red")  # compare random to real result above
+abline(v = actual.pw/2, lwd = 3, col = "deeppink4")  # compare random to real result above
 ```
 
 ## 2a) Run evolutionary allometry ANCOVA -- reported in Table 1b (n = 317, clades = 7)
@@ -178,12 +178,12 @@ layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 # Rsq value
 par(mar = c(4, 4, 1.5, 0))
 hist(count.R2[1:length(count.R2)], xlim = c(fit.pgls$aov.table$Rsq[3], range(count.R2)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade Rsq value")
-abline(v = fit.pgls$aov.table$Rsq[3], lwd = 3, col = "red")  # compare rarified results to actual result above
+abline(v = fit.pgls$aov.table$Rsq[3], lwd = 3, col = "deeppink4")  # compare rarified results to actual result above
 
 # P value
 par(mar = c(5, 4, 1.5, 0))
 hist(count.R2.p[1:length(count.R2.p)], xlim = c(fit.pgls$aov.table$`Pr(>F)`[3], range(count.R2.p)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade p value")
-abline(v = fit.pgls$aov.table$`Pr(>F)`[3], lwd = 3, col = "red")  # compare rarified results to actual result above
+abline(v = fit.pgls$aov.table$`Pr(>F)`[3], lwd = 3, col = "deeppink4")  # compare rarified results to actual result above
 
 dev.off()
 ```
@@ -281,7 +281,7 @@ angle.changes <- abs(atan(med.delta.slopes/denom) * 180/pi)  # angles in deg
 ### Plot the results: Delta slope in CI boxplot and Delta angle as a histogram -- reported as Figure 3
 ```{r}
 setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_Phylo_Rare.eps")
+postscript("../Data/Results/Figure3_Phylo_Rare_pink.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
@@ -290,15 +290,15 @@ boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), pr
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
 text(0.5, 15, "a", cex = 2)
-abline(h = 0, col = 'coral4')
+abline(h = 0, col = 'deeppink4')
 
 # 3b) Delta angle (in degrees) as a histogram
 par(mar = c(5, 4, 0, 1))
 plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade (n species in clade and/or species name)", ylab = "Median delta angle (\u00B0)", pch = 16, ylim = c(0,90), xaxt = 'n')
 axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.8)
 text(0.5, 85, "b", cex = 2)
-abline(h = 4.5, col = "coral4")  # significance level
-text(1, 7, "4.5 degree significance level", adj = c(0,0), col = "coral4")
+abline(h = 4.5, col = "deeppink4")  # significance level
+text(1, 7, "4.5 degree significance level", adj = c(0,0), col = "deeppink4")
 
 dev.off()
 ```
@@ -350,7 +350,7 @@ boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.result
 
 # Add the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
-abline(h = 0, col = "coral4")
+abline(h = 0, col = "deeppink4")
 
 dev.off()
 ```
