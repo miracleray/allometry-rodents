@@ -1,6 +1,6 @@
 ---
 title: "04-measure-allometry"
-author: "Ariel Marcy & Thomas Guillerme"
+author: "Ariel Marcy & Emma Sherratt"
 date: "2019-01-11"
 output: html_document
 ---
@@ -11,13 +11,13 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Quantifying differences in allometry
-This script generates Table 1 and Table A5
+This script generates Table 1 and Table A5.
 
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample, relative to phylogenetic association.
 
 Our analyses here investigate allometry at two levels:
 1) Static (within-species)
-2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors)
+2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors). We do this with two different ANCOVAs, one with a phylogenetic reference and one without. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
@@ -25,7 +25,6 @@ library("devtools")
 devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE)  # Install latest `geomorph`
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
-library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
 library(ape)  # phylogeny
 source("../Functions/utilities.R")  # custom functions
@@ -72,15 +71,15 @@ pw.summary <- summary.pairwise(pw.comp, test.type = "VC", angle.type = "deg", co
 actual.pw <- length(which(round(pw.summary$pairwise.tables$P, 3) < 0.01))
 
 # Export p-value matrix to Results folder
-write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableS4_HOS.csv")
+write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableA4_HOS.csv")
 ```
 
 ### 1c) Randomize specimens to get NULL expantancy for pairwise significant results
 We'll do the randomization procedure 500 times. This takes at least 12 hours to run, so the results are saved in the gdf file in this script.
 ```{r}
-# Define function to shuffle species attributions and run PW comparisons; this randomizes species relative to centroid size
+# Define function to shuffle species attributions and run PW comparisons
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
-        rand.spp <- sample(info$Taxa)
+        rand.spp <- sample(info$Taxa)  # randomizes spp relative to Csize
         
         # Run the test with random sample
         pw.comp <- TestHOS(shape, info$Csize, rand.spp, lm.fun = procD.lm)
@@ -91,7 +90,7 @@ null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {
         return(length(which(round(pw.summary$pairwise.tables$P, 3) < alpha)))
 }
 
-# Do this randomization and testing 100 times
+# Do this randomization and testing 500 times
 set.seed(42)
 count.pw <- NULL
 for(i in 1:500){   # 100 iterations takes ~2.5 hours
@@ -105,7 +104,7 @@ for(i in 1:500){   # 100 iterations takes ~2.5 hours
 ```{r}
 # Counts are divided by 2 because pairwise table repeats each comparison
 hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
-abline(v = actual.pw/2, lwd = 3, col = "deeppink4")  # compare random to real result above
+abline(v = actual.pw/2, lwd = 3, col = "deeppink4")  # compare random to real result above; pink for Vera
 ```
 
 ## 2a) Run evolutionary allometry ANCOVA -- reported in Table 1b (n = 317, clades = 7)
@@ -134,7 +133,7 @@ fit.pgls <- procD.pgls(coords ~ log(size) * clade, aus.tree, iter = 500, data = 
 table1b_n37 <- as.data.frame(round(fit.pgls$aov.table, 3))
 table1b_n37[is.na(table1b_n37)] <- ""
 
-write.table(table1b_n37, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
+write.table(table1b_n37, "../Data/Results/TableA5_ANOVA_pgls.csv", sep = ",", col.names = NA)
 
 # Find Reg Score values for plotting purposes later on (script 07)
 evo.allo.rs <- plotAllometry(fit.pgls, size = info.means$MeanCsize, method = "RegScore")
@@ -163,7 +162,6 @@ for (i in 1:100) {
     # Save R2 of interaction factor (3rd value)
     count.R2 <- c(count.R2, fit.pgls.r$aov.table$Rsq[3])
     count.R2.p <- c(count.R2.p, fit.pgls.r$aov.table$`Pr(>F)`[3])
-    print(paste(i, fit.pgls.r$aov.table$Rsq[3], fit.pgls.r$aov.table$`Pr(>F)`[3]))  # meter to mullify impatience
 }
 ```
 
@@ -191,5 +189,5 @@ dev.off()
 ```{r}
 save(fit.static, fit.evo, fit.pgls, static.allo.rs, evo.allo.rs, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 07
 
-save(count.pw, delta.slopes, angle.changes, f.delta.slopes, fake.results.list, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons, the phylogenetic rarefaction, and the 100 "fake" clades rarefaction
+save(count.pw, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons
 ```

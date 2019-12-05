@@ -204,5 +204,5 @@ dev.off()
 
 ## Save data used for plotting
 ```{r}
-save(new.names, med.delta.slopes, angle.changes, n.spp.group, f.delta.slopes, fake.results.table, file = "../Data/Processed/05-Phylo-rare-results.rda")  # all the data needed to remake the plots
+save(new.names, med.delta.slopes, angle.changes, n.spp.group, f.delta.slopes, fake.results.table, file = "../Data/Processed/05-phylo-rare-results.rda")  # all the data needed to remake the plots
 ```
