@@ -42,7 +42,7 @@ short.label <- function(label) paste0(substr(strsplit(label, split = "_")[[1]][1
 short.tree <- aus.tree
 short.tree$tip.label <- unname(sapply(short.tree$tip.label, short.label))
 
-static.allo.rs <- plotAllometry(fit.static, size = static.gdf$size, method = "RegScore")  # Allometry data
+static.allo.rs <- plotAllometry(fit.static, size = info$Csize, method = "RegScore")  # Allometry data
 
 # Make table
 rare.table <- data.frame(info$Taxa, log(info$Csize), unname(static.allo.rs$RegScore))
@@ -82,15 +82,14 @@ delta.slopes <- lapply(data.clades, rarefy.stat, stat.fun = GetSlope, rarefactio
 We can then summarize these results by clade size and add the clade names:
 ```{r}
 # Clean up axis labels for plotting
-clade.names <- unlist(lapply(clades, paste, collapse = "+"))
-new.names <- clade.names
+new.names <- unlist(lapply(clades, paste, collapse = "+"))
 for(i in 1:length(new.names))
     if(nchar(new.names[i]) > 5) {  # detect bins of greater than 1 spp
         new.names[i] <- ((nchar(new.names[i]) + 1) / 6)  # gets number of spp
     }
 
 # Some vanity names for plotting, indicate major clades and n spp in each
-new.names[1] <- paste("All", length(new.names))
+new.names[1] <- paste("All", new.names[1])
 new.names[2] <- paste("No Mus", new.names[2])
 new.names[3] <- "AOE 28"  # Australian Old Endemics
 new.names[which(new.names == 11)] <- "Pse 11"  # Genus Pseudomys
@@ -99,8 +98,10 @@ new.names[25] <- "Not 4"  # Hopping Notomys
 new.names <- str_replace(new.names, "_", " ")  # removes "_" between G_spp
 ```
 
-## Test for "significant" delta slopes
-4.5 degrees is an ideal cut-off because absolute value of angle change can only vary from 0-90 therefore a 5% variation from 90 is 90*0.5 = 4.5 degrees.
+## Test for "significant" delta slope angles
+We converted from delta slope to delta angle using the [trigonometric equation here](https://math.stackexchange.com/questions/804089/formula-to-find-the-angle-between-two-slopes)
+
+We decided that 4.5 degrees is an ideal cut-off because absolute value of angle change can only vary from 0-90 therefore a 5% variation from 90 is 90*0.5 = 4.5 degrees.
 ```{r}
 # Define function to test for significant delta slopes
 test.delta.slope <- function(obs.slope, delta.slope, significance) {
@@ -119,7 +120,7 @@ med.delta.slopes[which(is.na(med.delta.slopes))] <- 0  # account for NAs
 is.parallel <- test.delta.slope(obs.slopes, med.delta.slopes, significance = 4.5)
 sum(is.parallel)  # number of clades with less than 4.5 deg angle change
 
-# Get angle change values for plotting 
+# Get delta angle change values for plotting 
 angle.changes <- test.delta.slope(obs.slopes, med.delta.slopes)
 ```
 
@@ -149,9 +150,9 @@ dev.off()
 ```
 
 ## Check the validity of the results above by randomizing species into "fake clades"
-First create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
+First, create some fake clade groupings (i.e. non phylogenetic) and connect it to real data by individuals
 ```{r}
-# Getting the same number of "groups" per "clades"
+# Getting the same number of "groups" per "clades" wihtout single spp clades
 clades <- prop.part.names(aus.tree, singletons = FALSE)
 n.spp.group <- sort(unlist(lapply(clades, length)), decreasing = TRUE)  # sort by big->small for graphing at the end
 
@@ -185,12 +186,13 @@ colnames(fake.results.table) <- n.spp.group  # summarize results by clade size
 ### Summarize the results -- Appendix A, Figure A2
 Transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
+fake.results.list <- apply(fake.results.table, 2, list)
+colnames(fake.results.table) <- n.spp.group
+
 setEPS()
 postscript("../Data/Results/FigureA2_FakeClades.eps")
 
 # An empty plot first
-fake.results.list <- apply(fake.results.table, 2, list)
-colnames(fake.results.table) <- n.spp.group
 boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Number of species in fake clade", names = new.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
 
 # Add the results
@@ -200,7 +202,7 @@ abline(h = 0, col = "deeppink4")
 dev.off()
 ```
 
-## Save data that takes a long time to generate
+## Save data used for plotting
 ```{r}
-save(delta.slopes, angle.changes, f.delta.slopes, fake.results.list, file = "../Data/Processed/05-Phylo-rare-results.rda")
+save(new.names, med.delta.slopes, angle.changes, n.spp.group, f.delta.slopes, fake.results.table, file = "../Data/Processed/05-Phylo-rare-results.rda")  # all the data needed to remake the plots
 ```
