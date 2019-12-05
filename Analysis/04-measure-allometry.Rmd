@@ -166,16 +166,24 @@ for (i in 1:100) {
 }
 ```
 
-### Visualized with a histogram 
+### Visualize with histograms
 Histogram of R2 result for the interaction factor (the most interesting result and only comparable statistic to other Procrustes ANOVAs). 
 ```{r}
+setEPS()  # sets up plot export
+postscript("../Data/Results/FigureR2_rare_pgls.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+
 # Rsq value
+par(mar = c(4, 4, 1.5, 0))
 hist(count.R2[1:length(count.R2)], xlim = c(fit.pgls$aov.table$Rsq[3], range(count.R2)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade Rsq value")
 abline(v = fit.pgls$aov.table$Rsq[3], lwd = 3, col = "red")  # compare rarified results to actual result above
 
 # P value
+par(mar = c(5, 4, 1.5, 0))
 hist(count.R2.p[1:length(count.R2.p)], xlim = c(fit.pgls$aov.table$`Pr(>F)`[3], range(count.R2.p)[2] + 0.01), main = NULL, xlab = "Interaction of size and clade p value")
 abline(v = fit.pgls$aov.table$`Pr(>F)`[3], lwd = 3, col = "red")  # compare rarified results to actual result above
+
+dev.off()
 ```
 
 ## 3) Measure allometric slope change using phylogenetic rarefaction
