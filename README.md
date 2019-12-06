@@ -4,7 +4,7 @@ Code authors: Ariel E. Marcy, Thomas Guillerme, Emma Sherratt
 To cite the paper and/or code:
 > Coming soonish
 
-As of December 2019, this is still a work in progress. Uses R (v. 3.6.1), geomorph (v. 3.1.3), and landvR (v. 0.4).
+As of December 2019, this is still a work in progress. Uses `R` (v. 3.6.1), `geomorph` (v. 3.1.3), and `landvR` (v. 0.4).
 
 *All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
 
@@ -38,15 +38,16 @@ If you use these data, please cite this paper and the original authors:
 * [02-calculate-user-error.Rmd](/Analysis/02-calculate-user-error.Rmd) Allows users to view outliers and find major landmarking errors. Calculates user error based on repeatability.
 * [03-prepare-data.Rmd](/Analysis/03-prepare-data.Rmd) Creates the metadata and graphing vectors needed for all subsequent analyses. Prepares mean shape data and the ultrametric phylogenetic tree for analyses that require a phylogeny. 
 
-**The next two scripts produce the main results:**
+**The next three scripts produce the main results:**
 
-* [04-measure-allometry.Rmd](/Analysis/04-measure-allometry.Rmd) Tests static and evolutionary allometry with `geomorph`'s `procD.lm`'s ANOVA function. `RRPP`'s `pairwise` functiond. This includes Procrustes ANOVAs and pairwise homogeneity of slopes (HOS) tests. Tests whether the HOS result is distinct from null expectancy with a randomization procedure. Uses phylogenetic rarefaction to tests for impact of species-level sample sizes with rarifaction across the phylogeny using `landvR`.  **Generates Table 1, Figure 3, Table A4, and Figure A2**.
-* [05-measure-evo-rates.Rmd](/Analysis/05-measure-evo-rates.Rmd) Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table A6**.
+* [04-measure-allometry.Rmd](/Analysis/04-measure-allometry.Rmd) Tests static and evolutionary allometry with `geomorph`'s `procD.lm`'s ANCOVA function. `RRPP`'s `pairwise` function. This includes Procrustes ANOVAs and pairwise homogeneity of slopes (HOS) tests. Tests whether the HOS result is distinct from null (global slope) expectancy with a randomization procedure. **Generates Table 1 and Table A4**.
+* [05-phylogenetic-rarefaction.Rmd](/Analysis/05-phylogenetic-rarefaction.Rmd) Uses phylogenetic rarefaction to tests for impact of species-level sample sizes on allometric findings with rarifaction across every clade in the phylogeny using `landvR`. **Generates Figure 3 and Figure A2**.
+* [06-measure-evo-rates.Rmd](/Analysis/06-measure-evo-rates.Rmd) Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table A6**.
 
 **The next two scripts produce the main multi-panel figures:** 
 
-* [06-plot-heatmaps.Rmd](/Analysis/06-plot-heatmaps.Rmd) Plot landmark heatmaps showing a statistically rigorous visualization of allometric shape variation from PC1 mininum to PC1 maximum. **Generates images for Figure 4C,D**.
-* [07-plot-allometry.Rmd](/Analysis/07-plot-allometry.Rmd) Plots static allometry with both Regression Scores and Predicted Values. Plots evolutionary allometry of mean shape data, a PCA of the mean shape data, combined with two heatmap views of the crania shape changes across PC1. **Generates Figure 2 and Figure 4**.
+* [07-plot-heatmaps.Rmd](/Analysis/07-plot-heatmaps.Rmd) Plots landmark heatmaps showing statistically rigorous visualizations of allometric shape variation from PC1 mininum to PC1 maximum. **Generates images for Figure 4C,D**.
+* [08-plot-allometry.Rmd](/Analysis/08-plot-allometry.Rmd) Plots static allometry with both Regression Scores and Predicted Values. Plots evolutionary allometry of mean shape data, a PCA of the mean shape data, combined with two heatmap views of the crania shape changes across PC1. **Generates Figure 2 and Figure 4**.
 
 ### Custom functions 
 * Some analyses call custom functions, which are defined in the [..Data/Functions/utilities.R](/Data/Functions/utilities.R) file.
