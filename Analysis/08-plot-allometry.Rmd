@@ -1,5 +1,5 @@
 ---
-title: "07-plot-allometry"
+title: "08-plot-allometry"
 authors: "Ariel Marcy & Thomas Guillerme"
 date: "2/14/2019"
 output: html_document

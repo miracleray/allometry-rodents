@@ -1,5 +1,5 @@
 ---
-title: "06-plot-heatmaps"
+title: "07-plot-heatmaps"
 author: "Thomas Guillerme & Ariel Marcy"
 date: "3/11/2019"
 output: html_document
@@ -72,7 +72,7 @@ view3d(phi = 90)
 rgl.snapshot("../Data/Processed/PC1heatmap_lat.png")
 ```
 
-### Prep images for multi-panel Figure 4 (created with script 07)
+### Prep images for multi-panel Figure 4 (created with script 08)
 This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)

@@ -1,5 +1,5 @@
 ---
-title: "05-measure-evo-rates"
+title: "06-measure-evo-rates"
 author: "Ariel Marcy"
 date: "2/4/2019"
 output: html_document
@@ -11,7 +11,7 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Evolutionary rates
-Generates Table S6: Morphological rates of evolution. 
+This script generates Table A6. 
 
 Studies of morphological rates of evolution must take into account the phylogenetic tree because related species do not behave the same as independent samples. 
 
@@ -80,5 +80,5 @@ rate.table[5, 4] <- p.adjusted[10]
 for(i in 1:dim(rate.table)[1]) rate.table[i, i] <- "-"
 
 # Export Table S6
-write.table(rate.table, "../Data/Results/TableS6_EvoRates.csv", sep = ",", col.names = NA)
+write.table(rate.table, "../Data/Results/TableA6_EvoRates.csv", sep = ",", col.names = NA)
 ```
