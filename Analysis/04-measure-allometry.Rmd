@@ -49,6 +49,11 @@ table1a[is.na(table1a)] <- ""
 write.table(table1a, "../Data/Results/Table1a_ANOVA_spp.csv", sep = ",", col.names = NA)
 ```
 
+Save Regression Scores for future allometric analyses:
+```{r}
+static.allo.rs <- plotAllometry(fit.static, size = info$Csize, method = "RegScore")  # Allometry data
+```
+
 ### 1b) Measure static allometry: Homogeneity of Slopes Test by species
 Run allometry tests as well as a homogeneity of slopes test. This test may take 1-2 min to run. Updated for `geomorph` v3.1.0. 
 ```{r}
@@ -187,7 +192,7 @@ dev.off()
 
 ## Save intermediate data and data that takes a long time to generate
 ```{r}
-save(fit.static, fit.evo, fit.pgls, static.allo.rs, evo.allo.rs, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 07
+save(fit.static, static.allo.rs, fit.evo, fit.pgls, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 08
 
-save(count.pw, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons
+save(count.pw, count.R2, count.R2.p, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons
 ```

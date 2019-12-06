@@ -42,8 +42,6 @@ short.label <- function(label) paste0(substr(strsplit(label, split = "_")[[1]][1
 short.tree <- aus.tree
 short.tree$tip.label <- unname(sapply(short.tree$tip.label, short.label))
 
-static.allo.rs <- plotAllometry(fit.static, size = info$Csize, method = "RegScore")  # Allometry data
-
 # Make table
 rare.table <- data.frame(info$Taxa, log(info$Csize), unname(static.allo.rs$RegScore))
 colnames(rare.table) <- c("Taxa", "Csize", "RegScore")

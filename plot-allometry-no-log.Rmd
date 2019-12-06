@@ -1,0 +1,81 @@
+---
+title: "plot-allometry-no-log"
+authors: "Ariel Marcy"
+date: "2/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
+```
+
+# Visualize allometry
+This script re-generates Figure 2, the static and common allometry plots without taking the log of centroid size.
+
+### Load packages, functions, and data from previous steps
+```{r message = FALSE}
+library(geomorph)
+load(file = "../Data/Processed/03-main-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
+```
+
+## Figure 2: Static and common allometric slopes with centroid size (no log)
+In _geomorph_, static allometry can be visualized with centroid size plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape. All static alloemtries can be compared to a common evolutionary allometry using the mean point for each static allometry:
+```{r}
+# Re-do allometry with no log (from script 04)
+nolog.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
+fit.nolog <- procD.lm(coords ~ size * spp, iter = 500, data = nolog.gdf, print.progress = FALSE)
+
+# Re do regression score
+nolog.allo.rs <- plotAllometry(fit.nolog, size = info$Csize, logsz = FALSE, method = "RegScore")  # Allometry data
+
+# Re do finding means
+nl.mean.size <- aggregate(nolog.allo.rs$size.var, list(Taxa = info$Taxa), mean)
+nl.mean.shape <- aggregate(nolog.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
+```
+
+### Plot/export static and evolutionary allometry multi-panel Figure 2
+Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression "pred-lines" for each species to compare with the evolutionary allometry of the entire group. 
+```{r}
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure2_Static_Allo_nolog.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+
+# Plot of all data points with evolutionary allometry
+par(mar = c(1, 4, 1.5, 0))
+plot(fit.nolog,
+     type = "regression",
+     reg.type = "RegScore",
+     predictor = info$Csize,
+     col = sp.col.gen, 
+     pch = pch.spp,
+     bg = sp.col.gen,
+     main = "Static and evolutionary allometry (no log)",
+     xlab = NA,
+     ylab = "Shape (Regression Score)",
+     bty = "n")
+text(4.7, 0.048, "A", cex = 2)
+abline(lm(nl.mean.shape$V1 ~ nl.mean.size$x), col = "dark grey", lwd = 2)  # plots evolutionary allometry
+text(250, -0.04, paste("Rsq of size = ", round(fit.nolog$aov.table$Rsq[1], 2)), cex = 1.1, col = "black")
+
+# Species Legend
+legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
+
+# Plot of static allometry with evolutionary allometry
+par(mar = c(5, 4, 1.5, 0))
+plot(fit.nolog,
+     type = "regression",
+     reg.type = "PredLine",
+     predictor = info$Csize,
+     col = sp.col.gen, 
+     pch = pch.spp,
+     bg = sp.col.gen,
+     xlab = "Centroid size",
+     ylab = "Shape (Predicted Value)",
+     bty = "n")
+text(4.7, 0.11, "B", cex = 2)
+text(250, -0.08, paste("Rsq of size:species = ", round(fit.nolog$aov.table$Rsq[3], 2)), cex = 1.1, col = "black")
+
+dev.off()
+```

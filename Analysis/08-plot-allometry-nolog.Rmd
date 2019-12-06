@@ -1,0 +1,240 @@
+---
+title: "08-plot-allometry"
+authors: "Ariel Marcy & Thomas Guillerme"
+date: "2/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../allometry-rodents')
+```
+
+# Visualize allometry
+This script generates Figure 1, the phylogeny colored by clade and centroid size; Figure 2, the static and common allometry plots; and Figure 4, which shows how allometry is associated with a CREA* pattern using a PCA and landmark heatplots. 
+
+*CREA = Craniofacial Evolutionary Allometry (Cardini & Polly 2013): larger individuals have a longer snout and smaller relative braincase.
+
+### Load packages, functions, and data from previous steps
+```{r message = FALSE}
+library(geiger)  # needed to work with phylogeny
+library(phytools)
+library(geomorph)
+library(plotrix)  # needed to draw ellipses
+library(png)
+library(stringr)
+load(file = "../Data/Processed/03-main-data.rda")
+load(file = "../Data/Processed/03-tree-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
+load(file = "../Data/Processed/04-allometry-data.rda")
+source("../Functions/utilities.R")  # custom functions
+source("../Functions/phytools.branch.colors.R")
+```
+
+## Figure 1: Phylogeny with centroid size
+Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03).
+```{r}
+# Branch colors by centroid size
+cs.tree <- -info.means$MeanCsize  # (-) so colors get darker with larger size
+names(cs.tree) <- aus.tree$tip.label
+
+# Tip lable colors by species, ordered in same way as tree
+grp <- as.factor(str_sub(aus.tree$tip.label, 1, 3))
+grp[which(grp == "Mas")] <- "Pse"
+names(col.gen) <- sort(unique(grp))
+col.tree <- col.gen[match(grp, names(col.gen))]
+# Account for invasive Rattus
+col.tree[which(aus.tree$tip.label == "Rattus_norvegicus")] <- "black"
+col.tree[which(aus.tree$tip.label == "Rattus_rattus")] <- "black"
+
+# Make Figure 1
+setEPS()
+postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
+
+plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = FALSE)
+
+# Add centroid size legend
+legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
+rasterImage(legend_image, 0, 2, 4, 5)
+text(2, 6, "Large", col = "dark grey", cex = 1)
+text(2, 1, "Small", col = "dark grey", cex = 1)
+
+dev.off()
+```
+
+## Figure 2: Static and common allometric slopes
+In _geomorph_, static allometry can be visualized with log(centroid size) plotted versus the projected regression score of shape ~ size, a common way of quantifying "size-less" shape. All static alloemtries can be compared to a common evolutionary allometry using the mean point for each static allometry:
+```{r}
+# Re-do allometry with no log
+
+
+# Re do regression score
+
+
+# Re do finding means
+sa.mean.size <- aggregate(static.allo.rs$size.var, list(Taxa = info$Taxa), mean)
+sa.mean.shape <- aggregate(static.allo.rs$RegScore, list(Taxa = info$Taxa), mean)
+```
+
+### Plot/export static and evolutionary allometry multi-panel Figure 2
+Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression "pred-lines" for each species to compare with the evolutionary allometry of the entire group. 
+```{r}
+setEPS()  # sets up plot export
+postscript("../Data/Results/Figure2_Static_Allo.eps")
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+
+# Plot of all data points with evolutionary allometry
+par(mar = c(1, 4, 1.5, 0))
+plot(fit.static,
+     type = "regression",
+     reg.type = "RegScore",
+     predictor = log(info$Csize),
+     xlim = c(4.7, 6.4),
+     col = sp.col.gen, 
+     pch = pch.spp,
+     bg = sp.col.gen,
+     main = "Static and evolutionary allometry",
+     xlab = NA,
+     ylab = "Shape (Regression Score)",
+     bty = "n")
+text(4.7, 0.048, "A", cex = 2)
+abline(lm(sa.mean.shape$V1 ~ sa.mean.size$x), col = "dark grey", lwd = 2)  # plots evolutionary allometry
+text(5.5, -0.04, paste("Rsq of log(size) = ", round(fit.static$aov.table$Rsq[1], 2)), cex = 1.1, col = "black")
+
+# Species Legend
+legend(6.05, 0.06, legend = phylo.names, col = col.unique.spp, border = NULL, pch = pch.unique.spp, pt.bg = col.unique.spp, cex = 0.97, pt.cex = 1, ncol = 2, bg = "white")
+
+# Plot of static allometry with evolutionary allometry
+par(mar = c(5, 4, 1.5, 0))
+plot(fit.static,
+     type = "regression",
+     reg.type = "PredLine",
+     predictor = log(info$Csize),
+     xlim = c(4.7, 6.4),
+     col = sp.col.gen, 
+     pch = pch.spp,
+     bg = sp.col.gen,
+     xlab = "Log(centroid size)",
+     ylab = "Shape (Predicted Value)",
+     bty = "n")
+text(4.7, 0.11, "B", cex = 2)
+text(5.6, -0.08, paste("Rsq of log(size):species = ", round(fit.static$aov.table$Rsq[3], 2)), cex = 1.1, col = "black")
+
+dev.off()
+```
+
+## Figure 4: multi-panel evolutionary allometry and mean shape PCA
+First, set up colors and points by genera and important taxa
+```{r}
+# Colors for genera and different points by species within each genus; used for PCA
+col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
+pch.means <- PointOutDiffSpp(info.means$EGenus)  # pts by unique species in a genus
+pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
+
+# Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
+pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
+pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 10  # quartered circle
+pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
+```
+
+### Run PCA
+```{r}
+pca.means <- plotTangentSpace(mean.shapes)  # PCA of mean shapes
+
+# Write x and y labels with proportion of variance for PC1 and PC2
+PCs <- pca.means$pc.summary$importance
+PC1.per <- round(PCs[2, 1] * 100, digits = 1)  # % with 1 decimal
+PC1.lab <- paste("PC", 1, " (", PC1.per, "%)", sep = "")
+PC2.per <- round(PCs[2, 2] * 100, digits = 1)
+PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
+```
+
+## Plot and export the multi-panel Figure 4
+Evolutionary allometry plot on top, PCA in the middle, two heatmaps on the bottom.
+
+ERROR: memory issues when trying to add legend within setEPS. Works when lines below `postscript()` and above `dev.off()` are run through the console, plot is "zoomed" from RStudio, and then a screenshot is taken from that window.
+```{r}
+# Read in heatmap PNGs created with script 06
+dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
+lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
+
+setEPS() 
+postscript("../Data/Results/Figure4_Allo_Shape.eps")
+mat <- matrix(c(1,1,2,2,3,4), 3, 2, byrow = TRUE)  # 3 rows, 2 columns
+layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))  
+
+# 1) Evolutionary Allometry plot
+par(mar = c(4, 4, 1, 1))  # sets the margins
+plot(x = log(info.means$MeanCsize),
+     y = evo.allo.rs$RegScore,
+     xlim = c(4.75, 6),
+     col = col.means, 
+     pch = pch.evo.allo,
+     xlab = "Log centroid size", 
+     ylab = "Shape",
+     bty = "n")
+text(4.75, 0.08, "A", cex = 2)
+
+legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 3, bty = "n")
+
+abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
+
+# Frugivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_gou")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")], pos = 2, "Frugivores     ", col = "dark grey")
+draw.ellipse(5.913, .065, .06, .005, angle = -2, border = "dark grey")
+
+# Folivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "P_ora")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")], "Folivores    ", pos = 2, col = "dark grey")
+draw.ellipse(5.4, .028, 0.09, .02, angle = 1, border = "dark grey")
+
+# Carnivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
+
+# Hopping Notomys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "       Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
+draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
+
+# 2) PCA
+par(mar=c(4, 4, 1, 1))  # sets the margins
+PCAlims = c(-0.08, 0.12)
+plot(x = -pca.means$pc.scores[, 1],
+     y = pca.means$pc.scores[, 2],
+     xlim = PCAlims,
+     ylim = PCAlims,
+     col = col.means,
+     pch = pch.means,
+     bg = col.means,
+     xlab = PC1.lab, 
+     ylab = PC2.lab,
+     bty = "n")
+text(-0.08, 0.1, "B", cex = 2)
+text(.105, -0.009, "Frugivores", col = "dark grey")
+draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
+text(.045, 0.065, "Folivores", col = "dark grey")
+draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
+text(.045, -0.053, "Carnivores", col = "dark grey")
+draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
+text(-.067, 0.027, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
+draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
+
+# 3) Plot dorsal view
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
+rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
+text(0, dim(dor)[1]-10, "C", cex = 2)
+
+# 4) Plot lateral view with same dimensions as above
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
+rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
+text(0, dim(dor)[1]-10, "D", cex = 2)
+
+# Make gradient legend
+legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
+rasterImage(legend_image, 440, 220, 465, 160)
+text(382, 213, "High variation", col = "dark grey", cex = 1)
+text(414, 168, "Low", col = "dark grey", cex = 1)
+
+dev.off()
+```
