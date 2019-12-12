@@ -110,11 +110,10 @@ shape <- shape[, , main]
 sp.info <- sp.info[main, ]
 ```
 
-### Remove 3 outliers from dataset
+### Remove outliers from dataset
 Three specimens had major landmarking errors: landmarks consistently placed in the wrong places. Therefore, we opted to remove these specimens.
 ```{r}
 # Find indices
-mel.out <- which(sp.info$CatNum == "J22537")  # Melomys burtoni
 rat.out <- which(sp.info$CatNum == "C11381")  # Rattus norvegicus
 uro.out <- which(sp.info$CatNum == "J17610")  # Uromys caudimaculatus
 

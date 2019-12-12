@@ -22,12 +22,11 @@ Custom functions are defined in utilities.R for conciseness.
 ```{r message = FALSE}
 library(devtools)
 devtools::install_github("geomorphR/geomorph", ref = "Stable")
-
+library(geomorph)
 library(dplyr)
 library(stringr)
 library(stringi)
 library(data.table)
-library(geomorph)
 source("../Functions/utilities.R")  # custom functions
 ```
 
@@ -60,7 +59,7 @@ The coordinate data is just shape data unless we can extract any information the
 ### Fix naming of replicate filenames (included to measure user error)
 Interspersed throughout the data collection process, AEM landmarked 20 specimens twice. Their specimen names included "_ERR", however, not always in the same place in the filename. 
 
-We correct the naming scheme to be machine-readable and in the process create a list of specimen names which were landmarked twice. In script 02-calculate-user-error.Rmd, we use this list to analyze user error.
+We correct the naming scheme to be machine-readable and in the process create a list of specimen names which were landmarked twice. In script 02-calculate-user-error.Rmd, we use this list to analyze user error relative to (biological) variation in our sample.
 ```{r}
 # Detect replicates
 names <- dimnames(A)[[3]]  # user-entered names from shape data
