@@ -30,8 +30,8 @@ load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 load(file = "../Data/Processed/04-allometry-data.rda")
 
-# Optional once long analyses have been run
-#load(file = "../Data/Processed/05-phylo-rare-results.rda")  
+# Optional once long analyses have been run - reload to tweak plots
+load(file = "../Data/Processed/05-phylo-rare-results.rda")  
 ```
 
 ### Get the data and each clade from the phylogeny ready for the test
@@ -96,10 +96,24 @@ new.names[25] <- "Not 4"  # Hopping Notomys
 new.names <- str_replace(new.names, "_", " ")  # removes "_" between G_spp
 ```
 
+
+## Alternate test for significant delta slope angles
+
+```{r}
+
+angle <- function(obs.slopes, delta.slopes) {
+    a <- obs.slopes
+    b <- delta.slopes
+    (180/pi) * (acos(sum(a*b) / (sqrt(sum(a * a)) * sqrt(sum(b * b)))))
+    }
+
+```
+
+
 ## Test for "significant" delta slope angles
 We converted from delta slope to delta angle using the [trigonometric equation here](https://math.stackexchange.com/questions/804089/formula-to-find-the-angle-between-two-slopes)
 
-We decided that 4.5 degrees is an ideal cut-off because absolute value of angle change can only vary from 0-90 therefore a 5% variation from 90 is 90*0.5 = 4.5 degrees.
+We set 4.5 degrees as an ideal cut-off because the absolute value of angle change can only vary from 0-90 therefore a 5% variation from 90 is 90*0.5 = 4.5 degrees.
 ```{r}
 # Define function to test for significant delta slopes
 test.delta.slope <- function(obs.slope, delta.slope, significance) {
@@ -108,7 +122,7 @@ test.delta.slope <- function(obs.slope, delta.slope, significance) {
     if(!missing(significance)) {
         return(ifelse(angle < significance, TRUE, FALSE))  # FALSE = failed the signifance level
     } else {
-        return(angle)
+        return(angle)  # returns angle values if no significance is provided
     }
 }
 
