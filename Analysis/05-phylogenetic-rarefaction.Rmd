@@ -96,20 +96,6 @@ new.names[25] <- "Not 4"  # Hopping Notomys
 new.names <- str_replace(new.names, "_", " ")  # removes "_" between G_spp
 ```
 
-
-## Alternate test for significant delta slope angles
-
-```{r}
-
-angle <- function(obs.slopes, delta.slopes) {
-    a <- obs.slopes
-    b <- delta.slopes
-    (180/pi) * (acos(sum(a*b) / (sqrt(sum(a * a)) * sqrt(sum(b * b)))))
-    }
-
-```
-
-
 ## Test for "significant" delta slope angles
 We converted from delta slope to delta angle using the [trigonometric equation here](https://math.stackexchange.com/questions/804089/formula-to-find-the-angle-between-two-slopes)
 
