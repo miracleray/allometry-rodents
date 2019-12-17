@@ -17,9 +17,9 @@ This script generates Figure 1, the phylogeny colored by clade and centroid size
 
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
+library(geomorph)
 library(geiger)  # needed to work with phylogeny
 library(phytools)
-library(geomorph)
 library(plotrix)  # needed to draw ellipses
 library(png)
 library(stringr)

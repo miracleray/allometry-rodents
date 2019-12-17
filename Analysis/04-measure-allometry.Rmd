@@ -66,6 +66,7 @@ TestHOS <- function(shape, size, group, iter = 500, lm.fun) {
         fit.common <- lm.fun(coords ~ log(size) + spp, iter = iter, data = spp.gdf, RRPP = FALSE)  # common allometries across spp (NULL HYPOTHESIS)
 
         return(pairwise(fit.unique, fit.common, groups = spp.gdf$spp))
+        
 }
 
 # Run with HOS dataset sampled above

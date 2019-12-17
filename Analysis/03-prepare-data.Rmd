@@ -169,7 +169,7 @@ for (i in 1:length(label.list)) {
 }
 ```
 
-### Re-label node
+### Re-label nodes
 Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species. 
 
 **Relabeled node:**
@@ -178,6 +178,16 @@ _Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
 relabel.tree <- no.cat.tree
 P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
 relabel.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
+```
+
+**Correct Rattus**
+R. lutreolus and R. leucopus were switched relative to Rowe et al 2011 and other recent phylogenies. Likely due to a simple labling error in phylogenetic preparation. Here we correct it. 
+```{r}
+R.lut <- which(str_detect(relabel.tree$tip.label, "Rattus_lutreolus"))
+R.leu <- which(str_detect(relabel.tree$tip.label, "Rattus_leucopus"))
+
+relabel.tree$tip.label[R.lut] <- paste("Rattus_leucopus")
+relabel.tree$tip.label[R.leu] <- paste("Rattus_lutreolus")
 ```
 
 ### Prune the tree and shape datasets to match each other
