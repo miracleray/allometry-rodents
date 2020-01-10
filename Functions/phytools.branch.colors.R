@@ -29,5 +29,5 @@ phytools.branch.colors <- function(tree, tip.traits, col.fun) {
         
         # Select & return the color for all traits
         branch.colors <- sapply(traits, color.selector, col, breaks)
-        return(branch.colors)
+        return(darken(branch.colors))
 }

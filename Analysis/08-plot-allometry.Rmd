@@ -22,6 +22,7 @@ library(geiger)  # needed to work with phylogeny
 library(phytools)
 library(plotrix)  # needed to draw ellipses
 library(png)
+library(colorspace) 
 library(stringr)
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
@@ -47,11 +48,17 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 col.tree[which(aus.tree$tip.label == "Rattus_norvegicus")] <- "black"
 col.tree[which(aus.tree$tip.label == "Rattus_rattus")] <- "black"
 
+# Designate phylogenetic groups
+
+
 # Make Figure 1
 setEPS()
 postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
-plotBranchbyTrait(aus.tree, -cs.tree, mode = "tips", palette = "gray", tip.color = col.tree, legend = FALSE)
+col.branch.size <- darken(phytools.branch.colors(aus.tree, -cs.tree), 0.1)  # darken so that P. delicatulus is visible
+
+plot.phylo(aus.tree, show.node.label = TRUE, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
+
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
