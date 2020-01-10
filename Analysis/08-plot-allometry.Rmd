@@ -60,12 +60,13 @@ postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
 axisPhylo()
+#text(16, 0, "Millions of years ago", col = "dark grey")
 
 # Add centroid size legend
-legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
+legend_image <- as.raster(matrix(c("black", gray.colors(7)), ncol = 1))
 rasterImage(legend_image, 0, 2, 4, 5)
-text(2, 6, "Large (~1kg)", col = "dark grey", cex = 1)
-text(2, 1, "Small (~10g)", col = "dark grey", cex = 1)
+text(2.1, 6, "Large (~1kg)", col = "dark grey", cex = 1)
+text(2.1, 1, "Small (~10g)", col = "dark grey", cex = 1)
 
 dev.off()
 ```
