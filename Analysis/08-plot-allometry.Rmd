@@ -24,6 +24,7 @@ library(plotrix)  # needed to draw ellipses
 library(png)
 library(colorspace) 
 library(stringr)
+
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 load(file = "../Data/Processed/03-graphing-vectors.rda")
@@ -32,7 +33,7 @@ source("../Functions/utilities.R")  # custom functions
 source("../Functions/phytools.branch.colors.R")
 ```
 
-## Figure 1: Phylogeny with centroid size
+### Prep for figure 1: Phylogeny with centroid size
 Phylogeny with branch colors coordinated to centroid size and tip labels colors coordinated to major clades (see script 03).
 ```{r}
 # Branch colors by centroid size
@@ -48,23 +49,23 @@ col.tree <- col.gen[match(grp, names(col.gen))]
 col.tree[which(aus.tree$tip.label == "Rattus_norvegicus")] <- "black"
 col.tree[which(aus.tree$tip.label == "Rattus_rattus")] <- "black"
 
-# Designate phylogenetic groups
+# Get edge colors
+col.branch.size <- darken(phytools.branch.colors(aus.tree, -cs.tree), 0.1)  # darken so that P. delicatulus is visible
+```
 
-
-# Make Figure 1
+## Make Figure 1
+```{r}
 setEPS()
 postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
-col.branch.size <- darken(phytools.branch.colors(aus.tree, -cs.tree), 0.1)  # darken so that P. delicatulus is visible
-
-plot.phylo(aus.tree, show.node.label = TRUE, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
-
+plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
+axisPhylo()
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(gray.colors(5), ncol = 1))
 rasterImage(legend_image, 0, 2, 4, 5)
-text(2, 6, "Large", col = "dark grey", cex = 1)
-text(2, 1, "Small", col = "dark grey", cex = 1)
+text(2, 6, "Large (~1kg)", col = "dark grey", cex = 1)
+text(2, 1, "Small (~10g)", col = "dark grey", cex = 1)
 
 dev.off()
 ```
