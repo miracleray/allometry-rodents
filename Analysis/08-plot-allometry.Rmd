@@ -51,6 +51,25 @@ col.tree[which(aus.tree$tip.label == "Rattus_rattus")] <- "black"
 
 # Get edge colors
 col.branch.size <- darken(phytools.branch.colors(aus.tree, -cs.tree), 0.1)  # darken so that P. delicatulus is visible
+
+# Color the nodes of major phylogenetic groups
+bg <- rep("white", 36)
+bg[36] <- "black"  # invasive Rattus
+bg[31] <- "dark gray"  # native Rattus
+bg[29] <- "#CC1C2F"  # Hydromys group
+bg[12] <- "#79ABE2"  # Pseudomys division
+bg[09] <- "#004616"  # Uromys group
+bg[07] <- "#A79FE1"  # Mesebriomys group
+
+# Color the text for the phylogenetic group nodes
+col.text <- rep("black", 36)
+col.text[36] <- "white"  # invasive Rattus
+#col.text[31] <- "dark gray"  # native Rattus
+#col.text[29] <- "#CC1C2F"  # Hydromys group
+#col.text[12] <- "#0072B4"  # Pseudomys division
+col.text[09] <- "white"  # Uromys group
+#col.text[07] <-   # Mesebriomys group
+
 ```
 
 ## Make Figure 1
@@ -60,7 +79,7 @@ postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
 axisPhylo()
-nodelabels(as.character(c(1:36)), frame = "circle", cex = 0.5, bg = "white")
+nodelabels(as.character(c("01", "02", "03", "04", "05", "06", "07", "08", "09", 10:36)), frame = "circle", cex = 0.5, bg = bg, col = col.text)
 #text(16, 0, "Millions of years ago", col = "dark grey")
 
 # Add centroid size legend
