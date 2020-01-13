@@ -130,7 +130,7 @@ layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
 par(mar = c(1, 4, 1.5, 1))
-boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope")), xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
+boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
 text(0.5, 15, "A", cex = 2)
@@ -138,11 +138,11 @@ abline(h = 0, col = 'deeppink4')  # pink for Vera
 
 # 3b) Delta angle (in degrees) as a histogram
 par(mar = c(5, 4, 0, 1))
-plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade (n species in clade and/or species name)", ylab = expression(paste("Median ", Delta, " angle (\u00B0)")), pch = 16, ylim = c(0,90), xaxt = 'n', cex = 0.5)
-axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.8)
+plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade number (see fig. 1) or species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)")), pch = 16, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
+axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.45)
 text(0.5, 85, "B", cex = 2)
 abline(h = 4.5, col = "deeppink4")  # significance level
-text(1, 7, "4.5 degree significance level", adj = c(0,0), col = "deeppink4")
+text(1, 7, "4.5\u00B0 significance level", adj = c(0,0), col = "deeppink4")
 
 dev.off()
 ```

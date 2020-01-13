@@ -60,6 +60,7 @@ postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
 axisPhylo()
+nodelabels(as.character(c(1:36)), frame = "circle", cex = 0.5, bg = "white")
 #text(16, 0, "Millions of years ago", col = "dark grey")
 
 # Add centroid size legend
