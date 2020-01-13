@@ -81,19 +81,25 @@ We can then summarize these results by clade size and add the clade names:
 ```{r}
 # Clean up axis labels for plotting
 new.names <- unlist(lapply(clades, paste, collapse = "+"))
-for(i in 1:length(new.names))
-    if(nchar(new.names[i]) > 5) {  # detect bins of greater than 1 spp
-        new.names[i] <- ((nchar(new.names[i]) + 1) / 6)  # gets number of spp
+for(i in 1:36) {
+    if(i < 10) { 
+        k <- as.character(paste("0", i, sep = "")) 
+        } else k <- i
+    new.names[i] <- k
+}
+new.names <- str_replace(new.names, "_", " ")  # removes "_" between G_spp
+
+# Get number of spp in bins
+spp.names <- unlist(lapply(clades, paste, collapse = "+"))
+for(i in 1:length(spp.names))
+    if(nchar(spp.names[i]) > 5) {  # detect bins of greater than 1 spp
+        spp.names[i] <- ((nchar(spp.names[i]) + 1) / 6)  # gets number of spp
     }
 
-# Some vanity names for plotting, indicate major clades and n spp in each
-new.names[1] <- paste("All", new.names[1])
-new.names[2] <- paste("No Mus", new.names[2])
-new.names[3] <- "AOE 28"  # Australian Old Endemics
-new.names[which(new.names == 11)] <- "Pse 11"  # Genus Pseudomys
-new.names[which(new.names == 8)] <- "Rat 8"  # Genus Rattus
-new.names[25] <- "Not 4"  # Hopping Notomys
-new.names <- str_replace(new.names, "_", " ")  # removes "_" between G_spp
+# Combine node numbers and species number
+for(i in 1:36) {
+    new.names[i] <- paste(new.names[i], "; ", spp.names[i], sep = "")
+}
 ```
 
 ## Test for "significant" delta slope angles
@@ -122,6 +128,22 @@ sum(is.parallel)  # number of clades with less than 4.5 deg angle change
 angle.changes <- test.delta.slope(obs.slopes, med.delta.slopes)
 ```
 
+### Get colors to plot outliers
+```{r}
+# Get names & indices of outliers
+out.index <- which(angle.changes > 4.5)
+out.names <- new.names[angle.changes > 4.5]
+
+# Give colors according to phylogeny
+col.pts <- rep("black", length(new.names))
+out.cols <- c(col.phylo["Mel"], col.phylo["Mes"], col.phylo["Not"], col.phylo["Pse"], col.phylo["Leg"], col.phylo["Rat"])
+
+# Put outlier colors in the right places
+for(i in 1:length(out.index)) {
+    col.pts[out.index[i]] <- out.cols[i]
+}
+```
+
 ### Plot the results: Delta slope in CI boxplot and Delta angle as a histogram -- reported as Figure 3
 ```{r}
 setEPS()  # sets up plot export
@@ -138,11 +160,12 @@ abline(h = 0, col = 'deeppink4')  # pink for Vera
 
 # 3b) Delta angle (in degrees) as a histogram
 par(mar = c(5, 4, 0, 1))
-plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Clade number (see fig. 1) or species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)")), pch = 16, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
-axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.45)
+plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Node number; species number OR species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)", sep = "")), pch = 16, col = col.pts, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
+axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.55)
 text(0.5, 85, "B", cex = 2)
 abline(h = 4.5, col = "deeppink4")  # significance level
 text(1, 7, "4.5\u00B0 significance level", adj = c(0,0), col = "deeppink4")
+legend("topright", out.names, col = out.cols, pch = 16)
 
 dev.off()
 ```

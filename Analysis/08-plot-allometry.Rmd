@@ -64,12 +64,7 @@ bg[07] <- "#A79FE1"  # Mesebriomys group
 # Color the text for the phylogenetic group nodes
 col.text <- rep("black", 36)
 col.text[36] <- "white"  # invasive Rattus
-#col.text[31] <- "dark gray"  # native Rattus
-#col.text[29] <- "#CC1C2F"  # Hydromys group
-#col.text[12] <- "#0072B4"  # Pseudomys division
 col.text[09] <- "white"  # Uromys group
-#col.text[07] <-   # Mesebriomys group
-
 ```
 
 ## Make Figure 1
