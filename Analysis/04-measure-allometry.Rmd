@@ -193,7 +193,7 @@ dev.off()
 
 ## Save intermediate data and data that takes a long time to generate
 ```{r}
-save(fit.static, static.allo.rs, fit.evo, fit.pgls, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 08
+save(fit.static, static.allo.rs, evo.allo.rs, fit.evo, fit.pgls, file = "../Data/Processed/04-allometry-data.rda")  # allometric data needed for plotting in script 08
 
 save(count.pw, count.R2, count.R2.p, file = "../Data/Processed/04-randomization-results.rda")  # data saved from procedures that take a long time to run, namely the null hypothesis test for pairwise static allometric slope comparisons
 ```

@@ -152,6 +152,14 @@ pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 pch.evo.allo <- rep(16, length(col.means))  # other taxa are circles
 pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 10  # quartered circle
 pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
+
+# Legend that include Mastacomys in Fig 4A
+gen.phylo.new <- c(genera.phylo[1:7], "Mas", genera.phylo[8:length(genera.phylo)])  # Legend words
+
+col.phylo.new <- c(col.phylo[1:7], col.phylo[7], col.phylo[8:length(col.phylo)])  # Legend colors
+
+pch.phylo.new <- rep(16, length(col.phylo.new))
+pch.phylo.new[8] <- 2  # open triangle
 ```
 
 ### Run PCA
@@ -192,7 +200,7 @@ plot(x = log(info.means$MeanCsize),
      bty = "n")
 text(4.75, 0.08, "A", cex = 2)
 
-legend(x = "bottomright", legend = genera.phylo, col = col.phylo, pch = 16, cex = 0.85, pt.cex = 0.85, ncol = 3, bty = "n")
+legend(x = "bottomright", legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
 
 abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
@@ -253,5 +261,5 @@ rasterImage(legend_image, 440, 220, 465, 160)
 text(382, 213, "High variation", col = "dark grey", cex = 1)
 text(414, 168, "Low", col = "dark grey", cex = 1)
 
-dev.off()
+#dev.off()
 ```
