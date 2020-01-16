@@ -128,6 +128,9 @@ sum(is.parallel)  # number of clades with less than 4.5 deg angle change
 angle.changes <- test.delta.slope(obs.slopes, med.delta.slopes)
 ```
 
+
+## Plot the results
+
 ### Get colors to plot outliers
 ```{r}
 # Get names & indices of outliers
@@ -144,7 +147,7 @@ for(i in 1:length(out.index)) {
 }
 ```
 
-### Plot the results: Delta slope in CI boxplot and Delta angle as a histogram -- reported as Figure 3
+### Make Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
 ```{r}
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure3_Phylo_Rare.eps")
@@ -211,10 +214,10 @@ fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
 
 setEPS()
-postscript("../Data/Results/FigureA2_FakeClades.eps")
+postscript("../Data/Results/FigureA2_RandomClades.eps")
 
 # An empty plot first
-boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = "Delta slope", xlab = "Number of species in fake clade", names = new.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
+boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = "Number of species in random clade", names = spp.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
 
 # Add the results
 plot.CI(unlist(fake.results.list, recursive = FALSE), type = "polygon", CI = c(50, 95), cent.tend = median, point.col = "black")
@@ -225,5 +228,5 @@ dev.off()
 
 ## Save data used for plotting
 ```{r}
-save(new.names, med.delta.slopes, angle.changes, n.spp.group, f.delta.slopes, fake.results.table, file = "../Data/Processed/05-phylo-rare-results.rda")  # all the data needed to remake the plots
+save(new.names, spp.names, delta.slopes, med.delta.slopes, angle.changes, n.spp.group, f.delta.slopes, fake.results.table, file = "../Data/Processed/05-phylo-rare-results.rda")  # all the data needed to remake the plots
 ```
