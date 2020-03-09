@@ -175,16 +175,13 @@ PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 ```
 
 ## Plot and export the multi-panel Figure 4
-Evolutionary allometry plot on top, PCA in the middle, two heatmaps on the bottom.
-
-ERROR: memory issues when trying to add legend within setEPS. Works when lines below `postscript()` and above `dev.off()` are run through the console, plot is "zoomed" from RStudio, and then a screenshot is taken from that window.
+Evolutionary allometry plot on top, PCA in the middle, heatmaps on the bottom.
 ```{r}
 # Read in heatmap PNGs created with script 06
 dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
 lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 
-setEPS() 
-postscript("../Data/Results/Figure4_Allo_Shape.eps")
+pdf("../Data/Results/Figure4_Allo_Shape.pdf")
 mat <- matrix(c(1,1,2,2,3,4), 3, 2, byrow = TRUE)  # 3 rows, 2 columns
 layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))  
 
@@ -193,7 +190,7 @@ par(mar = c(4, 4, 1, 1))  # sets the margins
 plot(x = log(info.means$MeanCsize),
      y = evo.allo.rs$RegScore,
      xlim = c(4.75, 6),
-     col = col.means, 
+     col = col.means,
      pch = pch.evo.allo,
      xlab = "Log centroid size", 
      ylab = "Shape",
@@ -261,5 +258,5 @@ rasterImage(legend_image, 440, 220, 465, 160)
 text(382, 213, "High variation", col = "dark grey", cex = 1)
 text(414, 168, "Low", col = "dark grey", cex = 1)
 
-#dev.off()
+dev.off()
 ```
