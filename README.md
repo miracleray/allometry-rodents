@@ -46,8 +46,8 @@ If you use these data, please cite this paper and the original authors:
 
 **The next two scripts produce the main multi-panel figures:** 
 
-* [07-plot-heatmaps.Rmd](/Analysis/07-plot-heatmaps.Rmd) Plots landmark heatmaps showing statistically rigorous visualizations of allometric shape variation from PC1 mininum to PC1 maximum. **Generates images for Figure 4C,D**.
-* [08-plot-allometry.Rmd](/Analysis/08-plot-allometry.Rmd) Plots static allometry with both Regression Scores and Predicted Values. Plots evolutionary allometry of mean shape data, a PCA of the mean shape data, combined with two heatmap views of the crania shape changes across PC1. **Generates Figure 1, Figure 2, and Figure 4**.
+* [07-plot-heatmaps.Rmd](/Analysis/07-plot-heatmaps.Rmd) Plots landmark heatmaps showing statistically rigorous visualizations of allometric shape variation from the mean (consensus) shape to either the PC1 mininum or to PC1 maximum (dorsal and lateral views). **Generates the four images for Figure 4C-F**.
+* [08-plot-allometry.Rmd](/Analysis/08-plot-allometry.Rmd) Plots static allometry with both Regression Scores and Predicted Values. Plots evolutionary allometry of mean shape data, a PCA of the mean shape data, combined with four heatmap views of the crania shape changes across PC1. **Generates Figure 1, Figure 2, and Figure 4**.
 
 ### Custom functions 
 * Some analyses call custom functions, which are defined in the [..Data/Functions/utilities.R](/Data/Functions/utilities.R) file.
