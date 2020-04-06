@@ -143,9 +143,9 @@ dev.off()
 ## Figure 4: multi-panel evolutionary allometry and mean shape PCA
 First, set up colors and points by genera and important taxa
 ```{r}
-# Colors for genera and different points by species within each genus; used for PCA
+# Colors for genera and distinct points by species within each genus for PCA
 col.means <- PlotByGroup(info.means, "EGenus", col.gen)  # standard colors from script 03 minus genus Conilurus
-pch.means <- PointOutDiffSpp(info.means$EGenus)  # pts by unique species in a genus
+pch.means <- PointOutDiffSpp(info.means$EGenus)  # pts by unique spp in genus
 pch.means[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 # Points to call out only specialized folivores with special characters; used for Evolutionary Allometry plot
@@ -154,9 +154,9 @@ pch.evo.allo[which(info.means$Taxa == "P_ora")] <- 10  # quartered circle
 pch.evo.allo[which(info.means$Taxa == "M_fus")] <- 2  # open triangle
 
 # Legend that include Mastacomys in Fig 4A
-gen.phylo.new <- c(genera.phylo[1:7], "Mas", genera.phylo[8:length(genera.phylo)])  # Legend words
+gen.phylo.new <- c(genera.phylo[1:7], "Mas", genera.phylo[8:length(genera.phylo)])  # legend words
 
-col.phylo.new <- c(col.phylo[1:7], col.phylo[7], col.phylo[8:length(col.phylo)])  # Legend colors
+col.phylo.new <- c(col.phylo[1:7], col.phylo[7], col.phylo[8:length(col.phylo)])  # legend colors
 
 pch.phylo.new <- rep(16, length(col.phylo.new))
 pch.phylo.new[8] <- 2  # open triangle
@@ -174,16 +174,21 @@ PC2.per <- round(PCs[2, 2] * 100, digits = 1)
 PC2.lab <- paste("PC", 2, " (", PC2.per, "%)", sep = "")
 ```
 
+### Read in heatmap pngs created with script 07
+```{r}
+dor1 <- readPNG("../Data/Processed/PC1heatmap_dor_1.png")
+dor2 <- readPNG("../Data/Processed/PC1heatmap_dor_2.png")
+lat1 <- readPNG("../Data/Processed/PC1heatmap_lat_1.png")
+lat2 <- readPNG("../Data/Processed/PC1heatmap_lat_2.png")
+```
+
 ## Plot and export the multi-panel Figure 4
 Evolutionary allometry plot on top, PCA in the middle, heatmaps on the bottom.
 ```{r}
-# Read in heatmap PNGs created with script 06
-dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
-lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
-
+# Set up layout and export settings
 pdf("../Data/Results/Figure4_Allo_Shape.pdf")
-mat <- matrix(c(1,1,2,2,3,4), 3, 2, byrow = TRUE)  # 3 rows, 2 columns
-layout(mat, widths = c(1, 1, 1), heights = c(0.65, 0.75, 0.5))  
+mat <- matrix(c(1,1,2,2,3,4,5,6), 4, 2, byrow = TRUE)  # 6 plots, 4 rows, 2 cols
+layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat))) 
 
 # 1) Evolutionary Allometry plot
 par(mar = c(4, 4, 1, 1))  # sets the margins
@@ -195,7 +200,7 @@ plot(x = log(info.means$MeanCsize),
      xlab = "Log centroid size", 
      ylab = "Shape",
      bty = "n")
-text(4.75, 0.08, "A", cex = 2)
+text(4.75, 0.08, "A", cex = 1.5)
 
 legend(x = "bottomright", legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
 
@@ -230,7 +235,7 @@ plot(x = -pca.means$pc.scores[, 1],
      xlab = PC1.lab, 
      ylab = PC2.lab,
      bty = "n")
-text(-0.08, 0.1, "B", cex = 2)
+text(-0.08, 0.1, "B", cex = 1.5)
 text(.105, -0.009, "Frugivores", col = "dark grey")
 draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
 text(.045, 0.065, "Folivores", col = "dark grey")
@@ -240,28 +245,40 @@ draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
 text(-.067, 0.027, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
-# 3) Plot dorsal view
+# 3) Plot dorsal view - mean to min
 par(mar = c(0, 0, 1, 0))
-plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T) 
-rasterImage(dor, 0, 0, dim(dor)[2], dim(dor)[1])
-text(0, dim(dor)[1]-10, "C", cex = 2)
+plot(c(0, dim(dor1)[2]), c(0, dim(dor1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE) 
+rasterImage(dor1, 0, 0, dim(dor1)[2], dim(dor1)[1])
+text(0, dim(dor1)[1]-10, "C", cex = 1.5)
 
-# 4) Plot lateral view with same dimensions as above
+# 4) Plot dorsal view with same dimensions as above - mean to max
 par(mar = c(0, 0, 1, 0))
-plot(c(0, dim(dor)[2]), c(0, dim(dor)[1]), type = "n", axes = F, xlab = "", ylab = "", asp = T)
-rasterImage(lat, 0, 0, dim(dor)[2], dim(dor)[1])
-text(0, dim(dor)[1]-10, "D", cex = 2)
+plot(c(0, dim(dor1)[2]), c(0, dim(dor1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE) 
+rasterImage(dor2, 0, 0, dim(dor1)[2], dim(dor1)[1])
+text(0, dim(dor1)[1]-10, "D", cex = 1.5)
+
+# 5) Plot lateral view  - mean to min
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(lat1)[2]), c(0, dim(lat1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE)
+rasterImage(lat1, 0, 0, dim(lat1)[2], dim(lat1)[1])
+text(0, dim(lat1)[1]-10, "E", cex = 1.5)
+
+# 5) Plot lateral view with same dimensions as above - mean to max
+par(mar = c(0, 0, 1, 0))
+plot(c(0, dim(lat1)[2]), c(0, dim(lat1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE)
+rasterImage(lat2, 0, 0, dim(lat1)[2], dim(lat1)[1])
+text(0, dim(lat1)[1]-10, "F", cex = 1.5)
 
 # Make gradient legend
 legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
-rasterImage(legend_image, 440, 220, 465, 160)
-text(382, 213, "High variation", col = "dark grey", cex = 1)
-text(414, 168, "Low", col = "dark grey", cex = 1)
+rasterImage(legend_image, 440, 150, 453, 210)
+text(382, 197, "High variation", col = "dark grey", cex = 1)
+text(414, 160, "Low", col = "dark grey", cex = 1)
 
 dev.off()
 ```
 
-
+## Visualize fitted allometry with color and pch by diet and locomotion
 ```{r}
 plot(x = log(info.means$MeanCsize),
      y = evo.allo.rs$RegScore,

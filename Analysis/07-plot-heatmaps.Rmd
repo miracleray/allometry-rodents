@@ -55,8 +55,9 @@ wrap.PCA <- plotTangentSpace(shape, verbose = FALSE)
 hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
 hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 ```
+
 ## Plot the range of variation along PC1 using a heat color scheme
-Use mean shape (aka consensus) as beginning coordinate configuration. Created here; inserted in multipanel figure 4 in script 8. 
+Use mean shape (aka consensus) as beginning coordinate configuration.
 ```{r}
  # Dorsal views
 open3d(windowRect = c(0, 0, 600, 600))
