@@ -260,3 +260,38 @@ text(414, 168, "Low", col = "dark grey", cex = 1)
 
 dev.off()
 ```
+
+
+```{r}
+plot(x = log(info.means$MeanCsize),
+     y = evo.allo.rs$RegScore,
+     xlim = c(4.75, 6),
+     col = col.diet.means,
+     pch = pch.gld.means,
+     bg = col.diet.means,
+     xlab = "Log centroid size", 
+     ylab = "Shape",
+     bty = "n")
+#text(4.75, 0.08, "A", cex = 2)
+
+#legend(x = "bottomright", legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
+
+abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
+
+# Frugivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_gou")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")], pos = 2, "Frugivores     ", col = "dark grey")
+draw.ellipse(5.913, .065, .06, .005, angle = -2, border = "dark grey")
+
+# Folivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "P_ora")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")], "Folivores    ", pos = 2, col = "dark grey")
+draw.ellipse(5.4, .028, 0.09, .02, angle = 1, border = "dark grey")
+
+# Carnivores
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
+
+# Hopping Notomys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "       Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
+draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
+
+```

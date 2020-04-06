@@ -55,27 +55,34 @@ wrap.PCA <- plotTangentSpace(shape, verbose = FALSE)
 hypothetical.1 <- wrap.PCA$pc.shapes[[1]]
 hypothetical.2 <- wrap.PCA$pc.shapes[[2]]
 ```
-
 ## Plot the range of variation along PC1 using a heat color scheme
-`3d` commands allow precise control of 3D visualization to get dorsal and lateral views
+Use mean shape (aka consensus) as beginning coordinate configuration. Created here; inserted in multipanel figure 4 in script 8. 
 ```{r}
-# Dorsal view
+ # Dorsal views
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
+PC1.var.plot <- procrustes.var.plot(consensus, hypothetical.1, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
 view3d(phi = 0)  # flip cranium
-rgl.snapshot("../Data/Processed/PC1heatmap_dor.png")  # save screenshot for multipanel plot
+rgl.snapshot("../Data/Processed/PC1heatmap_dor_1.png")  # save screenshot for multipanel plot
 
-# Lateral view
 open3d(windowRect = c(0, 0, 600, 600))
-PC1.var.plot <- procrustes.var.plot(hypothetical.1, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
+PC1.var.plot <- procrustes.var.plot(consensus, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
+view3d(phi = 0)
+rgl.snapshot("../Data/Processed/PC1heatmap_dor_2.png")
+
+# Lateral views
+open3d(windowRect = c(0, 0, 600, 600))
+PC1.var.plot <- procrustes.var.plot(consensus, hypothetical.1, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
 view3d(phi = 90)
-rgl.snapshot("../Data/Processed/PC1heatmap_lat.png")
+rgl.snapshot("../Data/Processed/PC1heatmap_lat_1.png")
+
+open3d(windowRect = c(0, 0, 600, 600))
+PC1.var.plot <- procrustes.var.plot(consensus, hypothetical.2, col = heat.colors, col.val = PC1.var[, "radius"], labels = FALSE)
+view3d(phi = 90)
+rgl.snapshot("../Data/Processed/PC1heatmap_lat_2.png")
 ```
 
 ### Prep images for multi-panel Figure 4 (created with script 08)
 This step assumes you have ImageMagik installed on your computer
 ```{r}
 system("mogrify ../Data/Processed/PC1heatmap_*.png -trim ../Data/Processed/*.png")  # removes whitespace (requires ImageMagik)
-dor <- readPNG("../Data/Processed/PC1heatmap_dor.png")
-lat <- readPNG("../Data/Processed/PC1heatmap_lat.png")
 ```
