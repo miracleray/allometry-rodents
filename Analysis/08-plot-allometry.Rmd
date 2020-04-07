@@ -187,7 +187,7 @@ Evolutionary allometry plot on top, PCA in the middle, heatmaps on the bottom.
 ```{r}
 # Set up layout and export settings
 pdf("../Data/Results/Figure4_Allo_Shape.pdf")
-mat <- matrix(c(1,1,2,2,3,4,5,6), 4, 2, byrow = TRUE)  # 6 plots, 4 rows, 2 cols
+mat <- matrix(c(1,1,2,2:6), 4, 2, byrow = TRUE)  # 6 plots, 4 rows, 2 cols
 layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat))) 
 
 # 1) Evolutionary Allometry plot
@@ -201,25 +201,23 @@ plot(x = log(info.means$MeanCsize),
      ylab = "Shape",
      bty = "n")
 text(4.75, 0.08, "A", cex = 1.5)
-
-legend(x = "bottomright", legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
+legend("bottomright", inset = c(0.026, 0), legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
 
 abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
 
 # Frugivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_gou")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")], pos = 2, "Frugivores     ", col = "dark grey")
-draw.ellipse(5.913, .065, .06, .005, angle = -2, border = "dark grey")
+text(5.985, evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")] + 0.012, pos = 2, "Frugivores", col = "grey17")
+#draw.ellipse(5.913, .065, .06, .01, angle = -2, border = "dark grey")
 
 # Folivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "P_ora")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")], "Folivores    ", pos = 2, col = "dark grey")
-draw.ellipse(5.4, .028, 0.09, .02, angle = 1, border = "dark grey")
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_fus")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")] - 0.005, "Folivores", pos = 2, col = col.gen[which(names(col.gen) == "Pse")])  # color of Pse
 
 # Carnivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
 text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")] - 0.005, pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
 
 # Hopping Notomys
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "       Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "      Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
 draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
 
 # 2) PCA
@@ -236,13 +234,14 @@ plot(x = -pca.means$pc.scores[, 1],
      ylab = PC2.lab,
      bty = "n")
 text(-0.08, 0.1, "B", cex = 1.5)
-text(.105, -0.009, "Frugivores", col = "dark grey")
-draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
-text(.045, 0.065, "Folivores", col = "dark grey")
-draw.ellipse(.048, .035, .025, .013, angle = -19, border = "dark grey")
-text(.045, -0.053, "Carnivores", col = "dark grey")
-draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
-text(-.067, 0.027, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
+text(.112, -0.01, "Frugivores", col = "grey17")
+#draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
+text(.05, 0.065, "Folivores", col = col.gen[which(names(col.gen) == "Pse")])
+draw.ellipse(.048, .032, .022, .013, angle = -19, border = "dark grey")
+text(.03, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])
+text(.06, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])
+#draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
+text(-.066, 0.025, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
 draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
 # 3) Plot dorsal view - mean to min
@@ -272,8 +271,8 @@ text(0, dim(lat1)[1]-10, "F", cex = 1.5)
 # Make gradient legend
 legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
 rasterImage(legend_image, 440, 150, 453, 210)
-text(382, 197, "High variation", col = "dark grey", cex = 1)
-text(414, 160, "Low", col = "dark grey", cex = 1)
+text(387, 197, "High variation", col = "grey55", cex = 1)
+text(419, 160, "Low", col = "grey55", cex = 1)
 
 dev.off()
 ```
