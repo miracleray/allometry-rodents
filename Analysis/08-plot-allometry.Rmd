@@ -235,14 +235,12 @@ plot(x = -pca.means$pc.scores[, 1],
      bty = "n")
 text(-0.08, 0.1, "B", cex = 1.5)
 text(.112, -0.01, "Frugivores", col = "grey17")
-#draw.ellipse(.116, .015, .006, .012, angle = -12, border = "dark grey")
 text(.05, 0.065, "Folivores", col = col.gen[which(names(col.gen) == "Pse")])
 draw.ellipse(.048, .032, .022, .013, angle = -19, border = "dark grey")
 text(.03, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])
 text(.06, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])
-#draw.ellipse(.044, -.073, .034, .007, angle = -15, border = "dark grey")
 text(-.066, 0.025, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
-draw.ellipse(c(-.053, -0.07), c(.014, -0.013), c(.015, .004), c(.004, .007), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
+draw.ellipse(c(-.053, -0.07), c(.014, -0.012), c(.015, .0035), c(.004, .008), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
 # 3) Plot dorsal view - mean to min
 par(mar = c(0, 0, 1, 0))
@@ -271,7 +269,7 @@ text(0, dim(lat1)[1]-10, "F", cex = 1.5)
 # Make gradient legend
 legend_image <- as.raster(matrix(heat.colors(20), ncol = 1))
 rasterImage(legend_image, 440, 150, 453, 210)
-text(387, 197, "High variation", col = "grey55", cex = 1)
+text(387, 198, "High variation", col = "grey55", cex = 1)
 text(419, 160, "Low", col = "grey55", cex = 1)
 
 dev.off()
