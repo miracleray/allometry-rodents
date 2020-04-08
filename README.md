@@ -4,14 +4,14 @@ Code authors: Ariel E. Marcy, Thomas Guillerme, Emma Sherratt
 To cite the paper and/or code:
 > Coming soonish
 
-As of April 2020, this is still a work in progress. Uses `R` (v. 3.6.1), `geomorph` (v. 3.1.3), and `landvR` (v. 0.4).
+As of April 2020, this is still a work in progress. Relies on `R` (v. 3.6.1), `geomorph` (v. 3.1.3), and `landvR` (v. 0.4).
 
-*All of the scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal, or you can click the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer, or open an RStudio project from that folder.*
+*All scripts are in RMarkdown format (.Rmd), which can be opened in RStudio. There, you can edit and run code chunks as normal or use the Knit button to create HTML versions with both code and output. After cloning this repo, remember to either set your working directory to the allometry-rodents folder on your computer or open an RStudio project from that folder.*
 
 ## Data
 **Landmarking data:**
-* [MorphoSource Project 561](https://www.morphosource.org/MyProjects/Dashboard/dashboard/select_project_id/561) publically provides 3D meshes for all surface scanned crania in the study
-* [Raw_Coordinates.csv](Data/Raw/Raw_Coord_Data.csv) provides the shape coordinates from landmarking 3D skulls in Viewbox 
+* [MorphoSource Project 561](https://www.morphosource.org/MyProjects/Dashboard/dashboard/select_project_id/561) publically provides 3D meshes for all surface scanned crania landmarked in the study.
+* [Raw_Coordinates.csv](Data/Raw/Raw_Coord_Data.csv) provides the shape coordinates from landmarked 3D skulls, exported from Viewbox.
 
 **Museum metadata provided by Curators:**
 * [Australian Museum specimens](/Data/Raw/AM_muridae_skulls.csv)
