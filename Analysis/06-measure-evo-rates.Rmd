@@ -39,7 +39,7 @@ Groups are defined as non-specialists (1) and distinct specialists in diet and/o
 # Define groups; 1 = those on allometric line / average body size 
 groups <- rep(1, dim(info.means)[1])  # 1 is default
 
-is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou"))
+is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou", info.means$Taxa == "L_con"))
 groups[is.frug] <- 2  # Define frugivores as 2
 
 is.fol <- c(which(info.means$Taxa == "P_ora"), which(info.means$Taxa == "M_fus"))
@@ -80,5 +80,5 @@ rate.table[5, 4] <- p.adjusted[10]
 for(i in 1:dim(rate.table)[1]) rate.table[i, i] <- "-"
 
 # Export Table S6
-write.table(rate.table, "../Data/Results/TableA6_EvoRates_2.csv", sep = ",", col.names = NA)
+write.table(rate.table, "../Data/Results/TableA6_EvoRates.csv", sep = ",", col.names = NA)
 ```
