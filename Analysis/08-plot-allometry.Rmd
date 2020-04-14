@@ -252,13 +252,13 @@ text(0, dim(dor1)[1]-10, "C", cex = 1.5)
 par(mar = c(0, 0, 1, 0))
 plot(c(0, dim(dor1)[2]), c(0, dim(dor1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE) 
 rasterImage(dor2, 0, 0, dim(dor1)[2], dim(dor1)[1])
-text(0, dim(dor1)[1]-10, "D", cex = 1.5)
+text(0, dim(dor1)[1]-10, "E", cex = 1.5)
 
 # 5) Plot lateral view  - mean to min
 par(mar = c(0, 0, 1, 0))
 plot(c(0, dim(lat1)[2]), c(0, dim(lat1)[1]), type = "n", axes = FALSE, xlab = "", ylab = "", asp = TRUE)
 rasterImage(lat1, 0, 0, dim(lat1)[2], dim(lat1)[1])
-text(0, dim(lat1)[1]-10, "E", cex = 1.5)
+text(0, dim(lat1)[1]-10, "D", cex = 1.5)
 
 # 5) Plot lateral view with same dimensions as above - mean to max
 par(mar = c(0, 0, 1, 0))
