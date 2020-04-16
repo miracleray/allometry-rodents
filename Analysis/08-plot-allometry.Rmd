@@ -212,12 +212,14 @@ text(5.985, evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")] + 0.012, pos
 # Folivores
 text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_fus")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")] - 0.005, "Folivores", pos = 2, col = col.gen[which(names(col.gen) == "Pse")])  # color of Pse
 
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "L_con")] + 0.1, evo.allo.rs$RegScore[which(info.means$Taxa == "L_con")] - 0.01, "Folivore", pos = 2, col = col.gen[which(names(col.gen) == "Lep")])  # color of Pse
+
 # Carnivores
 text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
 text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")] - 0.005, pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
 
 # Hopping Notomys
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "      Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
+text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")] + 0.03, evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, expression(paste("Hopping ", italic("Notomys"))), col = col.gen[which(names(col.gen) == "Not")])
 draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
 
 # 2) PCA
@@ -236,10 +238,11 @@ plot(x = -pca.means$pc.scores[, 1],
 text(-0.08, 0.1, "B", cex = 1.5)
 text(.112, -0.01, "Frugivores", col = "grey17")
 text(.05, 0.065, "Folivores", col = col.gen[which(names(col.gen) == "Pse")])
+text(.034, 0, "Folivore", col = col.gen[which(names(col.gen) == "Lep")])
 draw.ellipse(.048, .032, .022, .013, angle = -19, border = "dark grey")
 text(.03, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])
 text(.06, -0.063, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])
-text(-.066, 0.025, "Notomys", col = col.gen[which(names(col.gen) == "Not")])
+text(-.066, 0.025, expression(italic(Notomys)), col = col.gen[which(names(col.gen) == "Not")])
 draw.ellipse(c(-.053, -0.07), c(.014, -0.012), c(.015, .0035), c(.004, .008), angle = c(-95, 0), border = c("dark grey", "dark grey"))  # draws both
 
 # 3) Plot dorsal view - mean to min
