@@ -75,7 +75,7 @@ postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
 axisPhylo()
 nodelabels(as.character(c("01", "02", "03", "04", "05", "06", "07", "08", "09", 10:36)), frame = "circle", cex = 0.5, bg = bg, col = col.text)
-#text(16, 0, "Millions of years ago", col = "dark grey")
+mtext("         Millions of years ago", 1, line = 1, col = "black")
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(c("black", gray.colors(7)), ncol = 1))
