@@ -21,13 +21,10 @@ Our analyses here investigate allometry at two levels:
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
-library("devtools")
-devtools::install_github("geomorphR/geomorph", ref = "Stable", build_vignettes = TRUE)  # Install latest `geomorph`
 library(geomorph)
 library(RRPP)  # needed for pairwise comparisons with new `geomorph` > 3.1.0
 library(stringr)
 library(ape)  # phylogeny
-source("../Functions/utilities.R")  # custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 
@@ -109,8 +106,8 @@ for(i in 1:500){   # 100 iterations takes ~2.5 hours
 ### Visualize with histogram
 ```{r}
 # Counts are divided by 2 because pairwise table repeats each comparison
-hist((count.pw[1:length(count.pw)])/2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
-abline(v = actual.pw/2, lwd = 3, col = "deeppink4")  # compare random to real result above; pink for Vera
+hist((count.pw[1:length(count.pw)]) / 2, main = NULL, xlab = "Significant pairwise comparisons (alpha < 0.01)")
+abline(v = actual.pw / 2, lwd = 3, col = "deeppink4")  # compare random to real result above; pink for Vera
 ```
 
 ## 2a) Run evolutionary allometry ANCOVA -- reported in Table 1b (n = 317, clades = 7)

@@ -24,7 +24,6 @@ library(plotrix)  # needed to draw ellipses
 library(png)
 library(colorspace) 
 library(stringr)
-
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
 load(file = "../Data/Processed/03-graphing-vectors.rda")
