@@ -19,7 +19,7 @@ Phylogenetic rarefaction uses the phylogenetic tree to test whether sample size 
 
 The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd) with modifications for measuring the change in angle between two trajectories. 
 
-### Load packages, functions, and data
+### Load packages, functions, and data; set font for figures
 ```{r message = FALSE}
 library(geomorph)
 library(landvR)  # must be version 0.4 or greater for rarefaction functions
@@ -32,6 +32,9 @@ load(file = "../Data/Processed/04-allometry-data.rda")
 
 # Optional once long analyses have been run - reload to tweak plots
 load(file = "../Data/Processed/05-phylo-rare-results.rda")  
+
+# Set font for figures
+quartzFonts(helvetica = c("Helvetica Regular", "Helvetica Bold", "Helvetica Oblique", "Helvetica Bold Oblique"))
 ```
 
 ### Get the data and each clade from the phylogeny ready for the test
@@ -130,6 +133,7 @@ angle.changes <- test.delta.slope(obs.slopes, med.delta.slopes)
 
 
 ## Plot the results
+This generates Figure 3.
 
 ### Get colors to plot outliers
 ```{r}
@@ -147,7 +151,7 @@ for(i in 1:length(out.index)) {
 }
 ```
 
-### Make Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
+### Export Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
 ```{r}
 setEPS()  # sets up plot export
 postscript("../Data/Results/Figure3_Phylo_Rare.eps")
@@ -158,14 +162,14 @@ par(mar = c(1, 4, 1.5, 1))
 boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
-text(0.5, 15, "A", cex = 2)
+text(0.5, 15, "A", cex = 1.5)
 abline(h = 0, col = 'deeppink4')  # pink for Vera
 
 # 3b) Delta angle (in degrees) as a histogram
 par(mar = c(5, 4, 0, 1))
 plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Node number; species number OR species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)", sep = "")), pch = 16, col = col.pts, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
 axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.55)
-text(0.5, 85, "B", cex = 2)
+text(0.5, 85, "B", cex = 1.5)
 abline(h = 4.5, col = "deeppink4")  # significance level
 text(1, 7, "4.5\u00B0 significance level", adj = c(0,0), col = "deeppink4")
 legend("topright", out.names, col = out.cols, pch = 16)
