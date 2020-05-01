@@ -19,10 +19,12 @@ Phylogenetic rarefaction uses the phylogenetic tree to test whether sample size 
 
 The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd) with modifications for measuring the change in angle between two trajectories. 
 
-### Load packages, functions, and data; set font for figures
+### Load packages, functions, and data
 ```{r message = FALSE}
+library(devtools)
+install_github("TGuillerme/landvR")
+library(landvR)  # get version > 0.4 for rarefaction functions
 library(geomorph)
-library(landvR)  # must be version 0.4 or greater for rarefaction functions
 library(stringr)
 library(ape)  # phylogeny
 source("../Functions/utilities.R")  # custom functions
@@ -31,10 +33,7 @@ load(file = "../Data/Processed/03-tree-data.rda")
 load(file = "../Data/Processed/04-allometry-data.rda")
 
 # Optional once long analyses have been run - reload to tweak plots
-load(file = "../Data/Processed/05-phylo-rare-results.rda")  
-
-# Set font for figures
-quartzFonts(helvetica = c("Helvetica Regular", "Helvetica Bold", "Helvetica Oblique", "Helvetica Bold Oblique"))
+load(file = "../Data/Processed/05-phylo-rare-results.rda")
 ```
 
 ### Get the data and each clade from the phylogeny ready for the test
