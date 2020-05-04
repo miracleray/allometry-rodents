@@ -1,8 +1,8 @@
 # Australian rodent skull allometry (Chapter 3 of Thesis) - data and code
 Code authors: Ariel E. Marcy, Thomas Guillerme, Emma Sherratt
 
-To cite the paper and/or code:
-> Coming very soon to bioXiv
+To cite the paper and/or code, cite the preprint (peer-reviewed article coming soon):
+> Marcy, A. E., T. Guillerme, E. Sherratt, K. C. Rowe, M. J. Phillips, and V. Weisbecker. 2020. Australian rodents reveal conserved Cranial Evolutionary Allometry across 10 million years of murid evolution. bioRxiv. [https://www.biorxiv.org/content/early/2020/05/01/2020.04.30.071308](https://www.biorxiv.org/content/early/2020/05/01/2020.04.30.071308)
 
 As of May 2020, this is still a work in progress. Relies on `R` (v. 3.6.1), `geomorph` (v. 3.1.3), and `landvR` (v. 0.4).
 
