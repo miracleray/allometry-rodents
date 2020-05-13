@@ -58,7 +58,7 @@ bg[31] <- "dark gray"  # native Rattus
 bg[29] <- "#CC1C2F"  # Hydromys group
 bg[12] <- "#79ABE2"  # Pseudomys division
 bg[09] <- "#004616"  # Uromys group
-bg[07] <- "#A79FE1"  # Mesebriomys group
+bg[07] <- "#A79FE1"  # Mesembriomys group
 
 # Color the text for the phylogenetic group nodes
 col.text <- rep("black", 36)
@@ -68,19 +68,19 @@ col.text[09] <- "white"  # Uromys group
 
 ## Make Figure 1
 ```{r}
-setEPS()
-postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
+pdf("../Data/Results/Figure1_Phylogeny_CS.pdf")
 
-plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.5)
+par(mar = c(2,0,0,0))
+plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.3, cex = 0.8)
 axisPhylo()
 nodelabels(as.character(c("01", "02", "03", "04", "05", "06", "07", "08", "09", 10:36)), frame = "circle", cex = 0.5, bg = bg, col = col.text)
-mtext("         Millions of years ago", 1, line = 1, col = "black")
+mtext("                                                                                                  Millions of years ago", 1, line = 1, col = "black", adj = 0, cex = 0.8)
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(c("black", gray.colors(7)), ncol = 1))
 rasterImage(legend_image, 0, 2, 4, 5)
-text(2.1, 6, "Large (~1kg)", col = "dark grey", cex = 1)
-text(2.1, 1, "Small (~10g)", col = "dark grey", cex = 1)
+text(2.13, 5.7, "Large (~1kg)", col = "black", cex = 0.8)
+text(2.13, 1.3, "Small (~10g)", col = "dark grey", cex = 0.8)
 
 dev.off()
 ```
