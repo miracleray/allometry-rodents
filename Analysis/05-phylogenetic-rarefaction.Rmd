@@ -11,18 +11,18 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Phylogenetic rarefaction
-This script generates Figure 3 and Figure A2.
-
 These analyses addresses reviewer concerns over small sample sizes in each species bin and whether it underlies some or all of our static allometry results showing parallel slopes across almost all species. 
 
-Phylogenetic rarefaction uses the phylogenetic tree to test whether sample size influences allometric slope measurements in our dataset. Since larger clades will have larger sample sizes, this was a powerful way to test whether rarifying all clades down to 5 specimens changed the allometric slope in a meaninful way. If all clades had a similar level of allometric slope change (measured from the observed to the rarified slopes), we could reject the hypothesis that our sample size was impacting our results.
+Phylogenetic rarefaction uses the phylogenetic tree to test whether sample size influences allometric slope measurements in our dataset. Since larger clades will have larger sample sizes, this is a powerful way to test whether rarifying all clades down to 5 specimens changed the allometric slope in a meaninful way. If all clades had a similar level of allometric slope change (measured from the observed to the rarified slopes), we could reject the hypothesis that our sample size was impacting our results.
 
-The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd) with modifications for measuring the change in angle between two trajectories. 
+The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd) with modifications for measuring the change in angle between two allometric trajectories. 
+
+Generates Figure 3 and Figure A2.
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
 library(devtools)
-install_github("TGuillerme/landvR")
+if(!require(landvR)) install_github("TGuillerme/landvR")
 library(landvR)  # get version > 0.4 for rarefaction functions
 library(geomorph)
 library(stringr)
@@ -142,36 +142,40 @@ out.names <- new.names[angle.changes > 4.5]
 
 # Give colors according to phylogeny
 col.pts <- rep("black", length(new.names))
-out.cols <- c(col.phylo["Mel"], col.phylo["Mes"], col.phylo["Not"], col.phylo["Pse"], col.phylo["Leg"], col.phylo["Rat"])
+out.cols <- c(col.phylo["Mel"], col.phylo["Mes"], col.phylo["Not"], col.phylo["Pse"], col.phylo["Pse"], col.phylo["Rat"])
 
 # Put outlier colors in the right places
 for(i in 1:length(out.index)) {
     col.pts[out.index[i]] <- out.cols[i]
 }
+
+# Get outlier species names into "Genus species" format
+tip.index <- out.index - 36  # take out indices for the 36 larger clades
+long.out.names <- str_replace(aus.tree$tip.label[tip.index], "_", " ")
 ```
 
 ### Export Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
 ```{r}
-setEPS()  # sets up plot export
-postscript("../Data/Results/Figure3_Phylo_Rare.eps")
+pdf("../Data/Results/Figure3_Phylo_Rare.pdf")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
-par(mar = c(1, 4, 1.5, 1))
+par(mar = c(1, 4, 1, 0.5))
 boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
-text(0.5, 15, "A", cex = 1.5)
+text(0.5, 14.5, "A", cex = 1.5)
 abline(h = 0, col = 'deeppink4')  # pink for Vera
 
 # 3b) Delta angle (in degrees) as a histogram
-par(mar = c(5, 4, 0, 1))
+par(mar = c(4, 4, 0, 0.5))
 plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Node number; species number OR species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)", sep = "")), pch = 16, col = col.pts, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
-axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.55)
-text(0.5, 85, "B", cex = 1.5)
+axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.65)
+
+text(0.5, 88, "B", cex = 1.5)
 abline(h = 4.5, col = "deeppink4")  # significance level
 text(1, 7, "4.5\u00B0 significance level", adj = c(0,0), col = "deeppink4")
-legend("topright", out.names, col = out.cols, pch = 16)
+legend("topright", long.out.names, col = out.cols, pch = 16, text.font = 3, cex = 0.8)
 
 dev.off()
 ```
