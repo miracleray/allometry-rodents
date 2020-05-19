@@ -116,13 +116,16 @@ legend.names <- str_c(genus, spp[], sep = " ")  # combine
 
 # Order like phylogeny by getting names to match phylo.names format
 first <- str_sub(phy.long.names, 1, 1)
-second <- str_sub(lapply(temp, '[[', 2), 1, 3)
+second <- str_sub(lapply(species, '[[', 1), 1, 3)
 match.names <- str_c(first, second, sep = " ")
 
 # Subset legend vectors to exclude Z ped which is not in the phylogeny
 leg.names <- legend.names[match(phylo.names[-which(phylo.names == "Z ped")], match.names)]  # also ordered with phylogeny
 col.legend <- col.unique.spp[-which(phylo.names == "Z ped")]
 pch.legend <- pch.unique.spp[-which(phylo.names == "Z ped")]
+
+# Denote the Pseudomys affiliation for Mastacomys fuscus
+leg.names[which(leg.names == "M. fuscus")] <- "M. (P.) fuscus"
 ```
 
 ### Plot/export static and evolutionary allometry multi-panel Figure 2
