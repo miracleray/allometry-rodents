@@ -64,6 +64,10 @@ bg[07] <- "#A79FE1"  # Mesembriomys group
 col.text <- rep("black", 36)
 col.text[36] <- "white"  # invasive Rattus
 col.text[09] <- "white"  # Uromys group
+
+# Insert (Pseudomys) into name for Mastacomys
+mas.index <- which(aus.tree$tip.label == "Mastacomys_fuscus")
+aus.tree$tip.label[mas.index] <- paste("Mastacomys_(Pseudomys)_fuscus")
 ```
 
 ## Make Figure 1
