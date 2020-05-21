@@ -156,7 +156,8 @@ long.out.names <- str_replace(aus.tree$tip.label[tip.index], "_", " ")
 
 ### Export Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
 ```{r}
-pdf("../Data/Results/Figure3_Phylo_Rare.pdf")
+setEPS()
+postscript("../Data/Results/Figure3_Phylo_Rare.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot

@@ -72,7 +72,8 @@ aus.tree$tip.label[mas.index] <- paste("Mastacomys_(Pseudomys)_fuscus")
 
 ## Make Figure 1
 ```{r}
-pdf("../Data/Results/Figure1_Phylogeny_CS.pdf")
+setEPS()
+postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
 
 par(mar = c(2,0,0,0))
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.3, cex = 0.8)
@@ -91,7 +92,8 @@ dev.off()
 
 ## Make simplified Figure 1 for Chapter 1 of thesis
 ```{r}
-pdf("../Data/Results/Figure1_Phylogeny_Chapter1.pdf")
+setEPS()
+postscript("../Data/Results/Figure1_Phylogeny_Chapter1.eps")
 
 par(mar = c(2,0,0,0))
 plot.phylo(aus.tree, edge.color = "#818181", edge.width = 4, tip.color = col.tree, label.offset = 0.3, cex = 0.8)
@@ -135,7 +137,8 @@ leg.names[which(leg.names == "M. fuscus")] <- "M. (P.) fuscus"
 ### Plot/export static and evolutionary allometry multi-panel Figure 2
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression "pred-lines" for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
-pdf("../Data/Results/Figure2_Static_Allo.pdf")
+setEPS()
+postscript("../Data/Results/Figure2_Static_Allo.eps")
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry
@@ -229,7 +232,8 @@ lat2 <- readPNG("../Data/Processed/PC1heatmap_lat_2.png")
 Evolutionary allometry plot on top, PCA in the middle, heatmaps on the bottom.
 ```{r}
 # Set up layout and export settings
-pdf("../Data/Results/Figure4_Allo_Shape.pdf")
+setEPS()
+postscript("../Data/Results/Figure4_Allo_Shape.eps")
 mat <- matrix(c(1,1,2,2:6), 4, 2, byrow = TRUE)  # 6 plots, 4 rows, 2 cols
 layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat))) 
 
