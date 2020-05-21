@@ -177,7 +177,7 @@ _Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
 ```{r}
 relabel.tree <- no.cat.tree
 P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))
-relabel.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosis")
+relabel.tree$tip.label[P.lor] <- paste("Pogonomys_mollipilosus")
 ```
 
 **Correct Rattus**
