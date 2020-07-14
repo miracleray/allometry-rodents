@@ -34,8 +34,13 @@ info <- info[, !(names(info) %in% drops)]
 traits <- read.csv("../Data/Processed/in_ex_traits.csv", header = TRUE)
 traits$Taxa <- paste(str_sub(traits$Genus, 1, 1), str_sub(traits$Species, 1, 3), sep = "_")  # make matching Taxa column
 info <- merge(info, traits, by = "Taxa", sort = TRUE)  # merge
-
 info <- info[order(info$Order), ]  # original order / same as shape
+
+# Deal with Pogonomys being undescribed
+info[, which(info$Species == "spp")] <- "mpp"
+info[, which(info$Species == "spp")] <- "mpp"
+
+
 
 # Rename Genus & Species columns so they have their original short column name, long form Genus and Species columns keep Genus.y and Species.y
 names(info)[names(info) == "Genus.x"] <- "Genus"
@@ -170,10 +175,10 @@ for (i in 1:length(label.list)) {
 ```
 
 ### Re-label nodes
-Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species. 
+Since the 2018 Smissen & Rowe tree focused primarily on New Guinea species, it does not have all of the Australian species in our shape dataset. However, it does include sister species with the same relative branch length to other genera in the study. Therefore, we decided to re-label one of the nodes to the sister Australian species (currently undescribed, but this will be encoded later in script 08). 
 
 **Relabeled node:**
-_Pogonomys loriae_ (NG) to _Pogonomys mollipilosus_ (Aus)
+_Pogonomys loriae_ (NG) to _Pogonomys spp_ (Aus)
 ```{r}
 relabel.tree <- no.cat.tree
 P.lor <- which(str_detect(no.cat.tree$tip.label, "Pogonomys_loriae"))

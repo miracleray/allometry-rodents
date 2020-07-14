@@ -65,9 +65,9 @@ col.text <- rep("black", 36)
 col.text[36] <- "white"  # invasive Rattus
 col.text[09] <- "white"  # Uromys group
 
-# Insert (Pseudomys) into name for Mastacomys
-mas.index <- which(aus.tree$tip.label == "Mastacomys_fuscus")
-aus.tree$tip.label[mas.index] <- paste("Mastacomys_(Pseudomys)_fuscus")
+# Correct Pogonomys designation
+pog.index <- which(aus.tree$tip.label == "Pogonomys_mollipilosus")
+aus.tree$tip.label[pog.index] <- paste("Pogonomys_sp.")
 ```
 
 ## Make Figure 1
