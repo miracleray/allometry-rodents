@@ -40,9 +40,9 @@ If you use these data, please cite this paper and the original authors:
 
 **The next three scripts produce the main results:**
 
-* [04-measure-allometry.Rmd](/Analysis/04-measure-allometry.Rmd) Tests static and evolutionary allometry with `geomorph`'s `procD.lm`'s ANCOVA function. `RRPP`'s `pairwise` function. This includes Procrustes ANOVAs and pairwise homogeneity of slopes (HOS) tests. Tests whether the HOS result is distinct from null (global slope) expectancy with a randomization procedure. **Generates Table 1 and Table A4**.
-* [05-phylogenetic-rarefaction.Rmd](/Analysis/05-phylogenetic-rarefaction.Rmd) Uses phylogenetic rarefaction to tests for impact of species-level sample sizes on allometric findings with rarifaction across every clade in the phylogeny using `landvR`. **Generates Figure 3 and Figure A2**.
-* [06-measure-evo-rates.Rmd](/Analysis/06-measure-evo-rates.Rmd) Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table A6**.
+* [04-measure-allometry.Rmd](/Analysis/04-measure-allometry.Rmd) Tests static and evolutionary allometry with `geomorph`'s `procD.lm`'s ANCOVA function. `RRPP`'s `pairwise` function. This includes Procrustes ANOVAs and pairwise homogeneity of slopes (HOS) tests. Tests whether the HOS result is distinct from null (global slope) expectancy with a randomization procedure. **Generates Table 1 and Table S4**.
+* [05-phylogenetic-rarefaction.Rmd](/Analysis/05-phylogenetic-rarefaction.Rmd) Uses phylogenetic rarefaction to tests for impact of species-level sample sizes on allometric findings with rarifaction across every clade in the phylogeny using `landvR`. **Generates Figure 3 and Figure S2**.
+* [06-measure-evo-rates.Rmd](/Analysis/06-measure-evo-rates.Rmd) Runs `geomorph`'s `compare.evol.rates()` function on species with locomotion and dietary specializations to see if they evolved more slowly or more quickly than sister taxa. **Generates Table S6**.
 
 **The next two scripts produce the main multi-panel figures:** 
 
@@ -52,4 +52,4 @@ If you use these data, please cite this paper and the original authors:
 ### Custom functions 
 * Some analyses call custom functions, which are defined in the [..Data/Functions/utilities.R](/Data/Functions/utilities.R) file.
 
-* **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the four museums' original metadata. **Generates Table A1**
+* **Sup01-combine-metadata-sex-info.Rmd** This supplementary script reattaches sex information and museum of origin to the specimen metadata using the four museums' original metadata. **Generates Table S1**
