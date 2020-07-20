@@ -17,7 +17,7 @@ Phylogenetic rarefaction uses the phylogenetic tree to test whether sample size 
 
 The code below is based on Dr Thomas Guillerme's [landvR vignette here](https://github.com/TGuillerme/landvR/blob/master/inst/vignettes/rarefy_regressions.Rmd) with modifications for measuring the change in angle between two allometric trajectories. 
 
-Generates Figure 3 and Figure A2.
+Generates Figure 3 and Figure S2.
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
@@ -30,6 +30,7 @@ library(ape)  # phylogeny
 source("../Functions/utilities.R")  # custom functions
 load(file = "../Data/Processed/03-main-data.rda")
 load(file = "../Data/Processed/03-tree-data.rda")
+load(file = "../Data/Processed/03-graphing-vectors.rda")
 load(file = "../Data/Processed/04-allometry-data.rda")
 
 # Optional once long analyses have been run - reload to tweak plots
@@ -156,8 +157,7 @@ long.out.names <- str_replace(aus.tree$tip.label[tip.index], "_", " ")
 
 ### Export Figure 3: Delta slope in CI boxplot and Delta angle as a histogram
 ```{r}
-setEPS()
-postscript("../Data/Results/Figure3_Phylo_Rare.eps")
+pdf("../Data/Results/Figure3_Phylo_Rare.pdf", family = "Times", useDingbat = FALSE)
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # 3a) Delta slope as a bloxplot
@@ -165,7 +165,7 @@ par(mar = c(1, 4, 1, 0.5))
 boxplot(delta.slopes, border = "white", ylim = quantile(unlist(delta.slopes), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = NULL, names = rep("", length(new.names)))  # an empty plot needed first
 
 plot.CI(delta.slopes, type = "polygon", CI = c(95, 50), cent.tend = median, point.col = "black")
-text(0.5, 14.5, "A", cex = 1.5)
+text(-0.5, 14.5, "A", cex = 1.5)
 abline(h = 0, col = 'deeppink4')  # pink for Vera
 
 # 3b) Delta angle (in degrees) as a histogram
@@ -173,7 +173,7 @@ par(mar = c(4, 4, 0, 0.5))
 plot(c(1:length(med.delta.slopes)), angle.changes, xlab = "Node number; species number OR species name", ylab = expression(paste("Median ", Delta, " angle (\u00B0)", sep = "")), pch = 16, col = col.pts, ylim = c(0,90), xaxt = 'n', cex.axis = 1)
 axis(side = 1, at = c(1:73), labels = new.names, las = 2, cex.axis = 0.65)
 
-text(0.5, 88, "B", cex = 1.5)
+text(-0.2, 88, "B", cex = 1.5)
 abline(h = 4.5, col = "deeppink4")  # significance level
 text(1, 7, "4.5\u00B0 significance level", adj = c(0,0), col = "deeppink4")
 legend("topright", long.out.names, col = out.cols, pch = 16, text.font = 3, cex = 0.8)
@@ -215,14 +215,13 @@ fake.results.table <- do.call(rbind, f.delta.slopes)  # full matrix of slope val
 colnames(fake.results.table) <- n.spp.group  # summarize results by clade size
 ``` 
 
-### Summarize the results -- Appendix A, Figure A2
+### Summarize the results - Figure S2
 Transform these statistics into tables to simply plot them with `boxplot`:
 ```{r, fig.width = 12, fig.height = 12}
 fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
 
-setEPS()
-postscript("../Data/Results/FigureA2_RandomClades.eps")
+pdf("../Data/Results/FigureA2_RandomClades.pdf", family = "Times", useDingbats = FALSE)
 
 # An empty plot first
 boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = "Number of species in random clade", names = spp.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
