@@ -11,9 +11,9 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Visualize allometry
-This script generates Figure 1, the phylogeny colored by clade and centroid size; Figure 2, the static and common allometry plots; and Figure 4, which shows how allometry is associated with a CREA* pattern using a PCA and landmark heatplots. 
+This script generates Figure 1, the phylogeny colored by clade and centroid size; Figure 2, the static and common allometry plots; and Figure 4, which shows how allometry is associated with a CREA pattern using a PCA and landmark heatplots. 
 
-*CREA = Craniofacial Evolutionary Allometry (Cardini et al. 2015): larger individuals have a longer snout and smaller relative braincase.
+CREA = Craniofacial Evolutionary Allometry (*sensu* Cardini et al. 2015): larger individuals have a longer snout and smaller relative braincase.
 
 ### Load packages, functions, and data from previous steps
 ```{r message = FALSE}
@@ -72,14 +72,13 @@ aus.tree$tip.label[pog.index] <- paste("Pogonomys_sp.")
 
 ## Make Figure 1
 ```{r}
-setEPS()
-postscript("../Data/Results/Figure1_Phylogeny_CS.eps")
+pdf("../Data/Results/Figure1_Phylogeny_CS.pdf", family = "Times", useDingbats = FALSE)
 
 par(mar = c(2,0,0,0))
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.3, cex = 0.8)
 axisPhylo()
 nodelabels(as.character(c("01", "02", "03", "04", "05", "06", "07", "08", "09", 10:36)), frame = "circle", cex = 0.5, bg = bg, col = col.text)
-mtext("                                                                                                  Millions of years ago", 1, line = 1, col = "black", adj = 0, cex = 0.8)
+mtext("                                                                                                                       Millions of years ago", 1, line = 1, col = "black", adj = 0, cex = 0.8)
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(c("black", gray.colors(7)), ncol = 1))
@@ -130,15 +129,14 @@ leg.names <- legend.names[match(phylo.names[-which(phylo.names == "Z ped")], mat
 col.legend <- col.unique.spp[-which(phylo.names == "Z ped")]
 pch.legend <- pch.unique.spp[-which(phylo.names == "Z ped")]
 
-# Denote the Pseudomys affiliation for Mastacomys fuscus
-leg.names[which(leg.names == "M. fuscus")] <- "M. (P.) fuscus"
+# Fix Pogonomys sp. 
+leg.names[is.na(leg.names)] <- "Pogonomys sp." 
 ```
 
 ### Plot/export static and evolutionary allometry multi-panel Figure 2
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression "pred-lines" for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
-setEPS()
-postscript("../Data/Results/Figure2_Static_Allo.eps")
+pdf("../Data/Results/Figure2_Static_Allo.pdf", family = "Times", useDingbats = FALSE)
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry
@@ -232,8 +230,7 @@ lat2 <- readPNG("../Data/Processed/PC1heatmap_lat_2.png")
 Evolutionary allometry plot on top, PCA in the middle, heatmaps on the bottom.
 ```{r}
 # Set up layout and export settings
-setEPS()
-postscript("../Data/Results/Figure4_Allo_Shape.eps")
+pdf("../Data/Results/Figure4_Allo_Shape.pdf", family = "Times", useDingbats = FALSE)
 mat <- matrix(c(1,1,2,2:6), 4, 2, byrow = TRUE)  # 6 plots, 4 rows, 2 cols
 layout(mat, widths = rep.int(1, ncol(mat)), heights = rep.int(1, nrow(mat))) 
 
@@ -323,39 +320,4 @@ text(387, 198, "High variation", col = "grey55", cex = 1)
 text(419, 160, "Low", col = "grey55", cex = 1)
 
 dev.off()
-```
-
-## Visualize fitted allometry with color and pch by diet and locomotion
-```{r}
-plot(x = log(info.means$MeanCsize),
-     y = evo.allo.rs$RegScore,
-     xlim = c(4.75, 6),
-     col = col.diet.means,
-     pch = pch.gld.means,
-     bg = col.diet.means,
-     xlab = "Log centroid size", 
-     ylab = "Shape",
-     bty = "n")
-#text(4.75, 0.08, "A", cex = 2)
-
-#legend(x = "bottomright", legend = gen.phylo.new, col = col.phylo.new, pch = pch.phylo.new, cex = 0.9, pt.cex = 0.95, ncol = 3, bty = "n")
-
-abline(lm(evo.allo.rs$RegScore ~ log(info.means$MeanCsize)), col = "dark grey", lwd = 1)  # plots evolutionary allometry line of best fit
-
-# Frugivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "M_gou")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_gou")], pos = 2, "Frugivores     ", col = "dark grey")
-draw.ellipse(5.913, .065, .06, .005, angle = -2, border = "dark grey")
-
-# Folivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "P_ora")], evo.allo.rs$RegScore[which(info.means$Taxa == "M_fus")], "Folivores    ", pos = 2, col = "dark grey")
-draw.ellipse(5.4, .028, 0.09, .02, angle = 1, border = "dark grey")
-
-# Carnivores
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "H_chr")], evo.allo.rs$RegScore[which(info.means$Taxa == "H_chr")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Hyd")])  # Hydromys
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "X_myo")], evo.allo.rs$RegScore[which(info.means$Taxa == "X_myo")], pos = 2, "Carnivore", col = col.gen[which(names(col.gen) == "Xer")])  # Xeromys
-
-# Hopping Notomys
-text(log(info.means$MeanCsize)[which(info.means$Taxa == "N_mit")], evo.allo.rs$RegScore[which(info.means$Taxa == "N_mit")], pos = 4, "       Hopping Notomys", col = col.gen[which(names(col.gen) == "Not")])
-draw.ellipse(5.12, -0.035, .075, .009, angle = 2, border = "dark grey")
-
 ```
