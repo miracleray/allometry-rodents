@@ -221,7 +221,7 @@ Transform these statistics into tables to simply plot them with `boxplot`:
 fake.results.list <- apply(fake.results.table, 2, list)
 colnames(fake.results.table) <- n.spp.group
 
-pdf("../Data/Results/FigureA2_RandomClades.pdf", family = "Times", useDingbats = FALSE)
+pdf("../Data/Results/FigureS2_RandomClades.pdf", family = "Times", useDingbats = FALSE)
 
 # An empty plot first
 boxplot(fake.results.table, border = "white", ylim = quantile(unlist(fake.results.table), probs = c(0.01, 0.99), na.rm = TRUE), ylab = expression(paste(Delta, " slope (95%, 50% CI)")), xlab = "Number of species in random clade", names = spp.names[1:length(n.spp.group)], las = 2, cex.axis = 0.8)
