@@ -17,6 +17,9 @@ source("../Functions/utilities.R")  # custom functions
 load(file = "../Data/Processed/02-main-data.rda")
 ```
 
+# Specimen metadata
+This script generates Table S1.
+
 ## Prepare metadata for comparison with analyses metadata
 First, load in the museum metadata
 ```{r}
