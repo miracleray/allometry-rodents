@@ -80,7 +80,7 @@ write.csv(round(pw.summary$pairwise.tables$P, 3), "../Data/Results/TableA4_HOS.c
 ```
 
 ### 1c) Randomize specimens to get NULL expantancy for pairwise significant results
-We'll do the randomization procedure 500 times. This takes at least 12 hours to run, so the results are saved in the gdf file in this script.
+We'll do the randomization procedure 500 times. This takes at least 12 hours to run, so the results are saved in the 04-randomization-results.rda file in this script.
 ```{r}
 # Define function to shuffle species attributions and run PW comparisons
 null.pairwise <- function(shape, info, iter = 500, confidence = 0.99) {

@@ -39,10 +39,10 @@ Groups are defined as non-specialists (1) and distinct specialists in diet and/o
 # Define groups; 1 = those on allometric line / average body size 
 groups <- rep(1, dim(info.means)[1])  # 1 is default
 
-is.frug <- c(which(info.means$Taxa == "U_cau", info.means$Taxa == "M_gou", info.means$Taxa == "L_con"))
+is.frug <- c(which(info.means$Taxa == "U_cau"), which(info.means$Taxa == "M_gou"))
 groups[is.frug] <- 2  # Define frugivores as 2
 
-is.fol <- c(which(info.means$Taxa == "P_ora"), which(info.means$Taxa == "M_fus"))
+is.fol <- c(which(info.means$Taxa == "P_ora"), which(info.means$Taxa == "M_fus"), info.means$Taxa == "L_con")
 groups[is.fol] <- 3 # Define folivores as 3
 
 is.carn <- c(which(info.means$Taxa == "H_chr", info.means$Taxa == "X_myo"))
