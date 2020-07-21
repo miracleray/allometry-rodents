@@ -19,7 +19,7 @@ Our analyses here investigate allometry at two levels:
 1) Static (within-species) -- Table 1
 2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors). -- Table 2
 
-We do this with two different ANCOVAs, one with a phylogenetic reference and one without. 
+We do the latter, evolutionary allometric analysis with two different ANCOVAs, one without a phylogenetic reference (Table 2) and one with (Table S5). 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
@@ -123,7 +123,7 @@ fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, prin
 table2_n317 <- as.data.frame(round(fit.evo$aov.table, 3))
 table2_n317[is.na(table2_n317)] <- ""
 
-write.table(table2_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", col.names = NA)
+write.table(table2_n317, "../Data/Results/Table2_ANOVA_clade.csv", sep = ",", col.names = NA)
 ```
 
 ### 2b) Measure Evolutionary Allometry using clades and phylogeny -- Supplementary Table S5 (n = 37 species mean shapes, 8 clades)
