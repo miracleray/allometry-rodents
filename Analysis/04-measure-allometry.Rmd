@@ -11,13 +11,15 @@ knitr::opts_knit$set(root.dir = '../allometry-rodents')
 ```
 
 # Quantifying differences in allometry
-This script generates Table 1 and Table A5.
+This script generates Table 1, 2, and Table S5.
 
 Changing size is one of the most common ways that organisms can change their shape. Modifications to growth during development often have a profound impact on adult shape. The tests in this script detect how much size appears to drive shape change in our sample, relative to phylogenetic association.
 
 Our analyses here investigate allometry at two levels:
-1) Static (within-species)
-2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors). We do this with two different ANCOVAs, one with a phylogenetic reference and one without. 
+1) Static (within-species) -- Table 1
+2) Evolutionary (among clades defined by Aplin 2014 as those that radiated in Australia from distinct ancestors). -- Table 2
+
+We do this with two different ANCOVAs, one with a phylogenetic reference and one without. 
 
 ### Load packages, functions, and data
 ```{r message = FALSE}
@@ -33,17 +35,17 @@ load(file = "../Data/Processed/04-allometry-data.rda")
 load(file = "../Data/Processed/04-randomization-results.rda")  
 ```
 
-## 1a) Measure static allometry with an ANCOVA (Procrustes ANOVA) -- reported in Table 1a
+## 1) Measure static allometry with an ANCOVA (Procrustes ANOVA) -- reported in Table 1
 ```{r}
 # Run static allometry test with all specimens
 static.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, spp = info$Taxa)
 fit.static <- procD.lm(coords ~ log(size) * spp, iter = 500, data = static.gdf, print.progress = FALSE)
 
 # Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
-table1a <- as.data.frame(round(fit.static$aov.table, 3))
-table1a[is.na(table1a)] <- ""
+table1 <- as.data.frame(round(fit.static$aov.table, 3))
+table1[is.na(table1)] <- ""
 
-write.table(table1a, "../Data/Results/Table1a_ANOVA_spp.csv", sep = ",", col.names = NA)
+write.table(table1, "../Data/Results/Table1_ANOVA_spp.csv", sep = ",", col.names = NA)
 ```
 
 Save Regression Scores for future allometric analyses:
@@ -110,7 +112,7 @@ hist((count.pw[1:length(count.pw)]) / 2, main = NULL, xlab = "Significant pairwi
 abline(v = actual.pw / 2, lwd = 3, col = "deeppink4")  # compare random to real result above; pink for Vera
 ```
 
-## 2a) Run evolutionary allometry ANCOVA -- reported in Table 1b (n = 317, clades = 7)
+## 2a) Run evolutionary allometry ANCOVA -- reported in Table 2 (n = 317, clades = 7)
 This analysis is directly comparable to static ANCOVA above since only the grouping variable is changed.
 ```{r}
 # Run static allometry test with all specimens
@@ -118,13 +120,13 @@ evo.gdf <- geomorph.data.frame(coords = shape, size = info$Csize, clade = info$C
 fit.evo <- procD.lm(coords ~ log(size) * clade, iter = 500, data = evo.gdf, print.progress = FALSE)
 
 # Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
-table1b_n317 <- as.data.frame(round(fit.evo$aov.table, 3))
-table1b_n317[is.na(table1b_n317)] <- ""
+table2_n317 <- as.data.frame(round(fit.evo$aov.table, 3))
+table2_n317[is.na(table2_n317)] <- ""
 
-write.table(table1b_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", col.names = NA)
+write.table(table2_n317, "../Data/Results/Table1b_ANOVA_clade.csv", sep = ",", col.names = NA)
 ```
 
-### 2b) Measure Evolutionary Allometry using clades and phylogeny -- Supplementary Table S5 (n = 37 species mean shapes, 7 clades)
+### 2b) Measure Evolutionary Allometry using clades and phylogeny -- Supplementary Table S5 (n = 37 species mean shapes, 8 clades)
 Here we run Procrustes ANOVAs to compare the relative impact of PHYLO CLADE (Aplin 2014), size, and their interaction on shape.
 ```{r}
 # Procrustes ANOVA with interaction
@@ -133,10 +135,10 @@ pgls.gdf <- geomorph.data.frame(coords = mean.shapes, size = info.means$MeanCsiz
 fit.pgls <- procD.pgls(coords ~ log(size) * clade, aus.tree, iter = 500, data = pgls.gdf, print.progress = FALSE)
 
 # Round all values in ANCOVA table to 3 sig figs & remove NAs from the table
-table1b_n37 <- as.data.frame(round(fit.pgls$aov.table, 3))
-table1b_n37[is.na(table1b_n37)] <- ""
+table2_n37 <- as.data.frame(round(fit.pgls$aov.table, 3))
+table2_n37[is.na(table2_n37)] <- ""
 
-write.table(table1b_n37, "../Data/Results/TableA5_ANOVA_pgls.csv", sep = ",", col.names = NA)
+write.table(table2_n37, "../Data/Results/TableS5_ANOVA_pgls.csv", sep = ",", col.names = NA)
 
 # Find Reg Score values for plotting purposes later on (script 07)
 evo.allo.rs <- plotAllometry(fit.pgls, size = info.means$MeanCsize, method = "RegScore")
