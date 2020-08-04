@@ -78,7 +78,7 @@ par(mar = c(2,0,0,0))
 plot.phylo(aus.tree, edge.color = col.branch.size, edge.width = 4, tip.color = col.tree, label.offset = 0.3, cex = 0.8)
 axisPhylo()
 nodelabels(as.character(c("01", "02", "03", "04", "05", "06", "07", "08", "09", 10:36)), frame = "circle", cex = 0.5, bg = bg, col = col.text)
-mtext("                                                                                                                       Millions of years ago", 1, line = 1, col = "black", adj = 0, cex = 0.8)
+mtext("                                                                                                    Millions of years ago", 1, line = 1, col = "black", adj = 0, cex = 0.8)
 
 # Add centroid size legend
 legend_image <- as.raster(matrix(c("black", gray.colors(7)), ncol = 1))
@@ -137,6 +137,7 @@ leg.names[is.na(leg.names)] <- "Pogonomys sp."
 Here we consolidate the information above into two static allometry plots, one with all the data points and one with just the regression "pred-lines" for each species to compare with the evolutionary allometry of the entire group. 
 ```{r}
 pdf("../Data/Results/Figure2_Static_Allo.pdf", family = "Times", useDingbats = FALSE)
+
 layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
 
 # Plot of all data points with evolutionary allometry
