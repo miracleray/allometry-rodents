@@ -1,10 +1,12 @@
 # Australian rodents reveal conserved CREA across 10 million years of murid evolution - data and code
 Code authors: Ariel E. Marcy, Thomas Guillerme, Emma Sherratt
 
-As of August 2020, this is *in press*. Is also the data and code for Chpater 3 of Ariel E. Marcy's PhD thesis, which will be available on UQ's espace soon. 
+As of September 2020, the article is [just accepted on *The American Naturalist*!](https://www.journals.uchicago.edu/doi/10.1086/711398) The fully formatted article will drop very soon. 
 
-To cite the paper and/or code, cite the preprint (peer-reviewed article in press):
+In the meantime, to cite the paper and/or code, please cite the preprint:
 > Marcy, A. E., T. Guillerme, E. Sherratt, K. C. Rowe, M. J. Phillips, and V. Weisbecker. 2020. Australian rodents reveal conserved Cranial Evolutionary Allometry across 10 million years of murid evolution. bioRxiv. [https://www.biorxiv.org/content/early/2020/05/01/2020.04.30.071308](https://www.biorxiv.org/content/early/2020/05/01/2020.04.30.071308)
+
+Is also the data and code for Chpater 3 of my PhD thesis, which will be available on UQ's espace once the embargo lifts in 3 years (so please enjoy the preprint). 
 
 Relies on `R` (v. 3.6.1), `geomorph` (v. 3.1.3), and `landvR` (v. 0.4).
 
